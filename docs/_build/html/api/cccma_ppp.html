@@ -47,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -158,6 +159,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest"><code class="docutils literal notranslate"><span class="pre">DeterministicRequest</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest.added_features"><code class="docutils literal notranslate"><span class="pre">DeterministicRequest.added_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest.chunk_output_samples"><code class="docutils literal notranslate"><span class="pre">DeterministicRequest.chunk_output_samples</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest.input"><code class="docutils literal notranslate"><span class="pre">DeterministicRequest.input</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest.input_mask"><code class="docutils literal notranslate"><span class="pre">DeterministicRequest.input_mask</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest.output_sample_size"><code class="docutils literal notranslate"><span class="pre">DeterministicRequest.output_sample_size</span></code></a></li>
@@ -182,6 +184,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest"><code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest.added_features"><code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest.added_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest.chunk_size"><code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest.chunk_size</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest.condition"><code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest.condition</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest.condition_mask"><code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest.condition_mask</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest.latent_sample_size"><code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest.latent_sample_size</span></code></a></li>
@@ -192,12 +195,17 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.checkpoint_config</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condemb_to_decoder"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condemb_to_decoder</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_dependant_latent"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_dependant_latent</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_embedding_dims"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_embedding_dims</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_embedding_size"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_embedding_size</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.latent_size"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.latent_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_dependant_latent"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_dependant_latent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_embedding_size"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_embedding_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_embedding_dims"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_embedding_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condemb_to_decoder"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condemb_to_decoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.checkpoint_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id0"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condemb_to_decoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id1"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_dependant_latent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id2"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_embedding_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id3"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.condition_embedding_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id4"><code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC.latent_size</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelsABC"><code class="docutils literal notranslate"><span class="pre">cVAEmodelsABC</span></code></a><ul>
@@ -215,16 +223,20 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelABC"><code class="docutils literal notranslate"><span class="pre">modelABC</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelABC.forward"><code class="docutils literal notranslate"><span class="pre">modelABC.forward()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelABC.generative_modeling"><code class="docutils literal notranslate"><span class="pre">modelABC.generative_modeling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelABC.forward"><code class="docutils literal notranslate"><span class="pre">modelABC.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id5"><code class="docutils literal notranslate"><span class="pre">modelABC.generative_modeling</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC"><code class="docutils literal notranslate"><span class="pre">modelConfigABC</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.EXPECTS_MASK"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.EXPECTS_MASK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.activation"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.activation</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.GENERATOR"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.GENERATOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.EXPECTS_MASK"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.EXPECTS_MASK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id6"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.EXPECTS_MASK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id7"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.GENERATOR</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.NUM_INPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.NUM_INPUT_DIMS</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.NUM_OUTPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.NUM_OUTPUT_DIMS</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.activation"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.activation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#id8"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.activation</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC.build"><code class="docutils literal notranslate"><span class="pre">modelConfigABC.build()</span></code></a></li>
 </ul>
 </li>
@@ -293,19 +305,13 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC"><code class="docutils literal notranslate"><span class="pre">moduleABC</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC.init_loss_function"><code class="docutils literal notranslate"><span class="pre">moduleABC.init_loss_function()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC._compute_loss"><code class="docutils literal notranslate"><span class="pre">moduleABC._compute_loss()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC.forward"><code class="docutils literal notranslate"><span class="pre">moduleABC.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC.init_loss_function"><code class="docutils literal notranslate"><span class="pre">moduleABC.init_loss_function()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC.predict"><code class="docutils literal notranslate"><span class="pre">moduleABC.predict()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#id0"><code class="docutils literal notranslate"><span class="pre">moduleABC.forward()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#id1"><code class="docutils literal notranslate"><span class="pre">moduleABC.init_loss_function()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#id2"><code class="docutils literal notranslate"><span class="pre">moduleABC.predict()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleConfigABC"><code class="docutils literal notranslate"><span class="pre">moduleConfigABC</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleConfigABC.build"><code class="docutils literal notranslate"><span class="pre">moduleConfigABC.build()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleConfigABC._load_from_checkpoint"><code class="docutils literal notranslate"><span class="pre">moduleConfigABC._load_from_checkpoint()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#id3"><code class="docutils literal notranslate"><span class="pre">moduleConfigABC.build()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleConfigABC.check_registered"><code class="docutils literal notranslate"><span class="pre">moduleConfigABC.check_registered()</span></code></a></li>
 </ul>
 </li>
@@ -348,12 +354,9 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cccma_ppp.core.html#module-cccma_ppp.core.registery">cccma_ppp.core.registery module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery"><code class="docutils literal notranslate"><span class="pre">Registery</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery.register"><code class="docutils literal notranslate"><span class="pre">Registery.register()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery.get"><code class="docutils literal notranslate"><span class="pre">Registery.get()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery.available"><code class="docutils literal notranslate"><span class="pre">Registery.available()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#id4"><code class="docutils literal notranslate"><span class="pre">Registery.available()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#id5"><code class="docutils literal notranslate"><span class="pre">Registery.get()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#id6"><code class="docutils literal notranslate"><span class="pre">Registery.register()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery.get"><code class="docutils literal notranslate"><span class="pre">Registery.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery.register"><code class="docutils literal notranslate"><span class="pre">Registery.register()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -387,6 +390,8 @@
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.available"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.available()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.build_module"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.build_module()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.config"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.model_config"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.model_type"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.model_type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.register"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.register()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.registery"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.registery</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector.type"><code class="docutils literal notranslate"><span class="pre">ModuleSelector.type</span></code></a></li>
@@ -436,9 +441,11 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.writer.WriterConfig"><code class="docutils literal notranslate"><span class="pre">WriterConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.writer.WriterConfig.aggregate_only"><code class="docutils literal notranslate"><span class="pre">WriterConfig.aggregate_only</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.writer.WriterConfig.build"><code class="docutils literal notranslate"><span class="pre">WriterConfig.build()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.writer.WriterConfig.get_trained_model_stats_from_validation"><code class="docutils literal notranslate"><span class="pre">WriterConfig.get_trained_model_stats_from_validation</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.writer.WriterConfig.num_output_sampling"><code class="docutils literal notranslate"><span class="pre">WriterConfig.num_output_sampling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.writer.WriterConfig.predict_only"><code class="docutils literal notranslate"><span class="pre">WriterConfig.predict_only</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.writer.WriterConfig.predictor"><code class="docutils literal notranslate"><span class="pre">WriterConfig.predictor</span></code></a></li>
 </ul>
 </li>
@@ -497,17 +504,22 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.dataset_config"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.dataset_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.pin_memory"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.pin_memory</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.time_features"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.time_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.prefetch_factor"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.prefetch_factor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.return_spatial_mask"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.return_spatial_mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.reduce_spatial_mask"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.reduce_spatial_mask</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.available_times"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.available_times</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#id4"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.dataset_config</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.init_time_dim"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.init_time_dim</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.lead_time_dim"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.lead_time_dim</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.pin_memory"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.pin_memory</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.prefetch_factor"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.prefetch_factor</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.reduce_spatial_mask"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.reduce_spatial_mask</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.return_spatial_mask"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.return_spatial_mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#id5"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.pin_memory</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#id6"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.prefetch_factor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#id7"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.reduce_spatial_mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#id8"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.return_spatial_mask</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.select_requested_times"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.select_requested_times()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.setup_distributed"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.setup_distributed()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.time_features"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.time_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.html#id9"><code class="docutils literal notranslate"><span class="pre">DataloaderConfigABC.time_features</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -564,11 +576,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cccma_ppp.generic.html#module-cccma_ppp.generic.distributed">cccma_ppp.generic.distributed module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed"><code class="docutils literal notranslate"><span class="pre">Distributed</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.distributed"><code class="docutils literal notranslate"><span class="pre">Distributed.distributed</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.rank"><code class="docutils literal notranslate"><span class="pre">Distributed.rank</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.local_rank"><code class="docutils literal notranslate"><span class="pre">Distributed.local_rank</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.world_size"><code class="docutils literal notranslate"><span class="pre">Distributed.world_size</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.device"><code class="docutils literal notranslate"><span class="pre">Distributed.device</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.all_reduce_sum"><code class="docutils literal notranslate"><span class="pre">Distributed.all_reduce_sum()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.barrier"><code class="docutils literal notranslate"><span class="pre">Distributed.barrier()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.broadcast"><code class="docutils literal notranslate"><span class="pre">Distributed.broadcast()</span></code></a></li>
@@ -614,6 +621,7 @@
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_EXP_DIR"><code class="docutils literal notranslate"><span class="pre">RuntimeContext.GLOBAL_EXP_DIR</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_FIGURES_DIR"><code class="docutils literal notranslate"><span class="pre">RuntimeContext.GLOBAL_FIGURES_DIR</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_LOG_DIR"><code class="docutils literal notranslate"><span class="pre">RuntimeContext.GLOBAL_LOG_DIR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_MONITORING_DIR"><code class="docutils literal notranslate"><span class="pre">RuntimeContext.GLOBAL_MONITORING_DIR</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_OUTPUT_DIR"><code class="docutils literal notranslate"><span class="pre">RuntimeContext.GLOBAL_OUTPUT_DIR</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.runtime.RuntimeContext.INPUT_VAR_METADATA"><code class="docutils literal notranslate"><span class="pre">RuntimeContext.INPUT_VAR_METADATA</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.runtime.RuntimeContext.TARGET_VAR_METADATA"><code class="docutils literal notranslate"><span class="pre">RuntimeContext.TARGET_VAR_METADATA</span></code></a></li>
@@ -749,11 +757,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline"><code class="docutils literal notranslate"><span class="pre">Losspipeline</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.config"><code class="docutils literal notranslate"><span class="pre">Losspipeline.config</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.weights"><code class="docutils literal notranslate"><span class="pre">Losspipeline.weights</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.num_output_dimensions"><code class="docutils literal notranslate"><span class="pre">Losspipeline.num_output_dimensions</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.pipeline"><code class="docutils literal notranslate"><span class="pre">Losspipeline.pipeline</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.steps"><code class="docutils literal notranslate"><span class="pre">Losspipeline.steps</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.forward"><code class="docutils literal notranslate"><span class="pre">Losspipeline.forward()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.register"><code class="docutils literal notranslate"><span class="pre">Losspipeline.register()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.Losspipeline.registery"><code class="docutils literal notranslate"><span class="pre">Losspipeline.registery</span></code></a></li>
@@ -772,24 +775,19 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cccma_ppp.loss.html#module-cccma_ppp.loss.loss_abc">cccma_ppp.loss.loss_abc module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC"><code class="docutils literal notranslate"><span class="pre">lossABC</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC._init_module"><code class="docutils literal notranslate"><span class="pre">lossABC._init_module()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC.forward"><code class="docutils literal notranslate"><span class="pre">lossABC.forward()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC._aggregate"><code class="docutils literal notranslate"><span class="pre">lossABC._aggregate()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC._print_loss"><code class="docutils literal notranslate"><span class="pre">lossABC._print_loss()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#id0"><code class="docutils literal notranslate"><span class="pre">lossABC.forward()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC.generative_context"><code class="docutils literal notranslate"><span class="pre">lossABC.generative_context</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#id0"><code class="docutils literal notranslate"><span class="pre">lossABC.generative_context</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC.forward"><code class="docutils literal notranslate"><span class="pre">lossABC.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#id1"><code class="docutils literal notranslate"><span class="pre">lossABC.generative_context</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cccma_ppp.loss.html#module-cccma_ppp.loss.registery">cccma_ppp.loss.registery module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.registery.Registery"><code class="docutils literal notranslate"><span class="pre">Registery</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.registery.Registery.register"><code class="docutils literal notranslate"><span class="pre">Registery.register()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.registery.Registery.get"><code class="docutils literal notranslate"><span class="pre">Registery.get()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.registery.Registery.available"><code class="docutils literal notranslate"><span class="pre">Registery.available()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#id1"><code class="docutils literal notranslate"><span class="pre">Registery.available()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#id2"><code class="docutils literal notranslate"><span class="pre">Registery.get()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#id3"><code class="docutils literal notranslate"><span class="pre">Registery.register()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.registery.Registery.get"><code class="docutils literal notranslate"><span class="pre">Registery.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.registery.Registery.register"><code class="docutils literal notranslate"><span class="pre">Registery.register()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -819,14 +817,15 @@
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.add_fitted_preprocessor"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.add_fitted_preprocessor()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.extract_output_coords_vars"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.extract_output_coords_vars()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.fit"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.get_flattener"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.get_flattener()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.get_preprocessors"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.get_preprocessors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.has_flattener"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.has_flattener</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.init_time_time"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.init_time_time</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.inverse_rename"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.inverse_rename()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.inverse_transform"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.inverse_transform()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.lead_time_time"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.lead_time_time</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.load_dir"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.load_dir</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.load_from_memory"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.load_from_memory()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.num_instances"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.num_instances</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.preprocessors_list"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.preprocessors_list</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.set_name"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.set_name()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.supported_NN_dimensions"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.supported_NN_dimensions</span></code></a></li>
@@ -838,11 +837,15 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cccma_ppp.preprocessing.html#module-cccma_ppp.preprocessing.preprocessing_ABC">cccma_ppp.preprocessing.preprocessing_ABC module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.large_ensemble</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.fitted</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.dims"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#id0"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.fitted</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.frequency"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.frequency</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.init_time_dim"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.init_time_dim</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.inverse_transform"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.inverse_transform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.large_ensemble</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#id1"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.large_ensemble</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_dim"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.lead_time_dim</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_resolution"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.lead_time_resolution</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.realization_dim"><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC.realization_dim</span></code></a></li>
@@ -904,6 +907,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover"><code class="docutils literal notranslate"><span class="pre">TrendRemover</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.TEMPORAL_ORDER"><code class="docutils literal notranslate"><span class="pre">TrendRemover.TEMPORAL_ORDER</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.fit"><code class="docutils literal notranslate"><span class="pre">TrendRemover.fit()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.intercept"><code class="docutils literal notranslate"><span class="pre">TrendRemover.intercept</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.inverse_transform"><code class="docutils literal notranslate"><span class="pre">TrendRemover.inverse_transform()</span></code></a></li>
@@ -1000,6 +1004,7 @@
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.losspipeline"><code class="docutils literal notranslate"><span class="pre">TrainConfig.losspipeline</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.max_epochs"><code class="docutils literal notranslate"><span class="pre">TrainConfig.max_epochs</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.module"><code class="docutils literal notranslate"><span class="pre">TrainConfig.module</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.monitoring_dir"><code class="docutils literal notranslate"><span class="pre">TrainConfig.monitoring_dir</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.optimization"><code class="docutils literal notranslate"><span class="pre">TrainConfig.optimization</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.prepare_directory"><code class="docutils literal notranslate"><span class="pre">TrainConfig.prepare_directory()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.read_config_from_halted_experiment"><code class="docutils literal notranslate"><span class="pre">TrainConfig.read_config_from_halted_experiment()</span></code></a></li>

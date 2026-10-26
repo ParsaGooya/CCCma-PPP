@@ -47,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -121,28 +122,27 @@
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLP">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAE_MLP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig" title="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig"><span class="pre">cVAE_MLPConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLP" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelsABC" title="cccma_ppp.architectures.models_abc.cVAEmodelsABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEmodelsABC</span></code></a></p>
-<p>MLP-based conditional variational autoencoder (cVAE).</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig" title="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig"><em>cVAE_MLPConfig</em></a>) – Model configuration.</p></li>
-<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input tensor shape.</p></li>
-<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> or </em><em>None</em>) – Output tensor shape.</p></li>
-<li><p><strong>added_features_dim</strong> (<em>int</em><em> or </em><em>None</em>) – Number of additional input features.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig" title="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig"><em>cVAE_MLPConfig</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLP.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEForwardRequest" title="cccma_ppp.architectures.models_abc.cVAEForwardRequest"><span class="pre">cVAEForwardRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="cccma_ppp.core.models.html#cccma_ppp.core.models.cvae.cVAEOutput" title="cccma_ppp.core.models.cvae.cVAEOutput"><span class="pre">cVAEOutput</span></a></span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLP.forward" title="Link to this definition"></a></dt>
-<dd><p>Perform forward pass through cVAE.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> – cVAEForwardRequest object</p>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEForwardRequest" title="cccma_ppp.architectures.models_abc.cVAEForwardRequest"><em>cVAEForwardRequest</em></a>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Output containing predictions, latent parameters,
-and optional conditioning statistics.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.models.html#cccma_ppp.core.models.cvae.cVAEOutput" title="cccma_ppp.core.models.cvae.cVAEOutput">cVAEOutput</a></p>
@@ -153,14 +153,13 @@ and optional conditioning statistics.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLP.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest" title="cccma_ppp.architectures.models_abc.cVAEPredictRequest"><span class="pre">cVAEPredictRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="cccma_ppp.core.models.html#cccma_ppp.core.models.cvae.cVAEOutput" title="cccma_ppp.core.models.cvae.cVAEOutput"><span class="pre">cVAEOutput</span></a></span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLP.predict" title="Link to this definition"></a></dt>
-<dd><p>Generate samples from learned prior.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> – cVAE predict arguments specified
-by cVAEPredictRequest.</p>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEPredictRequest" title="cccma_ppp.architectures.models_abc.cVAEPredictRequest"><em>cVAEPredictRequest</em></a>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Generated samples and conditioning outputs.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.models.html#cccma_ppp.core.models.cvae.cVAEOutput" title="cccma_ppp.core.models.cvae.cVAEOutput">cVAEOutput</a></p>
@@ -174,31 +173,34 @@ by cVAEPredictRequest.</p>
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAE_MLPConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_embedding_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_embedding_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dependant_latent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condemb_to_decoder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_normalization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'relu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gelu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'silu'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC" title="cccma_ppp.architectures.models_abc.cVAEmodelConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEmodelConfigABC</span></code></a></p>
-<p>Configuration for MLP-based conditional variational autoencoder (cVAE).</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>encoder_hidden_dims</strong> (<em>list</em><em> of </em><em>int</em>) – Hidden layer sizes for encoder network.</p></li>
-<li><p><strong>latent_size</strong> (<em>int</em>) – Dimensionality of latent space.</p></li>
-<li><p><strong>condition_embedding_dims</strong> (<em>list</em><em> of </em><em>int</em>) – Hidden layer sizes for condition embedding network.</p></li>
-<li><p><strong>condition_embedding_size</strong> (<em>int</em>) – Output size of condition embedding.</p></li>
-<li><p><strong>decoder_hidden_dims</strong> (<em>list</em><em> of </em><em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Hidden layer sizes for decoder network.</p></li>
-<li><p><strong>condition_dependant_latent</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether latent distribution depends on condition.</p></li>
-<li><p><strong>condemb_to_decoder</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to pass condition embedding to decoder.</p></li>
-<li><p><strong>batch_normalization</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use batch normalization.</p></li>
-<li><p><strong>dropout_rate</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Dropout probability.</p></li>
-<li><p><strong>init_method</strong> (<em>InitMethod</em><em>, </em><em>optional</em>) – Weight initialization method.</p></li>
+<li><p><strong>encoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>latent_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_embedding_dims</strong> (<em>list</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_embedding_size</strong> (<em>int</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>decoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_dependant_latent</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>condemb_to_decoder</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch_normalization</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>dropout_rate</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>init_method</strong> (<em>InitMethod</em>) – Description not yet provided.</p></li>
+<li><p><strong>activation</strong> (<em>ActivationName</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.EXPECTS_MASK">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.EXPECTS_MASK" title="Link to this definition"></a></dt>
-<dd><p>Check if the selected architecture
-EXPECTS_MASK.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -231,20 +233,20 @@ EXPECTS_MASK.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.build" title="Link to this definition"></a></dt>
-<dd><p>Build cVAE MLP model instance.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input tensor shape.</p></li>
-<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Output tensor shape.</p></li>
-<li><p><strong>added_features_dim</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Number of additional features.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Instantiated model.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLP" title="cccma_ppp.architectures.mlp.cvae.cVAE_MLP">cVAE_MLP</a></p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -308,29 +310,27 @@ EXPECTS_MASK.</p>
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.Autoencoder">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">Autoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig" title="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig"><span class="pre">AutoencoderConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.Autoencoder" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.deterministicmodelsABC" title="cccma_ppp.architectures.models_abc.deterministicmodelsABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">deterministicmodelsABC</span></code></a></p>
-<p>Deterministic MLP-based autoencoder.</p>
-<p>Implements encoder-decoder architecture with optional feature
-concatenation and regularization.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig" title="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig"><em>AutoencoderConfig</em></a>) – Model configuration.</p></li>
-<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input tensor shape.</p></li>
-<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> or </em><em>None</em>) – Output tensor shape.</p></li>
-<li><p><strong>added_features_dim</strong> (<em>int</em><em> or </em><em>None</em>) – Number of additional features.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig" title="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig"><em>AutoencoderConfig</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.Autoencoder.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest" title="cccma_ppp.architectures.models_abc.DeterministicRequest"><span class="pre">DeterministicRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="cccma_ppp.core.models.html#cccma_ppp.core.models.deterministic.deterministicOutput" title="cccma_ppp.core.models.deterministic.deterministicOutput"><span class="pre">deterministicOutput</span></a></span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.Autoencoder.forward" title="Link to this definition"></a></dt>
-<dd><p>Forward pass through the encoder/decoder.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest" title="cccma_ppp.architectures.models_abc.DeterministicRequest"><em>DeterministicRequest</em></a>) – Input request object.</p>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.DeterministicRequest" title="cccma_ppp.architectures.models_abc.DeterministicRequest"><em>DeterministicRequest</em></a>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Reconstructed output tensor.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.models.html#cccma_ppp.core.models.deterministic.deterministicOutput" title="cccma_ppp.core.models.deterministic.deterministicOutput">deterministicOutput</a></p>
@@ -344,30 +344,30 @@ concatenation and regularization.</p>
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">AutoencoderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_normalization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'relu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gelu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'silu'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC" title="cccma_ppp.architectures.models_abc.modelConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">modelConfigABC</span></code></a></p>
-<p>Configuration for MLP-based deterministic autoencoder.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>encoder_hidden_dims</strong> (<em>list</em><em> of </em><em>int</em>) – Hidden layer sizes for encoder.</p></li>
-<li><p><strong>decoder_hidden_dims</strong> (<em>list</em><em> of </em><em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Hidden layer sizes for decoder.</p></li>
-<li><p><strong>batch_normalization</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use batch normalization.</p></li>
-<li><p><strong>dropout_rate</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Dropout probability.</p></li>
-<li><p><strong>append_mode</strong> (<em>{1</em><em>, </em><em>2</em><em>, </em><em>3}</em><em>, </em><em>optional</em>) – Determines where additional features are appended:
-1 = encoder input,
-2 = decoder input,
-3 = both encoder and decoder.</p></li>
-<li><p><strong>init_method</strong> (<em>InitMethod</em><em>, </em><em>optional</em>) – Weight initialization method.</p></li>
+<li><p><strong>encoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>decoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch_normalization</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>dropout_rate</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>append_mode</strong> (<em>AppendMode</em>) – Description not yet provided.</p></li>
+<li><p><strong>init_method</strong> (<em>InitMethod</em>) – Description not yet provided.</p></li>
+<li><p><strong>activation</strong> (<em>ActivationName</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.EXPECTS_MASK">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.EXPECTS_MASK" title="Link to this definition"></a></dt>
-<dd><p>Check if the selected architecture
-EXPECTS_MASK.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -405,20 +405,20 @@ EXPECTS_MASK.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.build" title="Link to this definition"></a></dt>
-<dd><p>Build autoencoder model instance.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input tensor shape.</p></li>
-<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Output tensor shape.</p></li>
-<li><p><strong>added_features_dim</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Number of additional features.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Instantiated model.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.Autoencoder" title="cccma_ppp.architectures.mlp.deterministic.Autoencoder">Autoencoder</a></p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>

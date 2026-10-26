@@ -47,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -120,14 +121,14 @@
 <dt class="sig sig-object py" id="cccma_ppp.loss.kld.BetaAnnealing">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.kld.</span></span><span class="sig-name descname"><span class="pre">BetaAnnealing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epoch_to_warmup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs_to_hold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.kld.BetaAnnealing" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Beta annealing schedule for variational models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum beta value.</p></li>
-<li><p><strong>beta_min</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum beta value.</p></li>
-<li><p><strong>num_epoch_to_warmup</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of epochs to linearly increase beta.</p></li>
-<li><p><strong>num_epochs_to_hold</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of epochs to maintain full beta in cyclic mode.</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>beta_min</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_epoch_to_warmup</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_epochs_to_hold</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -144,13 +145,10 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.kld.BetaAnnealing.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_batches</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.kld.BetaAnnealing.build" title="Link to this definition"></a></dt>
-<dd><p>Initialize annealing schedule.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>num_batches</strong> (<em>int</em>) – Number of batches per epoch.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>num_batches</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -171,101 +169,59 @@
 <dt class="sig sig-object py" id="cccma_ppp.loss.kld.KLD">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.kld.</span></span><span class="sig-name descname"><span class="pre">KLD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.kld.KLD" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.loss.loss_abc.lossABC" title="cccma_ppp.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Kullback–Leibler divergence loss for variational models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>reduction</strong> (<em>{&quot;mean&quot;</em><em>, </em><em>&quot;sum&quot;}</em><em>, </em><em>optional</em>) – Reduction method applied to the KL divergence.</p>
+<dd class="field-odd"><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.kld.KLD.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_log_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_flow</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowModel" title="cccma_ppp.architectures.normalized_flows.NormalizedFlowModel"><span class="pre">NormalizedFlowModel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#cccma_ppp.loss.kld.KLD.forward" title="Link to this definition"></a></dt>
-<dd><p>Compute KL divergence.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Posterior mean.</p></li>
-<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Posterior log-variance.</p></li>
-<li><p><strong>cond_mu</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Conditional prior mean.</p></li>
-<li><p><strong>cond_log_var</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Conditional prior log-variance.</p></li>
-<li><p><strong>prior_flow</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowModel" title="cccma_ppp.architectures.normalized_flows.NormalizedFlowModel"><em>NormalizedFlowModel</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Flow-based prior model.</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to print the loss value.</p></li>
+<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>cond_mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>cond_log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>prior_flow</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowModel" title="cccma_ppp.architectures.normalized_flows.NormalizedFlowModel"><em>NormalizedFlowModel</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>KL divergence loss.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – If posterior and prior parameter shapes are inconsistent.</p>
+<dd class="field-even"><p><strong>AssertionError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>Expected tensor layouts:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">mu</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">log_var</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
-</ul>
-<p>Optional conditional prior parameters:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">cond_mu</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cond_log_var</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
-</ul>
-<p>where:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of latent samples
-(typically batch size or flattened batch size)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">F</span></code> is the latent feature dimension</p></li>
-</ul>
-<p>When a flow prior is used, latent samples are drawn from the posterior and transformed through the flow before estimating the KL divergence.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.kld.KLD.sample">
 <span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.kld.KLD.sample" title="Link to this definition"></a></dt>
-<dd><p>Sample latent variables using the reparameterization trick.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Mean of the latent distribution.</p></li>
-<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Log-variance of the latent distribution.</p></li>
-<li><p><strong>sample_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of Monte-Carlo samples.</p></li>
-<li><p><strong>std</strong> (<em>float</em><em>, </em><em>optional</em>) – Scaling factor applied to the sampling noise.</p></li>
+<li><p><strong>mu</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>log_var</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>sample_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>std</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Sampled latent variables.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.Tensor</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>Expected input shapes:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">mu</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">log_var</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
-</ul>
-<p>Returned shape:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">(S,</span> <span class="pre">N,</span> <span class="pre">F)</span></code></p></li>
-</ul>
-<p>where:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code> is <code class="docutils literal notranslate"><span class="pre">sample_size</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of latent samples</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">F</span></code> is the latent dimensionality</p></li>
-</ul>
-<p>This corresponds to drawing <code class="docutils literal notranslate"><span class="pre">S</span></code> independent samples from
-each posterior distribution.</p>
 </dd></dl>
 
 </dd></dl>
@@ -277,12 +233,12 @@ each posterior distribution.</p>
 <dt class="sig sig-object py" id="cccma_ppp.loss.loss.LossStepConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.loss.</span></span><span class="sig-name descname"><span class="pre">LossStepConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">object]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss.LossStepConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Configuration for a single loss step in a loss pipeline.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Name of the registered loss function.</p></li>
-<li><p><strong>args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>object</em><em>]</em><em>, </em><em>optional</em>) – Arguments used to initialize the loss function.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>object</em><em>]</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -302,93 +258,39 @@ each posterior distribution.</p>
 <dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.loss.</span></span><span class="sig-name descname"><span class="pre">Losspipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.loss.loss.LosspipelineConfig" title="cccma_ppp.loss.loss.LosspipelineConfig"><span class="pre">LosspipelineConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Container for sequentially applying multiple loss functions.</p>
-<p>Combines multiple loss terms using configurable weights,
-supports spatial weighting, and enforces dimensionality checks.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.config" title="Link to this definition"></a></dt>
-<dd><p>Configuration object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.loss.loss.LosspipelineConfig" title="cccma_ppp.loss.loss.LosspipelineConfig">LosspipelineConfig</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.weights">
-<span class="sig-name descname"><span class="pre">weights</span></span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.weights" title="Link to this definition"></a></dt>
-<dd><p>Spatial or variable weights.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.num_output_dimensions">
-<span class="sig-name descname"><span class="pre">num_output_dimensions</span></span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.num_output_dimensions" title="Link to this definition"></a></dt>
-<dd><p>Output dimensionality used for validation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.pipeline">
-<span class="sig-name descname"><span class="pre">pipeline</span></span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.pipeline" title="Link to this definition"></a></dt>
-<dd><p>List of instantiated loss functions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.steps">
-<span class="sig-name descname"><span class="pre">steps</span></span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.steps" title="Link to this definition"></a></dt>
-<dd><p>Names of loss steps.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list of str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_arguments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.forward" title="Link to this definition"></a></dt>
-<dd><p>Compute combined loss from all pipeline steps.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Ground truth targets.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Optional mask applied to targets.</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to print individual loss values.</p></li>
-<li><p><strong>step_arguments</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Additional arguments passed to each loss step.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.loss.loss.LosspipelineConfig" title="cccma_ppp.loss.loss.LosspipelineConfig"><em>LosspipelineConfig</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_arguments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>target_mask</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>step_arguments</strong> (<em>dict</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>(total_loss, individual_losses)</p>
-<dl class="simple">
-<dt>total_loss<span class="classifier">torch.Tensor</span></dt><dd><p>Weighted combined loss.</p>
-</dd>
-<dt>individual_losses<span class="classifier">dict of str to float</span></dt><dd><p>Individual loss contributions.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – If input dimensionality does not match expectations.</p>
+<dd class="field-even"><p><strong>AssertionError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -396,16 +298,16 @@ supports spatial weighting, and enforces dimensionality checks.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.loss.Losspipeline.register">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss.Losspipeline.register" title="Link to this definition"></a></dt>
-<dd><p>Register a loss function.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name used for registration.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator for registering loss functions.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -421,32 +323,43 @@ supports spatial weighting, and enforces dimensionality checks.</p>
 <dt class="sig sig-object py" id="cccma_ppp.loss.loss.LosspipelineConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.loss.</span></span><span class="sig-name descname"><span class="pre">LosspipelineConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_pipeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#cccma_ppp.loss.loss.LossStepConfig" title="cccma_ppp.loss.loss.LossStepConfig"><span class="pre">LossStepConfig</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masked_loss_calculation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saved_output_mask_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss.LosspipelineConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Configuration for combining multiple loss functions.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>loss_pipeline</strong> (<em>list</em><em> of </em><a class="reference internal" href="#cccma_ppp.loss.loss.LossStepConfig" title="cccma_ppp.loss.loss.LossStepConfig"><em>LossStepConfig</em></a>) – Sequence of loss steps.</p></li>
 <li><p><strong>loss_weights</strong> (<em>list</em><em> of </em><em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Weights applied to each loss term.</p></li>
 <li><p><strong>reduction</strong> (<em>{&quot;mean&quot;</em><em>, </em><em>&quot;sum&quot;}</em><em>, </em><em>optional</em>) – Reduction method applied to individual losses.</p></li>
+<li><p><strong>saved_output_mask_dir</strong> (<em>str</em><em> or </em><em>None</em>) – <p>Location of a saved fixed output maks for loss
+calculation. The mask could have any of the
+following shapes:</p>
+<p>1- C, D1, D2, ..
+2- 1, D1, D2, …
+3- D1, D2, …</p>
+<p>where C is channel size and D1, D2, … are output sizes.
+The sizes must match that of the model and target data.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.loss.LosspipelineConfig.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss.LosspipelineConfig.build" title="Link to this definition"></a></dt>
-<dd><p>Construct loss pipeline.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial or variable weights applied to loss computation.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimensionality of model outputs.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Initialized loss pipeline.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.loss.loss.Losspipeline" title="cccma_ppp.loss.loss.Losspipeline">Losspipeline</a></p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -485,57 +398,47 @@ supports spatial weighting, and enforces dimensionality checks.</p>
 <dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.loss_abc.</span></span><span class="sig-name descname"><span class="pre">lossABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for loss functions.</p>
-<p>Defines the interface for computing loss, applying reductions,
-and optionally printing loss values.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC._init_module">
-<span class="sig-name descname"><span class="pre">_init_module</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC._init_module" title="Link to this definition"></a></dt>
-<dd><p>initialize loss function based on the model</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_modeling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC.forward" title="Link to this definition"></a></dt>
-<dd><p>Compute loss.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC._aggregate">
-<span class="sig-name descname"><span class="pre">_aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC._aggregate" title="Link to this definition"></a></dt>
-<dd><p>Apply reduction to loss values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC._print_loss">
-<span class="sig-name descname"><span class="pre">_print_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC._print_loss" title="Link to this definition"></a></dt>
-<dd><p>Print formatted loss value.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
-<dd><p>Compute loss between predictions and targets.</p>
+<p>Document this class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC.generative_context">
+<span class="sig-name descname"><span class="pre">generative_context</span></span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC.generative_context" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Ground truth targets.</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to print the loss value.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Computed loss value.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.Tensor</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext">GenerativeContext</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC.generative_context">
-<span class="sig-name descname"><span class="pre">generative_context</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a></span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC.generative_context" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">generative_context</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext">GenerativeContext</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.loss.loss_abc.lossABC.forward">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#cccma_ppp.loss.loss_abc.lossABC.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">generative_context</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -547,81 +450,57 @@ and optionally printing loss values.</p>
 <dt class="sig sig-object py" id="cccma_ppp.loss.registery.Registery">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.registery.</span></span><span class="sig-name descname"><span class="pre">Registery</span></span><a class="headerlink" href="#cccma_ppp.loss.registery.Registery" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Registry for mapping string identifiers to classes and instantiating them.</p>
+<p>Document this class.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.loss.registery.Registery.register">
-<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.registery.Registery.register" title="Link to this definition"></a></dt>
-<dd><p>Register a class under a given name.</p>
+<dt class="sig sig-object py" id="cccma_ppp.loss.registery.Registery.available">
+<span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.registery.Registery.available" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.registery.Registery.get">
 <span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.registery.Registery.get" title="Link to this definition"></a></dt>
-<dd><p>Retrieve and instantiate a registered class.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.loss.registery.Registery.available">
-<span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.registery.Registery.available" title="Link to this definition"></a></dt>
-<dd><p>Return all registered names.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
-<dd><p>Get available class names.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Registered identifiers.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list of str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
-<dd><p>Retrieve and instantiate a registered class.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Name of the registered class.</p></li>
-<li><p><strong>config</strong> (<em>dict</em><em> or </em><em>object</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – <p>Configuration used for instantiation.</p>
-<ul>
-<li><p>If dict and class is a dataclass, uses <cite>dacite.from_dict</cite>.</p></li>
-<li><p>If dict and class is not a dataclass, uses <cite>cls(**config)</cite>.</p></li>
-<li><p>Otherwise, instantiates using <cite>cls(config)</cite>.</p></li>
-</ul>
-</p></li>
+<li><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Instantiated object.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the requested name is not registered.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
-<dd><p>Register a class under a specified name.</p>
+<dt class="sig sig-object py" id="cccma_ppp.loss.registery.Registery.register">
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.registery.Registery.register" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Identifier used to register the class.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator that registers the class.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -635,64 +514,41 @@ and optionally printing loss values.</p>
 <dt class="sig sig-object py" id="cccma_ppp.loss.utils_loss.Frobenius_norm">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.utils_loss.</span></span><span class="sig-name descname"><span class="pre">Frobenius_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariance_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'spatial'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'channel'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'spatial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.utils_loss.Frobenius_norm" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.loss.loss_abc.lossABC" title="cccma_ppp.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Frobenius norm loss between covariance matrices.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial/feature weights applied to the loss.</p></li>
-<li><p><strong>reduction</strong> (<em>{&quot;mean&quot;</em><em>, </em><em>&quot;sum&quot;}</em><em>, </em><em>optional</em>) – Reduction method applied to the loss.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of output dimensions.</p></li>
-<li><p><strong>generative_context</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a>) – Generative modeling context based on the module.
-Default values are set to False.</p></li>
-<li><p><strong>covariance_dim</strong> (<em>{&quot;spatial&quot;</em><em>, </em><em>&quot;channel&quot;}</em><em>, </em><em>optional</em>) – Dimension along which covariance is computed.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>covariance_dim</strong> (<em>CovarianceDim</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.utils_loss.Frobenius_norm.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#cccma_ppp.loss.utils_loss.Frobenius_norm.forward" title="Link to this definition"></a></dt>
-<dd><p>Compute Frobenius norm of covariance difference.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>)</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>)</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>print_loss</strong> (<em>bool</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>Expected tensor layouts:</p>
-<p>Standard mode:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>:</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
-- <code class="docutils literal notranslate"><span class="pre">target</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
-<p>Generative modeling:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>:</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
-- <code class="docutils literal notranslate"><span class="pre">target</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
-<p>Processing steps:</p>
-<p>1. Spatial dimensions <code class="docutils literal notranslate"><span class="pre">O1...On</span></code> are flattened into a single
-feature dimension.
-2. If generative modeling is enabled, the latent dimension <code class="docutils literal notranslate"><span class="pre">Z</span></code>
-is merged with the batch dimension.
-3. Covariance matrices are computed either:</p>
-<ul class="simple">
-<li><p>across spatial features (<code class="docutils literal notranslate"><span class="pre">covariance_dim=&quot;spatial&quot;</span></code>)</p></li>
-<li><p>across channels (<code class="docutils literal notranslate"><span class="pre">covariance_dim=&quot;channel&quot;</span></code>)</p></li>
-</ul>
-<ol class="arabic simple" start="4">
-<li><p>The Frobenius norm of the covariance difference is returned.</p></li>
-</ol>
 </dd></dl>
 
 </dd></dl>
@@ -701,66 +557,42 @@ is merged with the batch dimension.
 <dt class="sig sig-object py" id="cccma_ppp.loss.utils_loss.WeightedCRPS">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.utils_loss.</span></span><span class="sig-name descname"><span class="pre">WeightedCRPS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_ress_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.utils_loss.WeightedCRPS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.loss.loss_abc.lossABC" title="cccma_ppp.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Weighted continuous ranked probability score (CRPS).</p>
-<p>Designed for probabilistic predictions with multiple samples.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial/feature weights applied to the loss.</p></li>
-<li><p><strong>reduction</strong> (<em>{&quot;mean&quot;</em><em>, </em><em>&quot;sum&quot;}</em><em>, </em><em>optional</em>) – Reduction method applied to the loss.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of output dimensions.</p></li>
-<li><p><strong>low_ress_kernel_size</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Kernel size for low-resolution smoothing (if used).</p></li>
-<li><p><strong>generative_context</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a>) – Generative modeling context based on the module.
-Default values are set to False.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>low_ress_kernel_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.utils_loss.WeightedCRPS.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#cccma_ppp.loss.utils_loss.WeightedCRPS.forward" title="Link to this definition"></a></dt>
-<dd><p>Compute CRPS loss.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Output ensemble predictions (samples).</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Ground truth.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If generator flag is False.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>CRPS requires an ensemble of predictions. The first dimension of <code class="docutils literal notranslate"><span class="pre">data</span></code> is interpreted as the ensemble/sample dimension.</p>
-<p>Expected tensor layouts:</p>
-<p>Standard output ensemble prediction:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>:</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
-- <code class="docutils literal notranslate"><span class="pre">target</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
-<p>Generative modeling:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>:</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
-- <code class="docutils literal notranslate"><span class="pre">target</span></code>:
-<code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
-<p>where:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code> = output ensemble/sample dimension</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Z</span></code> = latent realization dimension</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">B</span></code> = batch dimension</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">C</span></code> = channel dimension</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">O1...On</span></code> = output dimensions</p></li>
-</ul>
-<p>where <code class="docutils literal notranslate"><span class="pre">E</span></code> is the output ensemble size.</p>
 </dd></dl>
 
 </dd></dl>
@@ -769,52 +601,45 @@ Default values are set to False.</p></li>
 <dt class="sig sig-object py" id="cccma_ppp.loss.utils_loss.WeightedMSE">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.utils_loss.</span></span><span class="sig-name descname"><span class="pre">WeightedMSE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_ress_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperparam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.loss.utils_loss.WeightedMSE" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.loss.loss_abc.lossABC" title="cccma_ppp.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Weighted mean squared error loss.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial or variable weights.</p></li>
-<li><p><strong>reduction</strong> (<em>{&quot;mean&quot;</em><em>, </em><em>&quot;sum&quot;}</em><em>, </em><em>optional</em>) – Reduction method.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of output dimensions.</p></li>
-<li><p><strong>low_ress_kernel_size</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Kernel size for optional low-resolution downsampling.</p></li>
-<li><p><strong>hyperparam</strong> (<em>float</em><em>, </em><em>optional</em>) – Scaling factor for asymmetric penalty.</p></li>
-<li><p><strong>min_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower threshold for asymmetric penalty.</p></li>
-<li><p><strong>max_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Upper threshold for asymmetric penalty.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>low_ress_kernel_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>hyperparam</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>min_threshold</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>max_threshold</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.loss.utils_loss.WeightedMSE.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#cccma_ppp.loss.utils_loss.WeightedMSE.forward" title="Link to this definition"></a></dt>
-<dd><p>Compute weighted MSE loss.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Ground truth values.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Mask applied to targets.</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to print loss.</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Loss value.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – If shapes do not match.</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>Expected tensor shapes are:</p>
-<ul class="simple">
-<li><p>Standard mode: <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code></p></li>
-<li><p>Generator mode: <code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code></p></li>
-<li><p>Generative modeling mode: <code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code></p></li>
-<li><p>Generator + generative modeling: <code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code></p></li>
-</ul>
-<p>where <code class="docutils literal notranslate"><span class="pre">E</span></code> is the output sample dimension, <code class="docutils literal notranslate"><span class="pre">Z</span></code> is the latent sample dimension, <code class="docutils literal notranslate"><span class="pre">B</span></code> is batch size, and <code class="docutils literal notranslate"><span class="pre">C</span></code> is the channel dimension.</p>
 </dd></dl>
 
 </dd></dl>

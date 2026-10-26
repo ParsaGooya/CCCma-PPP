@@ -47,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -119,37 +120,122 @@
 <span id="cccma-ppp-inference-predictors-cvae-module"></span><h2>cccma_ppp.inference.predictors.cvae module<a class="headerlink" href="#module-cccma_ppp.inference.predictors.cvae" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictor">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig" title="cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig"><span class="pre">cVAEPredictorConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictor" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig" title="cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig"><span class="pre">cVAEPredictorConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictor" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC" title="cccma_ppp.inference.predictors.predictor_abc.PredictorABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictorABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig" title="cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig"><em>cVAEPredictorConfig</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>module</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictor.build_latent_sampler">
 <span class="sig-name descname"><span class="pre">build_latent_sampler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictor.build_latent_sampler" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Callable[…, torch.Tensor]</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictor.extract_posterior_samples">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_posterior_samples</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictor.extract_posterior_samples" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictor.extract_training_residuals">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_residuals</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictor.extract_training_residuals" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictor.extract_training_vars">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_vars</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictor.extract_training_vars" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictorConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_latent_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infer_latent_samples_from_training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_latent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictorConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_latent_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infer_latent_samples_from_training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_latent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_latent_samples</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>nstds</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>chunk_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>infer_latent_samples_from_training</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_latent</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig.build" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig.chunk_size">
+<span class="sig-name descname"><span class="pre">chunk_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.cvae.cVAEPredictorConfig.chunk_size" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -179,23 +265,67 @@
 <span id="cccma-ppp-inference-predictors-deterministic-module"></span><h2>cccma_ppp.inference.predictors.deterministic module<a class="headerlink" href="#module-cccma_ppp.inference.predictors.deterministic" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.deterministic.</span></span><span class="sig-name descname"><span class="pre">DeterministicPredictorConfig</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.deterministic.</span></span><span class="sig-name descname"><span class="pre">DeterministicPredictorConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(False,)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig.build" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig.chunk_output_samples">
+<span class="sig-name descname"><span class="pre">chunk_output_samples</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(False,)</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig.chunk_output_samples" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.deterministic.DetermninisticPredictor">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.deterministic.</span></span><span class="sig-name descname"><span class="pre">DetermninisticPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig" title="cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig"><span class="pre">DeterministicPredictorConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DetermninisticPredictor" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.deterministic.</span></span><span class="sig-name descname"><span class="pre">DetermninisticPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig" title="cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig"><span class="pre">DeterministicPredictorConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DetermninisticPredictor" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC" title="cccma_ppp.inference.predictors.predictor_abc.PredictorABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictorABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig" title="cccma_ppp.inference.predictors.deterministic.DeterministicPredictorConfig"><em>DeterministicPredictorConfig</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>module</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.deterministic.DetermninisticPredictor.extract_training_vars">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_vars</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.deterministic.DetermninisticPredictor.extract_training_vars" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -206,46 +336,110 @@
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.predictor_abc.</span></span><span class="sig-name descname"><span class="pre">PredictorABC</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Document this class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_dir">
+<span class="sig-name descname"><span class="pre">output_dir</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_dir" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_sampler">
+<span class="sig-name descname"><span class="pre">output_sampler</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_sampler" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable[…, torch.Tensor] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling">
+<span class="sig-name descname"><span class="pre">num_output_covariance_sampling</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | None</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.add_decoder_noise">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">add_decoder_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reshape_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.add_decoder_noise" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><em>OutputABC</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_samples</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>sample_size</strong> (<em>tuple</em>) – Description not yet provided.</p></li>
+<li><p><strong>reshape_size</strong> (<em>tuple</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC">OutputABC</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.build_output_sampler">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build_output_sampler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.build_output_sampler" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Callable[…, torch.Tensor]</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.extract_training_vars">
 <span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_vars</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.extract_training_vars" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">num_output_covariance_sampling</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling">
-<span class="sig-name descname"><span class="pre">num_output_covariance_sampling</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">output_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_dir">
-<span class="sig-name descname"><span class="pre">output_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_dir" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_sampler">
-<span class="sig-name descname"><span class="pre">output_sampler</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_sampler" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">output_sampler</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.raw_module">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">raw_module</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.raw_module" title="Link to this definition"></a></dt>
-<dd><p>Access underlying module (unwrap DDP if needed).</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Raw model instance.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.moduleABC" title="cccma_ppp.core.core_abc.moduleABC">moduleABC</a></p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -253,19 +447,55 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.stats">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stats</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.aggregator.RunningCovariance" title="cccma_ppp.generic.aggregator.RunningCovariance"><span class="pre">RunningCovariance</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.stats" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, <a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.aggregator.RunningCovariance" title="cccma_ppp.generic.aggregator.RunningCovariance">RunningCovariance</a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.PredictorABC.temp_save_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">temp_save_dir</span></span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.PredictorABC.temp_save_dir" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cccma_ppp.inference.predictors.predictor_abc.save_batch_to_netcdf">
 <span class="sig-prename descclassname"><span class="pre">cccma_ppp.inference.predictors.predictor_abc.</span></span><span class="sig-name descname"><span class="pre">save_batch_to_netcdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_dims_sorted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.inference.predictors.predictor_abc.save_batch_to_netcdf" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prediction</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_output_dims</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Description not yet provided.</p></li>
+<li><p><strong>extra_dims_sorted</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>assign_coords</strong> (<em>dict</em>) – Description not yet provided.</p></li>
+<li><p><strong>attrs</strong> (<em>dict</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 <section id="module-cccma_ppp.inference.predictors">

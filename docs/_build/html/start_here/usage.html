@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Architectures" href="../module_overviews/architectures.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -46,7 +46,13 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#job-scheduling">Job Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inference">Inference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -91,11 +97,26 @@
              
   <section id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qsub<span class="w"> </span>-I<span class="w"> </span>-lselect<span class="o">=</span><span class="m">1</span>:ncpus<span class="o">=</span><span class="m">96</span>:mpiprocs<span class="o">=</span><span class="m">6</span>:ngpus<span class="o">=</span><span class="m">1</span>:mem<span class="o">=</span>400G:vntype<span class="o">=</span>gpu<span class="w"> </span>-lwalltime<span class="o">=</span><span class="m">3</span>:0:0<span class="w"> </span><span class="c1">#-v TERM</span>
+<section id="job-scheduling">
+<h2>Job Scheduling<a class="headerlink" href="#job-scheduling" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qsub<span class="w"> </span>-I<span class="w"> </span>-lselect<span class="o">=</span><span class="m">1</span>:ncpus<span class="o">={</span>number_of_cpus<span class="o">}</span>:mpiprocs<span class="o">={</span>number_of_MPI_processes<span class="o">}</span>:ngpus<span class="o">={</span>number_of_gpus<span class="o">}</span>:mem<span class="o">={</span>gb_ram<span class="o">}</span>G:vntype<span class="o">=</span>gpu<span class="w"> </span>-lwalltime<span class="o">={</span>hours<span class="o">}</span>:<span class="o">{</span>mins<span class="o">}</span>:<span class="o">{</span>seconds<span class="o">}</span>
 
-torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>cccma_ppp.train<span class="w"> </span>scripts/integration_suite_train_config.yaml
+qsub<span class="w"> </span>-I<span class="w"> </span>-lselect<span class="o">=</span><span class="m">1</span>:ncpus<span class="o">=</span><span class="m">96</span>:mpiprocs<span class="o">=</span><span class="m">6</span>:ngpus<span class="o">=</span><span class="m">1</span>:mem<span class="o">=</span>400G:vntype<span class="o">=</span>gpu<span class="w"> </span>-lwalltime<span class="o">=</span><span class="m">3</span>:0:0
 </pre></div>
 </div>
+</section>
+<section id="training">
+<h2>Training<a class="headerlink" href="#training" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>cccma_ppp.train<span class="w"> </span>path_to_train_config.yaml
+</pre></div>
+</div>
+</section>
+<section id="inference">
+<h2>Inference<a class="headerlink" href="#inference" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>cccma_ppp.inference<span class="w"> </span>path_to_inference_config.yaml
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -103,7 +124,7 @@ torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../module_overviews/architectures.html" class="btn btn-neutral float-right" title="Architectures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

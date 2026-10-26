@@ -47,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -119,16 +120,35 @@
 <span id="cccma-ppp-data-modules-dataset-dataset-abc-module"></span><h2>cccma_ppp.data_modules.dataset.dataset_abc module<a class="headerlink" href="#module-cccma_ppp.data_modules.dataset.dataset_abc" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">AddedTimeFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><span class="pre">cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">AddedTimeFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference_config</strong> (<a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><em>DatasetConfigABC</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>time_features</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures.build_time_features">
 <span class="sig-name descname"><span class="pre">build_time_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures" title="cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures"><span class="pre">AddedTimeFeatures</span></a></span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures.build_time_features" title="Link to this definition"></a></dt>
-<dd><p>Precompute temporal features for every sampled coordinate pair.</p>
-<p>The resulting array has shape:</p>
-<blockquote>
-<div><p>(n_samples, n_selected_features)</p>
-</div></blockquote>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>‘AddedTimeFeatures’</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -145,37 +165,110 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">DatasetABC</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">DatasetABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Document this class.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.config">
-<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.config" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.config" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC">DatasetConfigABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.requested_times">
+<span class="sig-name descname"><span class="pre">requested_times</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.requested_times" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.mask">
+<span class="sig-name descname"><span class="pre">mask</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.mask" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.time_features">
+<span class="sig-name descname"><span class="pre">time_features</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.time_features" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures" title="cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures">AddedTimeFeatures</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.return_metadata">
+<span class="sig-name descname"><span class="pre">return_metadata</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.return_metadata" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.load">
+<span class="sig-name descname"><span class="pre">load</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.load" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_added_features_dim">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_added_features_dim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_added_features_dim" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_cond_indexes">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_cond_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_cond_indexes" title="Link to this definition"></a></dt>
-<dd><p>Compute positional indexes for the conditioning dataset.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Sampling coordinate values for the model dataset.</p>
+<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Positional conditioning indexes for each sample, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when
-no conditioning dataset is available or the condition is static.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, np.ndarray] or None</p>
+<dd class="field-odd"><p>dict[str, np.ndarray] | None</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If required sampling coordinates are missing, if <code class="docutils literal notranslate"><span class="pre">same_member</span></code> is
-    requested without ensemble coordinates, or if any conditioning
-    coordinates cannot be found.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -183,10 +276,13 @@ no conditioning dataset is available or the condition is static.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_input_shape">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_input_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_input_shape" title="Link to this definition"></a></dt>
-<dd><p>Determine input shape.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
 </dd>
 </dl>
 </dd></dl>
@@ -194,17 +290,19 @@ no conditioning dataset is available or the condition is static.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_model_indexes">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_model_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_model_indexes" title="Link to this definition"></a></dt>
-<dd><p>Convert sampling coordinates to positional model-dataset indexes.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Mapping from dimension names to coordinate values for each sample.</p>
+<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Positional indexes for each dimension, or None if no model dataset
-is loaded.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, np.ndarray] or None</p>
+<dd class="field-odd"><p>dict[str, np.ndarray] | None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -212,37 +310,40 @@ is loaded.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_sampling_coords">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_sampling_coords</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.get_sampling_coords" title="Link to this definition"></a></dt>
-<dd><p>Compute coordinates for sampling the datasets.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.load" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.mask">
-<span class="sig-name descname"><span class="pre">mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.mask" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.requested_times">
-<span class="sig-name descname"><span class="pre">requested_times</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.requested_times" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">requested_times</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.return_metadata">
-<span class="sig-name descname"><span class="pre">return_metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.return_metadata" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">return_metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.time_features">
-<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures" title="cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures"><span class="pre">AddedTimeFeatures</span></a></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.time_features" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures" title="cccma_ppp.data_modules.dataset.dataset_abc.AddedTimeFeatures"><span class="pre">AddedTimeFeatures</span></a></span><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -251,13 +352,26 @@ is loaded.</p>
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">DatasetConfigABC</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for dataset configuration.</p>
+<p>Abstract base class for configuring pipeline datasets.</p>
+<p>Defines the shared interface for selecting model and conditioning data,
+resolving conditioning methods, validating compatibility between data
+sources, and selecting forecast lead times. Train and Inference datasets
+inherit from this class to implement specific data-loading.</p>
+<p>Supports ensemble-mean, cross-ensemble, same-member, and static
+conditioning. Model data can also serve as the conditioning source
+when a separate conditioning dataset is not provided.</p>
+<p>Subclasses must implement <cite>available_times</cite>, <cite>ds_operator</cite>,
+<cite>effective_input</cite>, and <cite>build_dataset</cite>. The following attributes
+must be defined in subclasses including both Train and Inference pipelines:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.model">
 <span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.model" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Configuration for the model prediction data. Could only be
+None for Inference pipeline where the
+conditioning dataset must provide the required input.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig">ModelDataConfig</a> or None</p>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig">ModelDataConfig</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -265,9 +379,12 @@ is loaded.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.condition">
 <span class="sig-name descname"><span class="pre">condition</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.condition" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Optional configuration for auxiliary conditioning data.
+If None, model data may be reused as conditioning data,
+depending on the selected conditioning method.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">ConditionDataConfig</a> or None</p>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">ConditionDataConfig</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -275,9 +392,12 @@ is loaded.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.condition_method">
 <span class="sig-name descname"><span class="pre">condition_method</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.condition_method" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Method used to associate conditioning data with model inputs.
+Supported methods are “ensemble_mean”, “cross_ensemble”,
+“same_member”, and “static”.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str or None</p>
+<dd class="field-odd"><p>str | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -285,9 +405,12 @@ is loaded.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.lead_times">
 <span class="sig-name descname"><span class="pre">lead_times</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.lead_times" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Requested forecast lead times. Accepts a lead-time configuration
+or an explicit sequence. If None, all available input lead times
+are selected.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>lead_times_config or None</p>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config" title="cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config">lead_time_config</a> | list | np.ndarray | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -295,53 +418,76 @@ is loaded.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.available_times">
 <span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_times</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.available_times" title="Link to this definition"></a></dt>
-<dd><p>Available times for dataset creation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-</dl>
+<dd><p>Return the time span available for dataset construction.
+This is different than input time because it should be the
+common time range resolved by the forecast and if available,
+the observation data. Forecasts range is based on initialization
+time and lead time, while observation data has one time resolution.</p>
+<p>For instance, for decadal predictions, the initial times are the
+start of the years, but the available times are the span of coverage
+based on initial_time / lead_time span which has a monthly resolution.</p>
+<p>Subclasses must implement this property to determine which
+initialization times satisfy their input and target data
+requirements.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.build_dataset">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.build_dataset" title="Link to this definition"></a></dt>
-<dd><p>Build dataset instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dataset</p>
-</dd>
-</dl>
+<dd><p>Construct the dataset from this validated configuration.</p>
+<p>Subclasses must implement this method to assemble the required
+model, conditioning, and optional observational data according
+to their dataset-specific sampling and preprocessing procedures.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">condition</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig"><span class="pre">ConditionDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig"><span class="pre">ConditionDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id6" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">condition_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">condition_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.ds_operator">
 <span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ds_operator</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.ds_operator" title="Link to this definition"></a></dt>
-<dd><p>Dataset operator instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator" title="cccma_ppp.data_modules.dataset.operator.DatasetOperator">DatasetOperator</a></p>
-</dd>
-</dl>
+<dd><p>Return the dataset-specific operator.</p>
+<p>Subclasses must implement this property to provide the operator
+used for their dataset construction and data access.</p>
+<p>Recommended implementaion is
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.effective_condition">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">effective_condition</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig"><span class="pre">ConditionDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig"><span class="pre">ModelDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.effective_condition" title="Link to this definition"></a></dt>
-<dd><p>Effective conditioning dataset.</p>
+<dd><p>Return the resolved conditioning data.
+Resolved at __init__ time based on the provided
+model and condition configs.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">ConditionDataConfig</a> or <a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig">ModelDataConfig</a> or None</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Explicit or model-derived conditioning configuration,
+or None if no conditioning dataset is required.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">ConditionDataConfig</a> | <a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig">ModelDataConfig</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.effective_condition_method">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">effective_condition_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.effective_condition_method" title="Link to this definition"></a></dt>
+<dd><p>Return the normalized conditioning method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Lowercase conditioning method, or None if no method
+is specified.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -349,19 +495,47 @@ is loaded.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.effective_input">
 <span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">effective_input</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig"><span class="pre">ConditionDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig"><span class="pre">ModelDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.effective_input" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Return the input data that effectively goes into the dataset.
+For Inference and Train this shall differ based on what is
+provided in the config.</p>
+<p>Subclasses must implement this property to identify the data
+source used as the primary input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Effective input configuration.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">ConditionDataConfig</a> | <a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig">ModelDataConfig</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.get_input_times">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_input_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requested_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.get_input_times" title="Link to this definition"></a></dt>
-<dd><p>Select the available input times within the requested_times</p>
+<dd><p>Resolve requested initialization times against the effective input.</p>
+<p>Validates that all requested times are available to the dataset,
+and selects those present in the effective input’s
+initialization-time coordinates to iterate over.</p>
+<p>The intention for this code is the dataset available temporal coverage
+is based on the model/condition/observation common time span. But, the
+exact initial times to be iterated over is not necessarily the same as the available times.
+See documentation for <cite>available_times</cite> for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>requested_times</strong> (<em>array-like</em>) – Training times used for fitting. Values must be either NumPy
-datetime64 or cftime datetime objects.</p>
+<dd class="field-odd"><p><strong>requested_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Requested initialization times. Non-xarray inputs are converted
+to a DataArray indexed by the initialization-time dimension.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>xr.DataArray containing input times within requested_times.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Requested initialization times that are present in the
+effective input dataset, preserving their original order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If any requested initialization time is not included in
+    <cite>available_times</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -373,11 +547,14 @@ datetime64 or cftime datetime objects.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.input_lead_times">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_lead_times</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.input_lead_times" title="Link to this definition"></a></dt>
-<dd><p>Coords of lead times in input dataset.</p>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_lead_times</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.input_lead_times" title="Link to this definition"></a></dt>
+<dd><p>Return the forecast lead times available in the effective input.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Lead-time coordinate values of the effective input dataset.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -393,13 +570,13 @@ datetime64 or cftime datetime objects.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">lead_times</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config" title="cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config"><span class="pre">lead_time_config</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">lead_times</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config" title="cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config"><span class="pre">lead_time_config</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig"><span class="pre">ModelDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">model</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig"><span class="pre">ModelDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id9" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -418,26 +595,34 @@ datetime64 or cftime datetime objects.</p>
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">lead_time_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_lead_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Configuration for selecting lead times.</p>
+<p>Configuration for selecting forecast lead times.</p>
+<p>Supports either an explicit list of lead times or an inclusive range
+defined by starting and ending lead times. Lead times are one-based.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>list_lead_times</strong> (<em>list</em><em> of </em><em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Explicit list of lead times.</p></li>
-<li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Start of lead time range (inclusive).</p></li>
-<li><p><strong>end</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – End of lead time range (inclusive).</p></li>
+<li><p><strong>list_lead_times</strong> (<em>list</em><em> | </em><em>None</em><em>, </em><em>default None</em>) – Explicit list of lead times to select. If provided, <cite>start</cite> and
+<cite>end</cite> are ignored.</p></li>
+<li><p><strong>start</strong> (<em>int</em><em>, </em><em>default 1</em>) – First lead time in the selected range. Used only when
+<cite>list_lead_times</cite> is None.</p></li>
+<li><p><strong>end</strong> (<em>int</em><em> | </em><em>None</em><em>, </em><em>default None</em>) – Last lead time in the selected range, inclusive. Required when
+<cite>list_lead_times</cite> is None.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config.build_lead_times">
 <span class="sig-name descname"><span class="pre">build_lead_times</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.dataset_abc.lead_time_config.build_lead_times" title="Link to this definition"></a></dt>
-<dd><p>Construct lead times array.</p>
+<dd><p>Construct the selected forecast lead times.</p>
+<p>Returns the explicitly specified lead times, if available.
+Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Lead times defined either explicitly or as a range.</p>
+<dd class="field-odd"><p>Selected lead times. Returns the original list when
+<cite>list_lead_times</cite> is provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray or list</p>
+<dd class="field-even"><p>list | np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -466,30 +651,27 @@ datetime64 or cftime datetime objects.</p>
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataset.operator.</span></span><span class="sig-name descname"><span class="pre">DatasetOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Class for managing dataset-level operations.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><em>DatasetConfigABC</em></a>) – Dataset configuration.</p>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC"><em>DatasetConfigABC</em></a>) – Description not yet provided.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator.add_fitted_preprocessor">
 <span class="sig-name descname"><span class="pre">add_fitted_preprocessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><span class="pre">PreprocessModuleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator.add_fitted_preprocessor" title="Link to this definition"></a></dt>
-<dd><p>Add a fitted preprocessor to all relevant pipelines.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>preprocessor</strong> (<a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><em>PreprocessModuleABC</em></a>)</p></li>
-<li><p><strong>index</strong> (<em>int</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>preprocessor</strong> (<a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><em>PreprocessModuleABC</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>index</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>TypeError</strong> – If preprocessor type is invalid.</p></li>
-<li><p><strong>AssertionError</strong> – If preprocessor is not fitted.</p></li>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AssertionError</strong> – Description not yet provided.</p></li>
+<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -498,13 +680,13 @@ datetime64 or cftime datetime objects.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator.config_observation">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">config_observation</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator.config_observation" title="Link to this definition"></a></dt>
-<dd><p>Observation dataset configuration if available.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Observation configuration if present, otherwise None.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig" title="cccma_ppp.data_modules.data.data_configs.ObsDataConfig">ObsDataConfig</a> or None</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -512,32 +694,29 @@ datetime64 or cftime datetime objects.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator.fit_preprocessors">
 <span class="sig-name descname"><span class="pre">fit_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator.fit_preprocessors" title="Link to this definition"></a></dt>
-<dd><p>Fit preprocessing pipelines for all datasets.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_times</strong> (<em>array-like</em>) – Training times used for fitting. Values must be either NumPy
-datetime64 or cftime datetime objects.</p></li>
-<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to persist fitted pipelines.</p></li>
-<li><p><strong>save_path</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>train_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>save</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>Applies fitting to model, observation, and condition datasets.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_input_var_metadata">
 <span class="sig-name descname"><span class="pre">get_input_var_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_input_var_metadata" title="Link to this definition"></a></dt>
-<dd><p>Retrieve metadata for input variables.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Variable names and preprocessing steps.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict</p>
@@ -548,13 +727,16 @@ datetime64 or cftime datetime objects.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_target_var_metadata">
 <span class="sig-name descname"><span class="pre">get_target_var_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_target_var_metadata" title="Link to this definition"></a></dt>
-<dd><p>Retrieve metadata for target variables.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If no target data is available.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -562,26 +744,26 @@ datetime64 or cftime datetime objects.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_weights">
 <span class="sig-name descname"><span class="pre">get_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.weights.WeightsConfig" title="cccma_ppp.data_modules.weights.WeightsConfig"><span class="pre">WeightsConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span></span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_weights" title="Link to this definition"></a></dt>
-<dd><p>Compute spatial and variable weights.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.weights.WeightsConfig" title="cccma_ppp.data_modules.weights.WeightsConfig"><em>WeightsConfig</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Configuration controlling weight computation.</p></li>
-<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to save computed weights.</p></li>
-<li><p><strong>save_path</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory where weights should be saved.</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Filename for saved weights.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.weights.WeightsConfig" title="cccma_ppp.data_modules.weights.WeightsConfig"><em>WeightsConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Computed spatial and variable weights.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xr.DataArray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>ValueError</strong> – If no valid dataset is available.</p></li>
-<li><p><strong>RuntimeError</strong> – If variable weights do not match expected variables.</p></li>
+<li><p><strong>RuntimeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -590,13 +772,10 @@ datetime64 or cftime datetime objects.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.data_modules.dataset.operator.DatasetOperator.load_fitted_preprocessors">
 <span class="sig-name descname"><span class="pre">load_fitted_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.data_modules.dataset.operator.DatasetOperator.load_fitted_preprocessors" title="Link to this definition"></a></dt>
-<dd><p>Load fitted preprocessing pipelines.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>load_dir</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>

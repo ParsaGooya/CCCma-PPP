@@ -47,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -120,33 +121,32 @@
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.preprocessing.</span></span><span class="sig-name descname"><span class="pre">PreprocessingPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessors_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#cccma_ppp.preprocessing.selector.PreprocessingStepSelector" title="cccma_ppp.preprocessing.selector.PreprocessingStepSelector"><span class="pre">PreprocessingStepSelector</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Sequential preprocessing pipeline, supports fitting,
-transformation, inverse transformation, and persistence.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>preprocessors_list</strong> (<em>list</em><em> of </em><a class="reference internal" href="#cccma_ppp.preprocessing.selector.PreprocessingStepSelector" title="cccma_ppp.preprocessing.selector.PreprocessingStepSelector"><em>PreprocessingStepSelector</em></a><em>, </em><em>optional</em>) – List of preprocessing steps.</p></li>
-<li><p><strong>load_dir</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Path to load a previously fitted pipeline.</p></li>
+<li><p><strong>preprocessors_list</strong> (<em>list</em><em>[</em><a class="reference internal" href="#cccma_ppp.preprocessing.selector.PreprocessingStepSelector" title="cccma_ppp.preprocessing.selector.PreprocessingStepSelector"><em>PreprocessingStepSelector</em></a><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>load_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Description not yet provided.</p></li>
+<li><p><strong>init_time_time</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>lead_time_time</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>supported_NN_dimensions</strong> (<em>tuple</em><em>[</em><em>str</em><em>]</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.add_fitted_preprocessor">
 <span class="sig-name descname"><span class="pre">add_fitted_preprocessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.add_fitted_preprocessor" title="Link to this definition"></a></dt>
-<dd><p>Add fitted preprocessor to pipeline.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>preprocessor</strong> (<a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><em>PreprocessModuleABC</em></a>) – Fitted preprocessor instance.</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Name of the step.</p></li>
-<li><p><strong>index</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Position to insert step.</p></li>
+<li><p><strong>preprocessor</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>index</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>AssertionError</strong> – If preprocessor is not fitted.</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -154,14 +154,13 @@ transformation, inverse transformation, and persistence.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.extract_output_coords_vars">
 <span class="sig-name descname"><span class="pre">extract_output_coords_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.extract_output_coords_vars" title="Link to this definition"></a></dt>
-<dd><p>Save the reference coordinates and variable names
-for the writer to use.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>base_data</strong> (<em>xr.DataArray</em>) – Data on which the pipeline is fit.</p>
+<dd class="field-odd"><p><strong>base_data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -169,47 +168,59 @@ for the writer to use.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.fit" title="Link to this definition"></a></dt>
-<dd><p>Fit preprocessing pipeline.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_data</strong> (<em>xr.DataArray</em><em>, </em><em>optional</em>) – Input data used for fitting.</p></li>
-<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Optional mask applied during fitting.</p></li>
-<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to save fitted pipeline.</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Filename for saving pipeline.</p></li>
-<li><p><strong>save_path</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for saving pipeline.</p></li>
+<li><p><strong>base_data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Fitted pipeline.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline" title="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline">PreprocessingPipeline</a></p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.get_flattener">
+<span class="sig-name descname"><span class="pre">get_flattener</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove" title="cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove"><span class="pre">Flattennanremove</span></a></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.get_flattener" title="Link to this definition"></a></dt>
+<dd><p>Get flattener preprocessor.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.get_preprocessors">
 <span class="sig-name descname"><span class="pre">get_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.get_preprocessors" title="Link to this definition"></a></dt>
-<dd><p>Retrieve fitted preprocessors.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Specific step name.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>All preprocessors or a specific one.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list or <a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC">PreprocessModuleABC</a></p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>RuntimeError</strong> – If pipeline is not fitted.</p></li>
-<li><p><strong>ValueError</strong> – If step is not found.</p></li>
+<li><p><strong>RuntimeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.has_flattener">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_flattener</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.has_flattener" title="Link to this definition"></a></dt>
+<dd><p>Check if pipeline includes Flattennanremove step.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -220,27 +231,39 @@ for the writer to use.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.inverse_rename">
 <span class="sig-name descname"><span class="pre">inverse_rename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.inverse_rename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.inverse_transform">
 <span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_arguments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Reverse preprocessing pipeline.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>xarray.DataArray</em>) – Transformed data.</p></li>
-<li><p><strong>step_arguments</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Per-step arguments for inverse transformation.</p></li>
+<li><p><strong>data</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>step_arguments</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Original representation.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xarray.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If step arguments refer to unknown steps.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -258,24 +281,22 @@ for the writer to use.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.load_from_memory">
 <span class="sig-name descname"><span class="pre">load_from_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.load_from_memory" title="Link to this definition"></a></dt>
-<dd><p>Load fitted pipeline from disk.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>load_dir</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Path to saved pipeline.</p>
+<dd class="field-odd"><p><strong>load_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If loaded pipeline is not fitted.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.num_instances">
-<span class="sig-name descname"><span class="pre">num_instances</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.num_instances" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.preprocessors_list">
@@ -285,13 +306,13 @@ for the writer to use.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.set_name">
 <span class="sig-name descname"><span class="pre">set_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.set_name" title="Link to this definition"></a></dt>
-<dd><p>Set pipeline name.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>rename_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -304,21 +325,19 @@ for the writer to use.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.to_dataset">
 <span class="sig-name descname"><span class="pre">to_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.to_dataset" title="Link to this definition"></a></dt>
-<dd><p>Write the transformed data array based to dataset
-on the base dataset used for fitting the pipeline.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xarray.DataArray</em>) – Transformed data.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>cooridnates corrected.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xarray.DataArray</p>
+<dd class="field-odd"><p>xr.Dataset</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the dara array does not have at least the same number
-    of dimensions as the base dataset.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -326,22 +345,22 @@ on the base dataset used for fitting the pipeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_arguments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline.transform" title="Link to this definition"></a></dt>
-<dd><p>Apply preprocessing pipeline.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>xarray.DataArray</em>) – Input data.</p></li>
-<li><p><strong>step_arguments</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Per-step arguments for transformation.</p></li>
+<li><p><strong>data</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>step_arguments</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Processed data.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xarray.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If step arguments refer to unknown steps.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -355,31 +374,53 @@ on the base dataset used for fitting the pipeline.</p>
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.preprocessing_ABC.</span></span><span class="sig-name descname"><span class="pre">PreprocessModuleABC</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for preprocessing modules.</p>
-<dl class="simple">
-<dt>Classvar:</dt><dd><dl class="simple">
-<dt>lead_time_resolution<span class="classifier">{“month”, “day”}, optional</span></dt><dd><p>Temporal unit represented by one lead-time increment.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit" title="Link to this definition"></a></dt>
-<dd><p>Fit preprocessing parameters to data.</p>
+<p>Document this class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble">
+<span class="sig-name descname"><span class="pre">large_ensemble</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>object</em>) – Input data used to estimate preprocessing statistics.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted">
-<span class="sig-name descname"><span class="pre">fitted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fitted</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.dims">
+<span class="sig-name descname"><span class="pre">dims</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.dims" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">fitted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.frequency" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -390,26 +431,20 @@ on the base dataset used for fitting the pipeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.inverse_transform">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Reverse preprocessing transformation.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>object</em>) – Transformed data.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Additional arguments for inverse transformation.</p></li>
+<li><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Data in original representation.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble">
-<span class="sig-name descname"><span class="pre">large_ensemble</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">large_ensemble</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -435,19 +470,13 @@ on the base dataset used for fitting the pipeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.transform">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.transform" title="Link to this definition"></a></dt>
-<dd><p>Apply preprocessing transformation.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>object</em>) – Input data to transform.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Additional arguments for transformation.</p></li>
+<li><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Transformed data.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -461,58 +490,57 @@ on the base dataset used for fitting the pipeline.</p>
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.registery.Registery">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.registery.</span></span><span class="sig-name descname"><span class="pre">Registery</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.registery.Registery" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Registry for mapping string names to classes.</p>
+<p>Document this class.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.registery.Registery.available">
 <span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.registery.Registery.available" title="Link to this definition"></a></dt>
-<dd><p>Available registered names.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Registered identifiers.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list of str</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.registery.Registery.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.registery.Registery.get" title="Link to this definition"></a></dt>
-<dd><p>Retrieve and optionally instantiate a registered class.</p>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.registery.Registery.get" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Name of the registered class.</p></li>
-<li><p><strong>config</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Initialization arguments.</p></li>
+<li><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Instantiated object if config is provided,
-otherwise the class itself.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the name is not registered.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.registery.Registery.register">
-<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.registery.Registery.register" title="Link to this definition"></a></dt>
-<dd><p>Register a class under a given name.</p>
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.registery.Registery.register" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Identifier used to register the class.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator that registers the class.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -526,12 +554,12 @@ otherwise the class itself.</p>
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.selector.PreprocessingStepSelector">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.selector.</span></span><span class="sig-name descname"><span class="pre">PreprocessingStepSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.selector.PreprocessingStepSelector" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Selector for preprocessing modules.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Name of the registered preprocessing module.</p></li>
-<li><p><strong>args</strong> (<em>dict</em><em> of </em><em>str to object</em><em>, </em><em>optional</em>) – Arguments used to initialize the module.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>object</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -543,10 +571,13 @@ otherwise the class itself.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.selector.PreprocessingStepSelector.available">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.selector.PreprocessingStepSelector.available" title="Link to this definition"></a></dt>
-<dd><p>List available preprocessing modules.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list of str</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -554,13 +585,13 @@ otherwise the class itself.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.selector.PreprocessingStepSelector.get_preprocessor">
 <span class="sig-name descname"><span class="pre">get_preprocessor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.selector.PreprocessingStepSelector.get_preprocessor" title="Link to this definition"></a></dt>
-<dd><p>Instantiate preprocessing module.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Initialized preprocessing module.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC">PreprocessModuleABC</a></p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -573,16 +604,16 @@ otherwise the class itself.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.selector.PreprocessingStepSelector.register">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><span class="pre">PreprocessModuleABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.selector.PreprocessingStepSelector.register" title="Link to this definition"></a></dt>
-<dd><p>Register preprocessing module.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name used for registration.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator for registering preprocessing modules.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Callable[…, <a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC">PreprocessModuleABC</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -599,38 +630,34 @@ otherwise the class itself.</p>
 <span id="cccma-ppp-preprocessing-utils-preprocessing-module"></span><h2>cccma_ppp.preprocessing.utils_preprocessing module<a class="headerlink" href="#module-cccma_ppp.preprocessing.utils_preprocessing" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">AnomaliesScaler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">AnomaliesScaler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
-<p>Anomaly scaling preprocessor.</p>
-<p>Computes anomalies relative to a mean climatology.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dims</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Dimensions used to compute mean.</p></li>
-<li><p><strong>frequency</strong> (<em>{&quot;year&quot;</em><em>, </em><em>&quot;month&quot;</em><em>, </em><em>&quot;day&quot;}</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – <p>Valid-time frequency used to group statistics.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: no temporal grouping.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>: group by valid year.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>: group by valid month.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>: group by valid day of year.</p></li>
-</ul>
-</p></li>
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>frequency</strong> (<em>TemporalFrequency</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler.fit" title="Link to this definition"></a></dt>
-<dd><p>Fit anomaly baseline.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>xr.DataArray</em>)</p></li>
-<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>self</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -638,16 +665,16 @@ otherwise the class itself.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler.inverse_transform">
 <span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler.inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Reconstruct original values from anomalies.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Reconstructed data.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -655,16 +682,16 @@ otherwise the class itself.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.AnomaliesScaler.transform" title="Link to this definition"></a></dt>
-<dd><p>Compute anomalies.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Anomaly values.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -675,31 +702,38 @@ otherwise the class itself.</p>
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Flattennanremove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
-<p>Flatten NN dimensions while removing NaN locations.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>load_dir</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Path to a previously fitted preprocessor.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove.fit" title="Link to this definition"></a></dt>
-<dd><p>Fit spatial flattening transformation.</p>
-<p>Determines valid spatial locations and optionally aligns them
-between input and target datasets.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>xr.DataArray</em>) – Input data.</p></li>
-<li><p><strong>target</strong> (<em>xr.DataArray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Target data for alignment.</p></li>
-<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Optional mask (unused in current implementation).</p></li>
-<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to save fitted preprocessor.</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Name of saved file.</p></li>
-<li><p><strong>save_path</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory to save object.</p></li>
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>mask</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>self</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -707,19 +741,19 @@ between input and target datasets.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove.inverse_transform">
 <span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove.inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Restore original spatial layout.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>) – Transformed data.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Reconstructed data in the original spatial grid.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>xr.Dataset</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – The data to be inverse transformed does not have the ref dims.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -732,19 +766,16 @@ between input and target datasets.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove.transform" title="Link to this definition"></a></dt>
-<dd><p>Apply flattening and spatial filtering.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Flattened data with only valid spatial locations.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – The data to be transformed does not have the correct NN dims.</p>
+<dd class="field-odd"><p>xr.Dataset</p>
 </dd>
 </dl>
 </dd></dl>
@@ -753,37 +784,34 @@ between input and target datasets.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Normalizer">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Normalizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Normalizer" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Normalizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Normalizer" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
-<p>Min-max normalization preprocessor.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>str</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – Dimensions over which normalization statistics are computed.</p></li>
-<li><p><strong>frequency</strong> (<em>{&quot;year&quot;</em><em>, </em><em>&quot;month&quot;</em><em>, </em><em>&quot;day&quot;}</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – <p>Valid-time frequency used to group statistics.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: no temporal grouping.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>: group by valid year.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>: group by valid month.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>: group by valid day of year.</p></li>
-</ul>
-</p></li>
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>frequency</strong> (<em>TemporalFrequency</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Normalizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Normalizer.fit" title="Link to this definition"></a></dt>
-<dd><p>Fit normalization parameters.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>xr.DataArray</em>) – Input data.</p></li>
-<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Mask specifying valid data.</p></li>
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>self</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -791,19 +819,16 @@ between input and target datasets.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Normalizer.inverse_transform">
 <span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Normalizer.inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Reverse normalization.</p>
-<p>Temporal statistics will be aligned using valid forecast times,
-if the data has lead_time and stats has init_time but no lead_time so
-lead time is taken into account.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>) – Input data in normalized space.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Data in original scale.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -821,19 +846,16 @@ lead time is taken into account.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Normalizer.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Normalizer.transform" title="Link to this definition"></a></dt>
-<dd><p>Apply min-max normalization.</p>
-<p>If the temporal auxiliary coordinate already exists on <code class="docutils literal notranslate"><span class="pre">data</span></code>,
-it is used directly. Otherwise, the coordinate is derived from
-<code class="docutils literal notranslate"><span class="pre">init_time</span></code>.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Normalized data.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -842,37 +864,38 @@ it is used directly. Otherwise, the coordinate is derived from
 
 <dl class="py class">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Standardizer">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Standardizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Standardizer" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Standardizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Standardizer" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
-<p>Standardization preprocessor.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dims</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Dimensions along which mean and std are computed.</p></li>
-<li><p><strong>frequency</strong> (<em>{&quot;year&quot;</em><em>, </em><em>&quot;month&quot;</em><em>, </em><em>&quot;day&quot;}</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – <p>Temporal grouping derived from the initialization-time coordinate.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: no temporal grouping.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>: group by initialization year.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>: group by initialization month.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>: group by initialization day of year.</p></li>
-</ul>
-</p></li>
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>frequency</strong> (<em>TemporalFrequency</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Should explicitly mention that std zero will be masked.</p>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Standardizer.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Standardizer.fit" title="Link to this definition"></a></dt>
-<dd><p>Fit standardization parameters.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>xr.DataArray</em>)</p></li>
-<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>self</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -880,16 +903,16 @@ it is used directly. Otherwise, the coordinate is derived from
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Standardizer.inverse_transform">
 <span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Standardizer.inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Reverse standardization.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Original scale data.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -907,16 +930,16 @@ it is used directly. Otherwise, the coordinate is derived from
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.Standardizer.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.Standardizer.transform" title="Link to this definition"></a></dt>
-<dd><p>Apply standardization.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Standardized data.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -927,24 +950,41 @@ it is used directly. Otherwise, the coordinate is derived from
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.TrendRemover">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">TrendRemover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
-<p>Linear trend-removal preprocessor.</p>
-<p>Fits and removes a linear trend along the initialization-time dimension
-independently at each remaining data location.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>frequency</strong> (<em>{&quot;month&quot;</em><em>, </em><em>&quot;day&quot;}</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – <p>Temporal grouping used when fitting the trend.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: fit one trend using all initialization times.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>: fit a separate trend for each calendar month.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>: fit a separate trend for each day of year.</p></li>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frequency</strong> (<em>Literal</em><em>[</em><em>'month'</em><em>, </em><em>'day'</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</p>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.TEMPORAL_ORDER">
+<span class="sig-name descname"><span class="pre">TEMPORAL_ORDER</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'day':</span> <span class="pre">0,</span> <span class="pre">'month':</span> <span class="pre">1,</span> <span class="pre">'year':</span> <span class="pre">2}</span></span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.TEMPORAL_ORDER" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.fit" title="Link to this definition"></a></dt>
-<dd><p>Fit linear temporal trends for each data variable.</p>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -955,15 +995,13 @@ independently at each remaining data location.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.inverse_transform">
 <span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Restore the fitted linear trend.</p>
-<p>When a lead-time dimension is present, the trend is evaluated at
-forecast target times rather than initialization times.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Detrended data.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Data with the fitted trend restored.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xr.Dataset</p>
@@ -979,13 +1017,13 @@ forecast target times rather than initialization times.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.TrendRemover.transform" title="Link to this definition"></a></dt>
-<dd><p>Remove the fitted linear trend.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Input data.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Detrended data.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xr.Dataset</p>
@@ -997,37 +1035,27 @@ forecast target times rather than initialization times.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cccma_ppp.preprocessing.utils_preprocessing.align_stat_data_lead_time_inverse_transform">
-<span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">align_stat_data_lead_time_inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'month'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_time_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lead_time'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.align_stat_data_lead_time_inverse_transform" title="Link to this definition"></a></dt>
-<dd><p>Align fitted temporal statistics to forecast target times.</p>
-<p>This is primarily needed when a preprocessing pipeline fitted to
-observations is inverse-applied to forecast data.</p>
-<p>Lead times are assumed to be one-based:</p>
-<ul class="simple">
-<li><p>lead_time=1 corresponds to init_time</p></li>
-<li><p>lead_time=2 corresponds to one period after init_time</p></li>
-</ul>
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">align_stat_data_lead_time_inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'month'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_time_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lead_time'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dataset</span></span></span><a class="headerlink" href="#cccma_ppp.preprocessing.utils_preprocessing.align_stat_data_lead_time_inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Align preprocessing statistics with data for inverse transformation.</p>
+<p>Statistics containing a lead-time dimension are aligned using
+initialization times. Otherwise, forecast valid times are used.</p>
+<p>Temporal grouping dimensions (‘year’, ‘month’, ‘day’) are aligned
+to the appropriate temporal coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xr.DataArray</em>) – Data containing initialization-time and lead-time coordinates.</p></li>
-<li><p><strong>stat</strong> (<em>xr.DataArray</em>) – <p>Fitted statistic. It may contain:</p>
-<ul>
-<li><p>init_time</p></li>
-<li><p>lead_time</p></li>
-<li><p>year</p></li>
-<li><p>month</p></li>
-<li><p>day</p></li>
-<li><p>no temporal dimensions</p></li>
-</ul>
-</p></li>
-<li><p><strong>lead_time_resolution</strong> (<em>{&quot;month&quot;</em><em>, </em><em>&quot;day&quot;}</em>) – Temporal unit represented by one lead-time increment.</p></li>
+<li><p><strong>ds</strong> (<em>xr.DataArray</em><em> | </em><em>xr.Dataset</em>) – Data to be inverse-transformed.</p></li>
+<li><p><strong>stat</strong> (<em>xr.DataArray</em><em> | </em><em>xr.Dataset</em>) – Fitted preprocessing statistics.</p></li>
+<li><p><strong>lead_time_resolution</strong> (<em>lead_time_unit</em>) – Resolution of forecast lead times.</p></li>
+<li><p><strong>init_time_dim</strong> (<em>str</em>) – Initialization-time dimension name.</p></li>
+<li><p><strong>lead_time_dim</strong> (<em>str</em>) – Lead-time dimension name.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Statistic aligned to the temporal dimensions of <code class="docutils literal notranslate"><span class="pre">ds</span></code>.</p>
+<dd class="field-even"><p>Temporally aligned statistics.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>xr.DataArray | xr.Dataset</p>
 </dd>
 </dl>
 </dd></dl>
