@@ -18,6 +18,7 @@ from cccma_ppp.configs import (
 )
 
 from cccma_ppp.data_modules.utils import (
+    TEMPORAL_ORDER,
     _load_xarray_data,
     _create_train_mask,
     _validate_time_sequence,
@@ -25,6 +26,7 @@ from cccma_ppp.data_modules.utils import (
     get_time_representation,
     TimeTypes,
     TimeFrequency,
+    TEMPORAL_ORDER,
 )
 from cccma_ppp.generic.runtime import RuntimeContext
 
@@ -61,9 +63,9 @@ class infoclass:
     time_coords_type : TimeTypes = Literal["datetime", "cftime"]
         Type of temporal coordinates used by the dataset, is in
         ["datetime", "cftime"]
-    init_time_freq : TimeFrequency = Literal["day", "month", "year"]
-        Temporal resolution of the dataset's initialization times, must be
-        in ["day", "month", "year"]. This is used to determine the temporal
+    init_time_freq : TimeFrequency = Literal["day", "month", "year"]    
+        Temporal resolution of the dataset's initialization times, must be 
+        in ["day", "month", "year"]. This is used to determine the temporal 
         resolution of the dataset, which can be Used for calendar-aware time handling
         and temporal alignment.
     """
@@ -78,14 +80,15 @@ class infoclass:
 
 
 class DataConfigABC(abc.ABC):
+
     """
     Abstract base class for DataConfig objects, providing a standardized interface for handling
-    xarray datasets in the CCCma_PPP framework.
+    xarray datasets in the CCCma_PPP framework. 
 
     Defines a common interface for model and observational datasets, including
     temporal resolution, ensemble selection, temporal and spatial metadata,
     preprocessing, and data access. Requires a coordinate matching each dimension,
-    requires time coordinate to be either a datetime or cftime type,
+    requires time coordinate to be either a datetime or cftime type, 
     and requires the initialization time coordinate to be present as specified for the pipeline.
 
     Subclasses must define the dataset type (`TYPE`), allowed dimensions,
@@ -107,8 +110,8 @@ class DataConfigABC(abc.ABC):
         dataset. Can be fitted using selected training data or restored
         from a previously saved pipeline.
     realization_list : list | None
-        List of ensemble realizations to select. If None,
-        all available realizations are loaded.
+        List of ensemble realizations to select. If None, 
+        all available realizations are loaded. 
     ensemble_mean : bool | None
         Whether to average ensemble realizations during data loading.
     concat_dim : str | None
@@ -130,6 +133,7 @@ class DataConfigABC(abc.ABC):
     Subclasses must implement `TYPE`, `_allowed_dims`, and `_required_dims`.
     """
 
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline
@@ -147,6 +151,7 @@ class DataConfigABC(abc.ABC):
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self):
+
         """
         Initialize the data configuration and resolve its metadata.
 
@@ -232,6 +237,7 @@ class DataConfigABC(abc.ABC):
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+
         """
         Fit the preprocessing pipeline using a selected subset of the input data.
 
@@ -250,7 +256,7 @@ class DataConfigABC(abc.ABC):
             to restrict preprocessing statistics to the training period only.
         mask : bool, default False
             Whether to construct and apply a training mask using the
-            dataset's initialization and lead times. USed to prevent data
+            dataset's initialization and lead times. USed to prevent data 
             leakage into future times when fitting preprocessing statistics.
         save : bool, default True
             Whether to save the fitted preprocessing pipeline.
@@ -283,7 +289,8 @@ class DataConfigABC(abc.ABC):
 
         _mask = (
             _create_train_mask(_base[self.init_time_dim], _base[self.lead_time_dim])
-            if (mask and self.init_time_dim in _base.dims)
+            if (mask and
+            self.init_time_dim in _base.dims)
             else None
         )
 
@@ -301,6 +308,7 @@ class DataConfigABC(abc.ABC):
 
     @final
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
+
         """
         Restore a previously fitted preprocessing pipeline from disk.
 
@@ -363,8 +371,8 @@ class DataConfigABC(abc.ABC):
             If False, data may remain lazily loaded, depending on the
             underlying xarray backend.
         add_time_auxiliary_coords : bool, default False
-            Whether to generate additional integer temporal coordinates
-            for day, month, and year based on the initialization time coordinate.
+            Whether to generate additional integer temporal coordinates 
+            for day, month, and year based on the initialization time coordinate. 
 
         Notes
         -----
@@ -390,7 +398,7 @@ class DataConfigABC(abc.ABC):
             add_time_auxiliary_coords=add_time_auxiliary_coords,
             load=load,
         )
-
+        
         if self.init_time_dim in self.data:
             time = self.data.coords[self.init_time_dim]
             _validate_time_sequence(time)
@@ -403,8 +411,9 @@ class DataConfigABC(abc.ABC):
         indexers: dict[str, Any] | None = None,
         **indexers_kwargs: Any,
     ):
+
         """
-        Wrapper for xarray Dataset.isel() method, applies
+        Wrapper for xarray Dataset.isel() method, applies 
         the preprocessing pipeline to the selected data before returning it.
 
         notes
@@ -482,6 +491,7 @@ class DataConfigABC(abc.ABC):
             self.data = None
 
     def __del__(self):
+
         """
         Attempt to close the underlying dataset when the instance is destroyed.
 
@@ -499,6 +509,7 @@ class DataConfigABC(abc.ABC):
 
 
 def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
+
     """
     Discover and optionally validate input data files for a DataConfig.
 
@@ -510,7 +521,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
     Required dimensions must be present in each individual file, except
     for the configured concatenation dimension, which may instead exist
     as a coordinate. The concatenation coordinate must be present in
-    every file, even when it is not a dimension.
+    every file, even when it is not a dimension. 
 
     Requires a coordinate matching each exisiting dimension.
 
@@ -590,7 +601,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                     ds = ds.drop_vars(dataconfig.drop_vars_list, errors="ignore")
 
                 ds_dims = set(ds.dims)
-
+                   
                 invalid = dataconfig._required_dims() - ds_dims
                 if invalid:
                     valid_concat = (
@@ -624,17 +635,17 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                     )
 
                 invalid = (
-                    dataconfig.concat_dim is not None
+                    dataconfig.concat_dim is not None 
                     and dataconfig.concat_dim not in ds.coords
                 )
                 if invalid:
-                    raise ValueError(
-                        f"Requested concat dimension {dataconfig.concat_dim} "
-                        f"is not a valid data coordinate for {p}"
-                    )
+                        raise ValueError(
+                            f"Requested concat dimension {dataconfig.concat_dim} "
+                            f"is not a valid data coordinate for {p}"
+                        )
 
                 _check_init_time = (
-                    dataconfig.init_time_dim in ds_dims
+                    dataconfig.init_time_dim in ds_dims 
                     or dataconfig.init_time_dim in ds.coords
                 )
                 if _check_init_time:
@@ -657,6 +668,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 
 
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
+
     """
     Extract information about xarray data as an infoclass instance.
 
@@ -723,6 +735,7 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
         ds = ds.sel({dataconfig.realization_dim: dataconfig.realization_list})
 
     if init_time_dim in ds.dims:
+
         start_time, final_time = (
             ds[init_time_dim].min().values,
             ds[init_time_dim].max().values,

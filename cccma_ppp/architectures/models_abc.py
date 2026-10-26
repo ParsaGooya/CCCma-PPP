@@ -50,7 +50,6 @@ class GENERATORConfig:
                 "For Generator training, at least two output ensemble samples are required."
             )
 
-
 @dataclasses.dataclass
 class CheckpointConfig:
     """

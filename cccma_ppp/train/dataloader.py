@@ -170,7 +170,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             self.train_times = self.select_requested_times(
                 requested_slice=self.train_years_slice,
             )
-
+        
         if self.num_validation_years > 0:
             last_train_year = self.train_times[-1].dt.year
 
@@ -263,7 +263,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         train_mask = _create_train_mask(
             init_times=self.dataset_config.get_input_times(self.train_times),
             lead_times=self.dataset_config.input_lead_times,
-            max_allowed_time=self.dataset_config.get_common_time.max(),
+            max_allowed_time=self.dataset_config.get_common_time.max()
         )
 
         train_dataset = self.dataset_config.build_dataset(
@@ -329,7 +329,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             validation_mask = _create_train_mask(
                 init_times=self.dataset_config.get_input_times(self.validation_times),
                 lead_times=self.dataset_config.input_lead_times,
-                max_allowed_time=self.dataset_config.get_common_time.max(),
+                max_allowed_time=self.dataset_config.get_common_time.max()
             )
             validation_dataset = self.dataset_config.build_dataset(
                 times=self.validation_times,

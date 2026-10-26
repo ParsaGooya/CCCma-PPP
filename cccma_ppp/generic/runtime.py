@@ -27,7 +27,9 @@ class RuntimeContext:
         Description not yet provided.
     """
 
-    GLOBAL_EXP_DIR: Path | str | None = dataclasses.field(default_factory=Path.cwd)
+    GLOBAL_EXP_DIR: Path | str | None = dataclasses.field(
+        default_factory=Path.cwd
+    )
     GLOBAL_CHECKPOINT_DIR: Path | str | None = None
     GLOBAL_FIGURES_DIR: Path | str | None = None
     GLOBAL_LOG_DIR: Path | str | None = None
@@ -53,3 +55,4 @@ class RuntimeContext:
 
         if self.GLOBAL_OUTPUT_DIR is None:
             self.GLOBAL_OUTPUT_DIR = self.GLOBAL_EXP_DIR / "inference"
+        
