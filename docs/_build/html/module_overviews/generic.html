@@ -55,7 +55,10 @@
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Configs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_modules.html">Data Modules</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Generic</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Generic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loss.html">Loss</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
@@ -92,6 +95,24 @@
              
   <section id="generic">
 <h1>Generic<a class="headerlink" href="#generic" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.generic</span></code> package holds cross-cutting utilities used by training and inference: distributed setup, logging, metrics, runtime state, resource monitoring, and import registration.</p>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">distributed.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">Distributed</span></code> wraps torch distributed setup. It reads <code class="docutils literal notranslate"><span class="pre">RANK</span></code>, <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code>, and <code class="docutils literal notranslate"><span class="pre">WORLD_SIZE</span></code> from the environment. It falls back to a single process when they are absent, and provides <code class="docutils literal notranslate"><span class="pre">barrier</span></code>, <code class="docutils literal notranslate"><span class="pre">all_reduce_sum</span></code>, <code class="docutils literal notranslate"><span class="pre">broadcast</span></code>, and <code class="docutils literal notranslate"><span class="pre">is_root</span></code>. Use <code class="docutils literal notranslate"><span class="pre">Distributed.get_instance()</span></code> for a shared object.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">logger.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">setup_logger</span></code> creates a named logger. Rank 0 logs to stdout and to <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.log</span></code> in the log directory. Other ranks stay silent.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">runtime.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">RuntimeContext</span></code> holds global directories (experiment, checkpoints, figures, logs, monitoring, output) and the input and target variable metadata. Module-level state is set here at startup and checked when checkpoints are loaded.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">aggregator.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">MetricsAggregator</span></code> collects batch losses, reduces them across ranks, records per-epoch values, and plots them. <code class="docutils literal notranslate"><span class="pre">RunningCovariance</span></code> accumulates a mean and covariance online, for estimating residual and latent statistics.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">monitoring.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">Monitor</span></code> samples CPU, RAM, and NVIDIA GPU use in a background thread, and records named stages with <code class="docutils literal notranslate"><span class="pre">span</span></code> and <code class="docutils literal notranslate"><span class="pre">checkpoint</span></code>. Results are exported to CSV and a timeline plot. <code class="docutils literal notranslate"><span class="pre">distributed_monitoring</span></code> is a context manager for training and combines per-rank results.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">registery_imports.py</span></code></dt><dd><p>Imports modules for their registration side effects, so <code class="docutils literal notranslate"><span class="pre">&#64;register</span></code> decorators run before configs are parsed.</p>
+</dd>
+</dl>
+</section>
 </section>
 
 

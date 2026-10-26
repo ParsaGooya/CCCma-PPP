@@ -52,7 +52,11 @@
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Configs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configs-init-py"><code class="docutils literal notranslate"><span class="pre">configs/__init__.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configs-configs-yaml"><code class="docutils literal notranslate"><span class="pre">configs/configs.yaml</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_modules.html">Data Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generic.html">Generic</a></li>
@@ -92,6 +96,26 @@
              
   <section id="configs">
 <h1>Configs<a class="headerlink" href="#configs" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.configs</span></code> package loads project-wide settings from <code class="docutils literal notranslate"><span class="pre">configs.yaml</span></code> and exposes them as module-level constants.</p>
+<section id="configs-init-py">
+<h2><code class="docutils literal notranslate"><span class="pre">configs/__init__.py</span></code><a class="headerlink" href="#configs-init-py" title="Link to this heading"></a></h2>
+<p>On import, the module reads <code class="docutils literal notranslate"><span class="pre">configs.yaml</span></code> from its own directory and provides:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">required_sample_dimensions</span></code>: the two sampling dimensions (initialization time and lead time).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lead_time_resolution</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>. Any other value raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">realization_dim</span></code>: name of the ensemble member dimension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">supported_NN_dimensions_sorted</span></code>: spatial/temporal dimensions the networks accept, in order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_data_allowed_dimensions</span></code>, <code class="docutils literal notranslate"><span class="pre">observation_data_allowed_dimensions</span></code>, <code class="docutils literal notranslate"><span class="pre">condition_data_allowed_dimensions</span></code>: allowed dimensions per data type, each merged with the supported NN dimensions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_data_required_dimensions</span></code>, <code class="docutils literal notranslate"><span class="pre">observation_data_required_dimensions</span></code>, <code class="docutils literal notranslate"><span class="pre">condition_data_required_dimensions</span></code>: dimensions each data type must have.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">save_deterministic_guess_only</span></code>: whether prediction saves only the deterministic guess branch.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lead_time_unit</span></code>: the <code class="docutils literal notranslate"><span class="pre">Literal[&quot;day&quot;,</span> <span class="pre">&quot;month&quot;]</span></code> type alias.</p></li>
+</ul>
+<p>Other modules import these constants instead of hard-coding dimension names, so changing the YAML file changes behavior across the package.</p>
+</section>
+<section id="configs-configs-yaml">
+<h2><code class="docutils literal notranslate"><span class="pre">configs/configs.yaml</span></code><a class="headerlink" href="#configs-configs-yaml" title="Link to this heading"></a></h2>
+<p>The YAML file that supplies the values above. Edit it to change dimension names or the lead-time resolution for a project.</p>
+</section>
 </section>
 
 

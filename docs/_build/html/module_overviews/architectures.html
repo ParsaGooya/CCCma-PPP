@@ -51,7 +51,11 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Architectures</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Architectures</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages-and-modules">Subpackages and modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-selection">Model selection</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Configs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_modules.html">Data Modules</a></li>
@@ -92,6 +96,57 @@
              
   <section id="architectures">
 <h1>Architectures<a class="headerlink" href="#architectures" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.architectures</span></code> package defines the neural network models and their building blocks. Each model has a config dataclass (subclassing <code class="docutils literal notranslate"><span class="pre">modelConfigABC</span></code>) that validates settings and builds the model, plus a <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> implementation.</p>
+<section id="subpackages-and-modules">
+<h2>Subpackages and modules<a class="headerlink" href="#subpackages-and-modules" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">models_abc.py</span></code></dt><dd><p>Abstract base classes and shared request/config types:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">modelConfigABC</span></code> and <code class="docutils literal notranslate"><span class="pre">modelABC</span></code>: base classes for all configs and models. Provide checkpoint loading, weight initialization, and device lookup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministicmodelsABC</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAEmodelsABC</span></code>: base classes for deterministic and conditional VAE models.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DeterministicRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEForwardRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest</span></code>: typed request objects passed to <code class="docutils literal notranslate"><span class="pre">forward</span></code>/<code class="docutils literal notranslate"><span class="pre">predict</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENERATORConfig</span></code>: settings for the ensemble generator (noise samples, noise level).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CheckpointConfig</span></code>: metadata for loading a saved model (shapes, variable metadata, freeze flag).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flowABC</span></code>: abstract base for normalizing flows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weights_init</span></code>: applies kaiming, xavier, or truncated-normal initialization.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">normalized_flows.py</span></code></dt><dd><p>Normalizing flows used as learned priors in the cVAE:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NormalizedFlowConfig</span></code> builds a <code class="docutils literal notranslate"><span class="pre">NormalizedFlowModel</span></code> from a list of flow steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MAF</span></code> (masked autoregressive flow) and <code class="docutils literal notranslate"><span class="pre">RealNVP</span></code> (affine coupling) are registered flow types.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FCNN</span></code> is the small base network used inside each flow step.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">layers/</span></code></dt><dd><p>Reusable building blocks:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">generic.py</span></code>: type aliases (activation, normalization, padding, init methods) and helpers <code class="docutils literal notranslate"><span class="pre">_build_activation</span></code>, <code class="docutils literal notranslate"><span class="pre">_build_normalization</span></code>, <code class="docutils literal notranslate"><span class="pre">LayerNorm2d</span></code>, <code class="docutils literal notranslate"><span class="pre">DropPath</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conv.py</span></code>: block configs (<code class="docutils literal notranslate"><span class="pre">ConvBlockConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig</span></code>) and block modules (<code class="docutils literal notranslate"><span class="pre">ConvBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">PartialConvBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvNeXtBlock</span></code>), plus <code class="docutils literal notranslate"><span class="pre">LatentBlock</span></code>/<code class="docutils literal notranslate"><span class="pre">LatentLayer</span></code> for the bottleneck to latent vector. <code class="docutils literal notranslate"><span class="pre">TensorMask</span></code> and <code class="docutils literal notranslate"><span class="pre">LatentVector</span></code> are the data carriers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">partialconv2d.py</span></code>: <code class="docutils literal notranslate"><span class="pre">PartialConv2d</span></code>, a convolution that tracks a validity mask, used for data with missing values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unet.py</span></code>: <code class="docutils literal notranslate"><span class="pre">DownBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">UpBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">UNetOutput</span></code>, <code class="docutils literal notranslate"><span class="pre">UNetOutputSIC</span></code>, and <code class="docutils literal notranslate"><span class="pre">build_conv_block</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mlp.py</span></code>: <code class="docutils literal notranslate"><span class="pre">build_mlp</span></code>, which builds a fully connected stack.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utils.py</span></code>: padding, mask broadcasting and merging, noise injection, and resizing helpers.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">mlp/</span></code></dt><dd><p>Fully connected models:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code>: <code class="docutils literal notranslate"><span class="pre">AutoencoderConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">Autoencoder</span></code>, registered as <code class="docutils literal notranslate"><span class="pre">&quot;mlp&quot;</span></code> for deterministic prediction. <code class="docutils literal notranslate"><span class="pre">append_mode</span></code> controls where added features enter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cvae.py</span></code>: <code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAE_MLP</span></code>, a conditional VAE with MLP encoder and decoder.</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">unet/</span></code></dt><dd><p>U-Net models:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code>: <code class="docutils literal notranslate"><span class="pre">UNetConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">UNet</span></code> and <code class="docutils literal notranslate"><span class="pre">UNetSICConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">UNetSIC</span></code> (the SIC variant clamps output).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cvae.py</span></code>: <code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAEUNet</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAEUNetSICEConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAEUNetSIC</span></code>. A conditional U-Net encodes the target into a latent, and can add a deterministic-guess U-Net branch.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utils.py</span></code>: config validation and mask repetition for ensemble generation.</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="model-selection">
+<h2>Model selection<a class="headerlink" href="#model-selection" title="Link to this heading"></a></h2>
+<p>Models register with <code class="docutils literal notranslate"><span class="pre">cVAEModelSelector</span></code> or <code class="docutils literal notranslate"><span class="pre">deterministicModelSelector</span></code> using <code class="docutils literal notranslate"><span class="pre">&#64;register(&quot;name&quot;)</span></code>, so a YAML config can pick one by name (<code class="docutils literal notranslate"><span class="pre">&quot;mlp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unet&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unetsic&quot;</span></code>).</p>
+</section>
 </section>
 
 

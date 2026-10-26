@@ -58,7 +58,10 @@
 <li class="toctree-l1"><a class="reference internal" href="generic.html">Generic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loss.html">Loss</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -92,6 +95,30 @@
              
   <section id="preprocessing">
 <h1>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.preprocessing</span></code> package transforms data before training and reverses the transforms on predictions. Steps are fitted on training data only, then saved and reloaded for inference.</p>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline</span></code>: an ordered list of steps. <code class="docutils literal notranslate"><span class="pre">fit</span></code> fits each step on the output of the previous one and saves the pipeline with joblib. <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> apply the steps forward or in reverse. <code class="docutils literal notranslate"><span class="pre">to_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_rename</span></code> restore the xarray structure of predictions. <code class="docutils literal notranslate"><span class="pre">load_from_memory</span></code> reloads a fitted pipeline.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">selector.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">PreprocessingStepSelector</span></code>: picks a step by registered name and arguments, and builds it.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">registery.py</span></code></dt><dd><p>The step registry, used by the selector.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">preprocessing_ABC.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code>: base class for steps. It handles reduction dimensions, the optional grouping coordinate (year, month, or day), aligning fitted statistics to data times, inverse-time computation for lead times, and zero-range checks.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">utils_preprocessing.py</span></code></dt><dd><p>Registered steps:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Normalizer</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;normalizer&quot;</span></code>): min-max scaling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Standardizer</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;standardizer&quot;</span></code>): z-score scaling. Zero standard deviations are masked.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AnomaliesScaler</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;anomalies&quot;</span></code>): subtracts the mean.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TrendRemover</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;trend_remover&quot;</span></code>): removes a linear trend over time, globally or per month or day.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Flattennanremove</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;flattener&quot;</span></code>): stacks spatial dimensions into one <code class="docutils literal notranslate"><span class="pre">ref</span></code> dimension and drops points with missing values. Required for 2D (flattened) network inputs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align_stat_data_lead_time_inverse_transform</span></code>: aligns stored statistics with predicted valid times when inverting.</p></li>
+</ul>
+</dd>
+</dl>
+</section>
 </section>
 
 

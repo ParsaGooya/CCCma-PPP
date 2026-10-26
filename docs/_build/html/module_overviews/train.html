@@ -59,7 +59,11 @@
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loss.html">Loss</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Train</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Train</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#typical-flow">Typical flow</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -92,6 +96,30 @@
              
   <section id="train">
 <h1>Train<a class="headerlink" href="#train" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.train</span></code> package wires the other packages together for training. It is run from the command line with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">cccma_ppp.train</span> <span class="pre">config.yaml</span></code>.</p>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">train.py</span></code></dt><dd><p>Entry point. <code class="docutils literal notranslate"><span class="pre">get_parser</span></code> defines the CLI. <code class="docutils literal notranslate"><span class="pre">main</span></code> loads the YAML config, sets the seed, prepares directories, and builds the trainer inside a resource-monitoring context. It then calls <code class="docutils literal notranslate"><span class="pre">setup_distributed</span></code> and <code class="docutils literal notranslate"><span class="pre">train</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">train_configs.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code> is the top-level config. It holds the experiment directory, maximum epochs, and the sections for the data loader, module, loss pipeline, trainer, optimizer, and weights. It validates that the pieces are compatible: generator models need CRPS, deterministic models need an observation target, cVAE models need a beta schedule, and input and output dimensions match the model. It also supports resuming from a halted experiment. <code class="docutils literal notranslate"><span class="pre">build_trainer</span></code> constructs every component in order. <code class="docutils literal notranslate"><span class="pre">set_seed</span></code> sets NumPy and torch seeds.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">dataloader.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">TrainDataloaderConfig</span></code> splits available times into training and validation sets, fits preprocessors on the rank 0 process, and builds training and validation loaders. <code class="docutils literal notranslate"><span class="pre">BatchData</span></code> carries input, target, added features, and optional validity masks.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">dataset.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">TrainDatasetConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">TrainDataset</span></code>. Pair model inputs with observation targets, or with the model itself for autoencoding, and build samples using the condition method.</p>
+</dd>
+</dl>
+</section>
+<section id="typical-flow">
+<h2>Typical flow<a class="headerlink" href="#typical-flow" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Load the YAML config into <code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code>.</p></li>
+<li><p>Fit preprocessors on training times (rank 0), then load them on all ranks.</p></li>
+<li><p>Build the training and validation loaders and the spatial weights.</p></li>
+<li><p>Build the module, loss pipeline, optimizer, and trainer.</p></li>
+<li><p>Train, saving the best checkpoint and metric plots to the experiment directory.</p></li>
+</ol>
+</section>
 </section>
 
 
