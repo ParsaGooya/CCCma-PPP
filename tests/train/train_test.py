@@ -269,7 +269,6 @@ def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_
     assert captured["logger"] is logger
 
 
-@pytest.mark.pruned
 def test_main_propagates_train_error_and_cleanup(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")

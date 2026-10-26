@@ -69,7 +69,6 @@ def test_config_weights_valid_branch():
     assert cfg.loss_weights == [0.5, 0.5]
 
 
-@pytest.mark.pruned
 def test_config_invalid_weight_length():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LosspipelineConfig(
@@ -143,6 +142,7 @@ def test_forward_single_loss():
     assert len(indiv) == 1
 
 
+@pytest.mark.pruned
 def test_forward_multiple_losses_weighted():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")],
@@ -194,7 +194,6 @@ def test_forward_total_loss_branch():
     assert isinstance(loss, torch.Tensor)
 
 
-@pytest.mark.pruned
 def test_checked_dimensionality_cache():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -654,6 +653,7 @@ def test_pt_mask_must_contain_tensor(
         )
 
 
+@pytest.mark.pruned
 def test_loads_mask_from_netcdf(
     tmp_path,
 ):
@@ -706,7 +706,6 @@ def test_loads_mask_from_netcdf(
     )
 
 
-@pytest.mark.pruned
 def test_build_with_saved_mask_requires_output_shape():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -833,6 +832,7 @@ def test_resolve_output_mask_rejects_spatial_mismatch():
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_channels",
     [
@@ -1627,7 +1627,6 @@ def test_dimension_check_runs_only_once(
     )
 
 
-@pytest.mark.pruned
 def test_generative_context_requires_extra_target_dimension():
     context = GenerativeContext()
     context.generative_modeling = True
@@ -1660,6 +1659,7 @@ def test_generative_context_requires_extra_target_dimension():
     assert "a" in individual
 
 
+@pytest.mark.pruned
 def test_generative_context_rejects_nongenerative_target_shape():
     context = GenerativeContext()
     context.generative_modeling = True

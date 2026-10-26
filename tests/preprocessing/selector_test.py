@@ -209,7 +209,6 @@ class TestPreprocessingStepSelectorArgumentValidation:
                 args=args,
             )
 
-    @pytest.mark.pruned
     def test_argument_error_reports_argument_type(
         self,
         isolated_registry,
@@ -287,6 +286,7 @@ class TestPreprocessingStepSelectorArgumentValidation:
             "value": 2,
         }
 
+    @pytest.mark.pruned
     def test_arguments_are_validated_before_name(
         self,
         isolated_registry,
@@ -474,7 +474,6 @@ class TestGetPreprocessor:
         )
         assert result.value == 1
 
-    @pytest.mark.pruned
     def test_builds_registered_preprocessor_with_arguments(
         self,
         isolated_registry,

@@ -1755,7 +1755,6 @@ class TestAdditionalFit:
             tmp_path / "custom_pipeline_preprocessing_pipeline.joblib",
         )
 
-    @pytest.mark.pruned
     def test_fit_creates_missing_save_directory(
         self,
         tmp_path,
@@ -1823,7 +1822,6 @@ class TestAdditionalTransform:
                 )
             )
 
-    @pytest.mark.pruned
     def test_empty_pipeline_returns_original_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1869,6 +1867,7 @@ class TestAdditionalTransform:
             data + 1.0,
         )
 
+    @pytest.mark.pruned
     def test_none_step_arguments_becomes_empty_mapping(self):
         pipeline, first, second = make_fitted_pipeline()
         data = xr.DataArray(
@@ -2392,6 +2391,7 @@ class TestAdditionalGetPreprocessors:
 
         assert result is second
 
+    @pytest.mark.pruned
     def test_named_lookup_is_case_sensitive(self):
         pipeline, _, _ = make_fitted_pipeline()
 

@@ -52,7 +52,6 @@ def test_build_activation_relu():
     assert activation.inplace is True
 
 
-@pytest.mark.pruned
 def test_build_activation_gelu():
     activation = _build_activation("gelu")
 
@@ -67,6 +66,7 @@ def test_build_activation_silu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [

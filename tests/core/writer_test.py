@@ -690,6 +690,7 @@ def test_aggregate_train_stats_root_skip_none_stat(
     assert saved == {}
 
 
+@pytest.mark.pruned
 def test_aggregate_predictions_missing_year_coord(
     tmp_path,
 ):
@@ -3732,7 +3733,6 @@ def test_writer_config_rejects_aggregate_and_predict_only_together(
         )
 
 
-@pytest.mark.pruned
 def test_writer_config_aggregate_only_does_not_require_predictor(
     tmp_path,
 ):
@@ -3812,7 +3812,6 @@ def test_setup_aggregate_only_requires_existing_temp_files(
     assert writer._setup is False
 
 
-@pytest.mark.pruned
 def test_setup_aggregate_only_accepts_existing_netcdf_file(
     tmp_path,
 ):
@@ -4336,6 +4335,7 @@ def test_build_train_loader_converts_global_experiment_dir_to_path(
     assert config.setup_called is True
 
 
+@pytest.mark.pruned
 def test_setup_aggregate_only_distributed_barrier(
     tmp_path,
 ):

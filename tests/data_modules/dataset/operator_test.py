@@ -830,6 +830,7 @@ class TestGetWeights:
             is flattener
         )
 
+    @pytest.mark.pruned
     def test_matching_channel_weights(self):
         model = make_data_config(
             names=[
@@ -883,7 +884,6 @@ class TestGetWeights:
             "pr",
         ]
 
-    @pytest.mark.pruned
     def test_inconsistent_channel_weights_raise(self):
         model = make_data_config(
             names=[
@@ -1138,6 +1138,7 @@ class TestTargetMetadata:
             "longitude",
         ]
 
+    @pytest.mark.pruned
     def test_rejects_missing_model_and_observation(self):
         config = DummyDatasetConfig()
         operator = DatasetOperator(config)
@@ -1325,7 +1326,6 @@ class TestBuildChunks:
 
 
 class TestAdditionalFitPreprocessors:
-    @pytest.mark.pruned
     def test_rejects_unavailable_training_time(self):
         model = make_data_config()
         config = DummyDatasetConfig(
@@ -1410,6 +1410,7 @@ class TestAdditionalFitPreprocessors:
 
         assert selection[REALIZATION_DIM] is model.coords[REALIZATION_DIM]
 
+    @pytest.mark.pruned
     def test_observation_fit_does_not_request_mask(self):
         observation = make_data_config()
         config = DummyDatasetConfig(
@@ -1429,7 +1430,6 @@ class TestAdditionalFitPreprocessors:
             INIT_TIME_DIM: train_times,
         }
 
-    @pytest.mark.pruned
     def test_observation_fit_includes_realization_coordinate(self):
         observation = make_data_config(
             realizations=[

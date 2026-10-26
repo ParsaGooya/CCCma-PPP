@@ -926,7 +926,6 @@ class TestObservationIndexes:
             ),
         )
 
-    @pytest.mark.pruned
     def test_reports_missing_observation_times(self):
         dataset = make_dataset()
 
@@ -1373,6 +1372,7 @@ class TestGetItem:
             ),
         )
 
+    @pytest.mark.pruned
     def test_condition_is_concatenated_to_input(self):
         dataset = self.make_getitem_dataset(
             observation=object(),

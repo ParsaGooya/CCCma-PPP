@@ -319,7 +319,6 @@ def test_update_train_stats_updates_posterior_samples(
     )
 
 
-@pytest.mark.pruned
 def test_update_train_stats_requires_samples(
     tmp_path,
     monkeypatch,
@@ -442,7 +441,6 @@ def test_get_latent_samples_builds_sampler_once(
     )
 
 
-@pytest.mark.pruned
 def test_build_latent_sampler_requires_stats_file(
     tmp_path,
 ):
@@ -731,6 +729,7 @@ def test_infer_on_batch_adds_decoder_noise(
     )
 
 
+@pytest.mark.pruned
 def test_batch_to_netcdf_latent_requires_variables(
     tmp_path,
 ):
@@ -920,6 +919,7 @@ def test_get_latent_samples_uses_existing_sampler(
     assert result.shape == (4, 3, 5)
 
 
+@pytest.mark.pruned
 def test_infer_on_batch_save_latent_requires_target(
     tmp_path,
     monkeypatch,

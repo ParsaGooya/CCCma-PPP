@@ -536,7 +536,6 @@ class TestLoadWeights:
         mock_unwrap.assert_called_once_with(loaded_dataset)
         assert result is unwrapped
 
-    @pytest.mark.pruned
     def test_loaded_weights_require_target_coordinate(
         self,
         tmp_path,
@@ -607,6 +606,7 @@ class TestLoadWeights:
                     target_coords=make_target_coords(),
                 )
 
+    @pytest.mark.pruned
     def test_loaded_weights_require_matching_coordinate_order(
         self,
         tmp_path,

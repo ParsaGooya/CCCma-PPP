@@ -2538,7 +2538,6 @@ def test_unet_output_sic_hidden_structure():
     )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "hidden_channels",
@@ -2586,6 +2585,7 @@ def test_unet_output_sic_activation_structure(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "hidden_channels",
     [

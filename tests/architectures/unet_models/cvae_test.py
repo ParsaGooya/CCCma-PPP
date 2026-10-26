@@ -191,6 +191,7 @@ class TestCVAEUNetConfig:
             5,
         ]
 
+    @pytest.mark.pruned
     def test_condition_channels_default_to_model_channels(self):
         config = make_config(
             channels=[
@@ -307,7 +308,6 @@ class TestCVAEUNetConfig:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     def test_deterministic_guess_generator_is_rejected(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -335,7 +335,6 @@ class TestCVAEUNetConfig:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "activation,hidden_channels",
         [
@@ -380,6 +379,7 @@ class TestCVAEUNetConfig:
                 deterministic_guess_config=selector,
             )
 
+    @pytest.mark.pruned
     def test_valid_shared_output_configuration(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -877,6 +877,7 @@ class TestPrepareInput:
             8,
         )
 
+    @pytest.mark.pruned
     def test_creates_condition_mask_when_missing(self):
         model = make_model()
 
@@ -1337,6 +1338,7 @@ class TestForward:
             3,
         )
 
+    @pytest.mark.pruned
     def test_forward_clamps_posterior_variance(self):
         model = self.make_stubbed_model()
 
@@ -1413,7 +1415,6 @@ class TestForward:
             ),
         )
 
-    @pytest.mark.pruned
     def test_forward_adds_deterministic_guess(self):
         model = self.make_stubbed_model()
 
@@ -1695,7 +1696,6 @@ class TestGenerationModule:
 
         assert len(generation.up_blocks) == 1
 
-    @pytest.mark.pruned
     def test_forward_without_generator(self):
         generation = self.make_generation()
 
@@ -2212,6 +2212,7 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is False
         assert config.freeze_deterministic is True
 
+    @pytest.mark.pruned
     def test_resolved_configuration_must_be_unet_config(self):
         selector = make_deterministic_selector(
             SimpleNamespace(
@@ -2381,7 +2382,6 @@ class TestAdditionalInitializationBranches:
 
         assert generation.call_args.kwargs["latent_size"] == 5
 
-    @pytest.mark.pruned
     def test_checkpoint_configuration_loads_state(self):
         config = make_config()
         checkpoint_config = object()
@@ -2533,7 +2533,6 @@ class TestAdditionalInitializationBranches:
 
 
 class TestAdditionalPrepareInputBranches:
-    @pytest.mark.pruned
     def test_condition_mask_is_broadcast(self):
         model = make_model()
 
@@ -3383,6 +3382,7 @@ class TestAdditionalGenerationForward:
             8,
         )
 
+    @pytest.mark.pruned
     def test_generation_passes_resize_shapes_in_order(
         self,
     ):
@@ -3648,7 +3648,6 @@ class TestSICModel:
             clip_output=True,
         )
 
-    @pytest.mark.pruned
     def test_sic_model_clips_output(self):
         model = self.make_sic_model(
             clip_output=True,
@@ -3673,6 +3672,7 @@ class TestSICModel:
         assert torch.all(result >= 0)
         assert torch.all(result <= 1)
 
+    @pytest.mark.pruned
     def test_sic_model_without_clipping_can_exceed_one(
         self,
     ):

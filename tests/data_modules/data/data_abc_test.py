@@ -425,6 +425,7 @@ def test_resolve_data_missing_coords(tmp_path):
             _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_realization_required_missing(tmp_path):
     cfg = DummyDataConfig(
         tmp_path,
@@ -469,7 +470,6 @@ def test_resolve_data_realization_present(tmp_path):
     assert cfg.list_paths == ["x.nc"]
 
 
-@pytest.mark.pruned
 def test_resolve_data_no_supported_nn_dimensions(tmp_path):
     ds = xr.Dataset(
         {
@@ -509,6 +509,7 @@ def test_resolve_data_no_supported_nn_dimensions(tmp_path):
             _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_invalid_time_type(tmp_path):
     ds = make_valid_ds().assign_coords(
         {
@@ -1581,7 +1582,6 @@ class TestAdditionalResolveData:
 
         collect.assert_not_called()
 
-    @pytest.mark.pruned
     def test_resolve_data_error_does_not_assign_list_paths(
         self,
         tmp_path,
@@ -1898,7 +1898,6 @@ class TestMoreResolveDataBranches:
             "data.nc",
         ]
 
-    @pytest.mark.pruned
     def test_missing_required_dimension_is_not_allowed_for_other_concat_dimension(
         self,
         tmp_path,
@@ -2009,6 +2008,7 @@ class TestMoreResolveDataBranches:
             ):
                 _resolve_data(config)
 
+    @pytest.mark.pruned
     def test_concat_dimension_present_as_dimension_but_not_coordinate_is_rejected(
         self,
         tmp_path,
@@ -2067,6 +2067,7 @@ class TestMoreResolveDataBranches:
             ):
                 _resolve_data(config)
 
+    @pytest.mark.pruned
     def test_time_validation_is_skipped_without_time_coordinate(
         self,
         tmp_path,

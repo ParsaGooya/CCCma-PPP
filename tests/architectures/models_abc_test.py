@@ -655,7 +655,6 @@ class TestLoadStateDict:
             freeze_weights=freeze_weights,
         )
 
-    @pytest.mark.pruned
     def test_missing_checkpoint_raises(
         self,
         tmp_path,
@@ -1120,6 +1119,7 @@ class TestSamplePrior:
             3,
         )
 
+    @pytest.mark.pruned
     def test_unconditional_prior_flow(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
 
@@ -1207,6 +1207,7 @@ class TestSamplePrior:
         )
         assert torch.all(passed_condition == 2)
 
+    @pytest.mark.pruned
     def test_user_latent_samples_are_preserved(
         self,
     ):
@@ -1225,7 +1226,6 @@ class TestSamplePrior:
 
         assert latent is user_samples
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "shape",
         [

@@ -438,7 +438,6 @@ def test_init_workers_zero_removes_prefetch():
     assert config.prefetch_factor is None
 
 
-@pytest.mark.pruned
 def test_init_workers_positive_preserves_prefetch(
     dataset_config,
 ):

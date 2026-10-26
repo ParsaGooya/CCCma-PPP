@@ -797,6 +797,7 @@ def test_figures_dir_property(tmp_path):
     assert "figures" in str(cfg.figures_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_copy_resume_branch(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1136,7 +1137,6 @@ def test_prepare_runtime_sets_target_metadata(tmp_path):
     assert RuntimeContext.TARGET_VAR_METADATA == cfg.train_loader.target_var_metadata
 
 
-@pytest.mark.pruned
 def test_checkpoint_dir_exists_after_prepare(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2007,7 +2007,6 @@ def test_prepare_directory_no_copy_root_false(tmp_path):
     cfg.prepare_directory(d)
 
 
-@pytest.mark.pruned
 def test_build_trainer_logger_none_non_root(tmp_path, capsys):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2398,7 +2397,6 @@ def test_prepare_directory_root_false_copy_resume_false_yaml_present(tmp_path):
     cfg.prepare_directory(d, yaml_config=yaml_path)
 
 
-@pytest.mark.pruned
 def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -2534,6 +2532,7 @@ def test_generator_branch_false(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_generator_branch_true_valid(tmp_path):
     module = DummyModuleSelector()
 
@@ -2918,6 +2917,7 @@ def test_prepare_directory_barrier_called(tmp_path):
     assert calls["n"] == 2
 
 
+@pytest.mark.pruned
 def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     calls = {"n": 0}
 

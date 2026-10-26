@@ -342,7 +342,6 @@ def test_forward_with_sample_size_explicit():
     assert isinstance(out, cVAEOutput)
 
 
-@pytest.mark.pruned
 def test_compute_loss_requires_init():
     m = make_module()
 
@@ -403,6 +402,7 @@ def test_load_checkpoint_missing():
         cfg._load_from_checkpoint("missing.pt")
 
 
+@pytest.mark.pruned
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -878,6 +878,7 @@ def test_predict_training_uses_training_noise_sample_count():
     assert request.output_sample_size == 7
 
 
+@pytest.mark.pruned
 def test_predict_eval_preserves_explicit_output_sample_size():
     selector = GeneratorSelector()
     module = make_module(
@@ -944,7 +945,6 @@ def test_compute_loss_accepts_none_target_mask():
     assert criterion.calls[0]["target_mask"] is None
 
 
-@pytest.mark.pruned
 def test_compute_loss_passes_prior_flow_to_kld():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),

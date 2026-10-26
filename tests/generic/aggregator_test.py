@@ -829,6 +829,7 @@ def test_plot_creates_loss_and_time_files(
     assert (tmp_path / "epoch_2_times.png").exists()
 
 
+@pytest.mark.pruned
 def test_plot_uses_custom_styles(tmp_path):
     first = make_agg("first")
     second = make_agg("second")
@@ -921,7 +922,6 @@ def test_plot_sanitizes_metric_name(tmp_path):
     assert (tmp_path / "epoch_2_loss_train.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_removes_old_loss_plot(tmp_path):
     old_plot = tmp_path / "epoch_1_loss.png"
     old_plot.write_text("old")

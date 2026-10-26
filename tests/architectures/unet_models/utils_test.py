@@ -413,6 +413,7 @@ def test_unet_config_checks_rejects_empty_channels():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "channels",
     [
@@ -575,7 +576,6 @@ def test_dimension_validation_order_starts_with_bottleneck():
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_latent_size_checked_before_condition_embedding_size():
     config = make_config(
         bottleneck_dim=16,
@@ -604,7 +604,6 @@ def test_unet_config_checks_rejects_independent_latent_without_decoder_condition
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_condition_rule_precedes_mask_threshold_validation():
     config = make_config(
         condition_dependant_latent=False,
@@ -682,6 +681,7 @@ def test_unet_config_checks_rejects_nonpositive_output_hidden_channels(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_output_hidden_channels_checked_before_generator():
     config = make_config(
         output_block_hidden_channels=0,

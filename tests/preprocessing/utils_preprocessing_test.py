@@ -1,3 +1,4 @@
+import datetime
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -996,6 +997,7 @@ class TestFlattennanremove:
                 )
             )
 
+    @pytest.mark.pruned
     def test_save(
         self,
         tmp_path,
@@ -1104,6 +1106,7 @@ class TestAlignStatistic:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_statistic_with_lead_time_is_returned_unchanged(self):
         data = make_forecast_data()
         stat = xr.DataArray(
@@ -1658,6 +1661,7 @@ def test_mask_with_no_valid_values_produces_nan_statistics(
         assert np.isnan(statistic.item())
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class",
     [
@@ -2176,6 +2180,7 @@ def test_flattener_save_uses_runtime_directory_and_default_name(
     )
 
 
+@pytest.mark.pruned
 def test_align_exact_initialization_time_statistic():
     times = np.asarray(
         [
@@ -2589,6 +2594,7 @@ class TestTrendRemoverInitialization:
         assert remover.time_origin is None
         assert remover.fitted is False
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "frequency",
         [
@@ -2891,6 +2897,7 @@ class TestTrendFitLinearTrend:
 
 
 class TestTrendRemoverFit:
+    @pytest.mark.pruned
     def test_requires_initialization_time_dimension(self):
         data = xr.Dataset(
             {
@@ -3742,3 +3749,1110 @@ class TestAlignStatisticAdditionalBranches:
         )
 
         assert add_times.call_args.kwargs["lead_time_resolution"] == "day"
+
+
+class TestAdditionalScalerResetBranches:
+    @pytest.mark.pruned
+    @pytest.mark.parametrize(
+        "scaler_class, statistic_names",
+        [
+            (
+                Normalizer,
+                (
+                    "min",
+                    "max",
+                ),
+            ),
+            (
+                Standardizer,
+                (
+                    "mean",
+                    "std",
+                ),
+            ),
+            (
+                AnomaliesScaler,
+                ("mean",),
+            ),
+        ],
+    )
+    def test_refitting_replaces_existing_statistics(
+        self,
+        scaler_class,
+        statistic_names,
+    ):
+        first = xr.DataArray(
+            [
+                1.0,
+                2.0,
+                3.0,
+            ],
+            dims=("samples",),
+        )
+        second = xr.DataArray(
+            [
+                10.0,
+                20.0,
+                30.0,
+            ],
+            dims=("samples",),
+        )
+
+        scaler = scaler_class(
+            dims=[
+                "samples",
+            ]
+        ).fit(first)
+
+        previous_statistics = {
+            name: getattr(
+                scaler,
+                name,
+            )
+            for name in statistic_names
+        }
+
+        result = scaler.fit(second)
+
+        assert result is scaler
+        assert scaler.fitted is True
+
+        for name in statistic_names:
+            assert (
+                getattr(
+                    scaler,
+                    name,
+                )
+                is not previous_statistics[name]
+            )
+
+    @pytest.mark.pruned
+    def test_normalizer_reset_clears_all_fitted_state(
+        self,
+    ):
+        scaler = Normalizer(
+            dims=[
+                "samples",
+            ]
+        ).fit(
+            xr.DataArray(
+                [
+                    1.0,
+                    2.0,
+                ],
+                dims=("samples",),
+            )
+        )
+
+        scaler._reset_fit()
+
+        assert scaler.min is None
+        assert scaler.max is None
+        assert scaler.fitted is False
+        assert scaler.dims == ("samples",)
+
+    @pytest.mark.pruned
+    def test_standardizer_reset_clears_all_fitted_state(
+        self,
+    ):
+        scaler = Standardizer(
+            dims=[
+                "samples",
+            ]
+        ).fit(
+            xr.DataArray(
+                [
+                    1.0,
+                    2.0,
+                ],
+                dims=("samples",),
+            )
+        )
+
+        scaler._reset_fit()
+
+        assert scaler.mean is None
+        assert scaler.std is None
+        assert scaler.fitted is False
+        assert scaler.dims == ("samples",)
+
+    @pytest.mark.pruned
+    def test_anomalies_reset_clears_all_fitted_state(
+        self,
+    ):
+        scaler = AnomaliesScaler(
+            dims=[
+                "samples",
+            ]
+        ).fit(
+            xr.DataArray(
+                [
+                    1.0,
+                    2.0,
+                ],
+                dims=("samples",),
+            )
+        )
+
+        scaler._reset_fit()
+
+        assert scaler.mean is None
+        assert scaler.fitted is False
+        assert scaler.dims == ("samples",)
+
+
+class TestAdditionalScalerFrequencyBranches:
+    @pytest.mark.pruned
+    @pytest.mark.parametrize(
+        "scaler_class",
+        [
+            Normalizer,
+            Standardizer,
+            AnomaliesScaler,
+        ],
+    )
+    def test_frequency_is_ignored_when_time_is_not_a_reduction_dimension(
+        self,
+        scaler_class,
+    ):
+        data = xr.DataArray(
+            np.arange(
+                8,
+                dtype=float,
+            ).reshape(
+                4,
+                2,
+            ),
+            dims=(
+                TIME_DIM,
+                "channels",
+            ),
+            coords={
+                TIME_DIM: np.asarray(
+                    [
+                        "2000-01-01",
+                        "2000-02-01",
+                        "2001-01-01",
+                        "2001-02-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                "channels": [
+                    "tas",
+                    "pr",
+                ],
+            },
+        )
+
+        scaler = scaler_class(
+            dims=[
+                "channels",
+            ],
+            frequency="month",
+        ).fit(data)
+
+        statistic = (
+            scaler.min
+            if isinstance(
+                scaler,
+                Normalizer,
+            )
+            else scaler.mean
+        )
+
+        assert "month" not in statistic.dims
+        assert statistic.dims == (TIME_DIM,)
+
+    @pytest.mark.pruned
+    def test_standardizer_grouped_std_uses_sample_ddof(
+        self,
+    ):
+        data = make_time_data()
+
+        scaler = Standardizer(
+            dims=[
+                TIME_DIM,
+            ],
+            frequency="month",
+        ).fit(data)
+
+        expected = np.asarray(
+            [
+                np.std(
+                    [
+                        2.0,
+                        6.0,
+                    ],
+                    ddof=1,
+                ),
+                np.std(
+                    [
+                        4.0,
+                        8.0,
+                    ],
+                    ddof=1,
+                ),
+            ]
+        )
+
+        np.testing.assert_allclose(
+            scaler.std.values,
+            expected,
+        )
+
+    def test_normalizer_group_with_zero_range_raises(
+        self,
+    ):
+        data = xr.DataArray(
+            [
+                5.0,
+                7.0,
+                5.0,
+                9.0,
+            ],
+            dims=(TIME_DIM,),
+            coords={
+                TIME_DIM: np.asarray(
+                    [
+                        "2000-01-01",
+                        "2000-02-01",
+                        "2001-01-01",
+                        "2001-02-01",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        with pytest.raises(
+            ValueError,
+        ):
+            Normalizer(
+                dims=[
+                    TIME_DIM,
+                ],
+                frequency="month",
+            ).fit(data)
+
+
+class TestAdditionalInverseAlignmentCalls:
+    @pytest.mark.pruned
+    @pytest.mark.parametrize(
+        "scaler_class, statistic_names",
+        [
+            (
+                Normalizer,
+                (
+                    "min",
+                    "max",
+                ),
+            ),
+            (
+                Standardizer,
+                (
+                    "mean",
+                    "std",
+                ),
+            ),
+            (
+                AnomaliesScaler,
+                ("mean",),
+            ),
+        ],
+    )
+    def test_inverse_forwards_configured_lead_time_resolution(
+        self,
+        scaler_class,
+        statistic_names,
+        monkeypatch,
+    ):
+        scaler = scaler_class()
+        scaler.lead_time_resolution = "day"
+        scaler.fitted = True
+
+        for index, name in enumerate(
+            statistic_names,
+            start=1,
+        ):
+            setattr(
+                scaler,
+                name,
+                xr.DataArray(float(index)),
+            )
+
+        alignment = Mock(
+            side_effect=lambda ds, stat, **kwargs: stat,
+        )
+        monkeypatch.setattr(
+            module,
+            "align_stat_data_lead_time_inverse_transform",
+            alignment,
+        )
+
+        data = xr.DataArray(
+            [
+                1.0,
+                2.0,
+            ],
+            dims=("samples",),
+        )
+
+        scaler.inverse_transform(data)
+
+        assert alignment.call_count == len(statistic_names)
+
+        for call, name in zip(
+            alignment.call_args_list,
+            statistic_names,
+        ):
+            assert call.kwargs == {
+                "ds": data,
+                "stat": getattr(
+                    scaler,
+                    name,
+                ),
+                "lead_time_resolution": "day",
+            }
+
+
+class TestAdditionalFlattennanremoveBranches:
+    def make_data(self):
+        return xr.DataArray(
+            [
+                [
+                    1.0,
+                    2.0,
+                ],
+                [
+                    3.0,
+                    4.0,
+                ],
+            ],
+            dims=(
+                "lat",
+                "lon",
+            ),
+            coords={
+                "lat": [
+                    45.0,
+                    46.0,
+                ],
+                "lon": [
+                    -124.0,
+                    -123.0,
+                ],
+            },
+        )
+
+    @pytest.mark.pruned
+    def test_reset_fit_clears_learned_state(
+        self,
+    ):
+        flattener = Flattennanremove().fit(self.make_data())
+
+        flattener._reset_fit()
+
+        assert flattener.fitted is False
+        assert flattener.common_to_input_and_target is False
+        assert flattener.NN_dims == []
+        assert flattener.reference_shape is None
+        assert flattener.final_locations is None
+
+    @pytest.mark.pruned
+    def test_fit_resets_previous_state_before_refitting(
+        self,
+    ):
+        flattener = Flattennanremove().fit(self.make_data())
+        previous_reference = flattener.reference_shape
+        previous_locations = flattener.final_locations
+
+        result = flattener.fit(self.make_data())
+
+        assert result is flattener
+        assert flattener.fitted is True
+        assert flattener.reference_shape is not previous_reference
+        assert flattener.final_locations is not previous_locations
+
+    @pytest.mark.pruned
+    def test_save_without_name_uses_default_filename(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        dump = Mock()
+        monkeypatch.setattr(
+            module.joblib,
+            "dump",
+            dump,
+        )
+
+        flattener = Flattennanremove().fit(
+            self.make_data(),
+            save=True,
+            save_path=tmp_path,
+        )
+
+        dump.assert_called_once_with(
+            flattener,
+            tmp_path / "flattener.joblib",
+        )
+
+    def test_save_creates_nested_directory(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        dump = Mock()
+        monkeypatch.setattr(
+            module.joblib,
+            "dump",
+            dump,
+        )
+
+        directory = tmp_path / "one" / "two"
+
+        flattener = Flattennanremove().fit(
+            self.make_data(),
+            save=True,
+            save_name="state",
+            save_path=directory,
+        )
+
+        assert directory.is_dir()
+        dump.assert_called_once_with(
+            flattener,
+            directory / "state.joblib",
+        )
+
+    @pytest.mark.pruned
+    def test_transform_requires_fitted_state(
+        self,
+    ):
+        with pytest.raises(
+            RuntimeError,
+            match="must be fitted",
+        ):
+            Flattennanremove().transform(self.make_data())
+
+    @pytest.mark.pruned
+    def test_inverse_requires_fitted_state_before_dimension_check(
+        self,
+    ):
+        with pytest.raises(
+            RuntimeError,
+            match="must be fitted",
+        ):
+            Flattennanremove().inverse_transform(self.make_data())
+
+    def test_transform_existing_ref_selects_only_final_locations(
+        self,
+    ):
+        data = self.make_data()
+        flattener = Flattennanremove().fit(data)
+
+        stacked = data.stack(ref=flattener.NN_dims)
+        result = flattener.transform(stacked)
+
+        xr.testing.assert_identical(
+            result["ref"],
+            flattener.final_locations,
+        )
+
+    @pytest.mark.pruned
+    def test_load_copies_nn_dimensions_without_aliasing(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        loaded = SimpleNamespace(
+            fitted=True,
+            NN_dims=[
+                "lat",
+                "lon",
+            ],
+            reference_shape=xr.Dataset(),
+            final_locations=xr.DataArray(
+                [
+                    0,
+                ],
+                dims=("ref",),
+            ),
+            common_to_input_and_target=False,
+        )
+
+        monkeypatch.setattr(
+            module.joblib,
+            "load",
+            Mock(
+                return_value=loaded,
+            ),
+        )
+
+        flattener = Flattennanremove()
+        flattener._load_from_memory(tmp_path / "saved.joblib")
+
+        assert flattener.NN_dims == [
+            "lat",
+            "lon",
+        ]
+        assert flattener.NN_dims is not loaded.NN_dims
+
+        loaded.NN_dims.append("extra")
+
+        assert flattener.NN_dims == [
+            "lat",
+            "lon",
+        ]
+
+
+class TestAdditionalTrendResetAndFitBranches:
+    @pytest.mark.pruned
+    def test_reset_fit_clears_learned_state(
+        self,
+    ):
+        remover = TrendRemover().fit(make_trend_dataset())
+
+        remover._reset_fit()
+
+        assert remover.slope is None
+        assert remover.intercept is None
+        assert remover.time_origin is None
+        assert remover.fitted is False
+        assert remover.frequency is None
+        assert remover.dims == [
+            TIME_DIM,
+        ]
+
+    def test_failed_refit_clears_previous_fit(
+        self,
+    ):
+        remover = TrendRemover().fit(make_trend_dataset())
+
+        invalid = xr.Dataset(
+            {
+                "tas": (
+                    "samples",
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            }
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="initialization-time dimension",
+        ):
+            remover.fit(invalid)
+
+        assert remover.slope is None
+        assert remover.intercept is None
+        assert remover.time_origin is None
+        assert remover.fitted is False
+
+    def test_frequency_coarser_than_data_frequency_is_rejected(
+        self,
+        monkeypatch,
+    ):
+        data = make_trend_dataset()
+
+        monkeypatch.setattr(
+            module,
+            "infer_time_resolution",
+            Mock(
+                return_value="day",
+            ),
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="must be None or finer",
+        ):
+            TrendRemover(
+                frequency="month",
+            ).fit(data)
+
+    @pytest.mark.pruned
+    def test_equal_requested_and_data_frequency_is_accepted(
+        self,
+        monkeypatch,
+    ):
+        data = make_trend_dataset(
+            times=[
+                "2000-01-01",
+                "2001-01-01",
+                "2000-01-02",
+                "2001-01-02",
+            ]
+        )
+
+        monkeypatch.setattr(
+            module,
+            "infer_time_resolution",
+            Mock(
+                return_value="day",
+            ),
+        )
+
+        result = TrendRemover(
+            frequency="day",
+        ).fit(data)
+
+        assert result.fitted is True
+
+    @pytest.mark.pruned
+    def test_fit_loads_grouped_slope_and_intercept(
+        self,
+        monkeypatch,
+    ):
+        data = make_trend_dataset(
+            times=[
+                "2000-01-01",
+                "2001-01-01",
+                "2000-01-02",
+                "2001-01-02",
+            ]
+        )
+
+        monkeypatch.setattr(
+            module,
+            "infer_time_resolution",
+            Mock(
+                return_value="day",
+            ),
+        )
+
+        remover = TrendRemover(
+            frequency="day",
+        ).fit(data)
+
+        assert remover.slope["tas"].dims == ("day",)
+        assert remover.intercept["tas"].dims == ("day",)
+        assert remover.slope["tas"].values.flags["OWNDATA"]
+
+
+class TestAdditionalTimeToNumericBranches:
+    @pytest.mark.pruned
+    def test_python_datetime_values(
+        self,
+    ):
+        times = xr.DataArray(
+            np.asarray(
+                [
+                    datetime.datetime(
+                        2000,
+                        1,
+                        1,
+                    ),
+                    datetime.datetime(
+                        2000,
+                        1,
+                        3,
+                    ),
+                ],
+                dtype="datetime64[ns]",
+            ),
+            dims=(TIME_DIM,),
+        )
+
+        result = TrendRemover._time_to_numeric(
+            times,
+            origin=np.datetime64("2000-01-01"),
+        )
+
+        np.testing.assert_allclose(
+            result.values,
+            [
+                0.0,
+                2.0,
+            ],
+        )
+
+    @pytest.mark.pruned
+    def test_cftime_scalar_dataarray_origin(
+        self,
+    ):
+        times = xr.DataArray(
+            np.asarray(
+                [
+                    cftime.Datetime360Day(
+                        2000,
+                        1,
+                        1,
+                    ),
+                    cftime.Datetime360Day(
+                        2000,
+                        2,
+                        1,
+                    ),
+                ],
+                dtype=object,
+            ),
+            dims=(TIME_DIM,),
+        )
+        origin = xr.DataArray(
+            cftime.Datetime360Day(
+                2000,
+                1,
+                1,
+            )
+        )
+
+        result = TrendRemover._time_to_numeric(
+            times,
+            origin=origin,
+        )
+
+        np.testing.assert_allclose(
+            result.values,
+            [
+                0.0,
+                30.0,
+            ],
+        )
+
+
+class TestAdditionalAlignStatisticBranches:
+    @pytest.mark.pruned
+    def test_lead_time_statistic_with_temporal_group_uses_initialization_time(
+        self,
+    ):
+        data = make_forecast_data(
+            times=(
+                "2000-01-01",
+                "2000-02-01",
+            ),
+            lead_times=(
+                1,
+                2,
+            ),
+        )
+
+        stat = xr.DataArray(
+            np.arange(
+                24,
+                dtype=float,
+            ).reshape(
+                12,
+                2,
+            ),
+            dims=(
+                "month",
+                LEAD_TIME_DIM,
+            ),
+            coords={
+                "month": np.arange(
+                    1,
+                    13,
+                ),
+                LEAD_TIME_DIM: [
+                    1,
+                    2,
+                ],
+            },
+        )
+
+        result = align_stat_data_lead_time_inverse_transform(
+            data,
+            stat,
+        )
+
+        assert result.dims == (
+            TIME_DIM,
+            LEAD_TIME_DIM,
+        )
+        np.testing.assert_array_equal(
+            result.values,
+            [
+                [
+                    0.0,
+                    1.0,
+                ],
+                [
+                    2.0,
+                    3.0,
+                ],
+            ],
+        )
+
+    @pytest.mark.pruned
+    def test_exact_time_statistic_without_lead_dimension_uses_valid_times(
+        self,
+    ):
+        data = make_forecast_data(
+            times=("2000-01-01",),
+            lead_times=(
+                1,
+                2,
+            ),
+        )
+        stat = xr.DataArray(
+            [
+                10.0,
+                20.0,
+            ],
+            dims=(TIME_DIM,),
+            coords={
+                TIME_DIM: np.asarray(
+                    [
+                        "2000-01-01",
+                        "2000-02-01",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        result = align_stat_data_lead_time_inverse_transform(
+            data,
+            stat,
+        )
+
+        assert result.dims == (
+            TIME_DIM,
+            LEAD_TIME_DIM,
+        )
+        np.testing.assert_array_equal(
+            result.values,
+            [
+                [
+                    10.0,
+                    20.0,
+                ]
+            ],
+        )
+
+    def test_exact_time_statistic_with_lead_dimension_uses_initialization_times(
+        self,
+    ):
+        times = np.asarray(
+            [
+                "2000-01-01",
+                "2001-01-01",
+            ],
+            dtype="datetime64[ns]",
+        )
+        data = make_forecast_data(
+            times=(
+                "2000-01-01",
+                "2001-01-01",
+            ),
+            lead_times=(
+                1,
+                2,
+            ),
+        )
+        stat = xr.DataArray(
+            np.asarray(
+                [
+                    [
+                        10.0,
+                        20.0,
+                    ],
+                    [
+                        30.0,
+                        40.0,
+                    ],
+                ]
+            ),
+            dims=(
+                TIME_DIM,
+                LEAD_TIME_DIM,
+            ),
+            coords={
+                TIME_DIM: times,
+                LEAD_TIME_DIM: [
+                    1,
+                    2,
+                ],
+            },
+        )
+
+        result = align_stat_data_lead_time_inverse_transform(
+            data,
+            stat,
+        )
+
+        np.testing.assert_array_equal(
+            result.values,
+            stat.values,
+        )
+        xr.testing.assert_equal(
+            result[TIME_DIM],
+            data[TIME_DIM],
+        )
+        xr.testing.assert_equal(
+            result[LEAD_TIME_DIM],
+            data[LEAD_TIME_DIM],
+        )
+
+    @pytest.mark.pruned
+    def test_missing_month_value_raises_key_error(
+        self,
+    ):
+        data = make_forecast_data(
+            times=("2000-01-01",),
+            lead_times=(
+                1,
+                2,
+            ),
+        )
+        stat = xr.DataArray(
+            [
+                10.0,
+            ],
+            dims=("month",),
+            coords={
+                "month": [
+                    1,
+                ],
+            },
+        )
+
+        with pytest.raises(
+            KeyError,
+            match="not all values found",
+        ):
+            align_stat_data_lead_time_inverse_transform(
+                data,
+                stat,
+            )
+
+    @pytest.mark.pruned
+    def test_dataset_statistics_are_aligned(
+        self,
+    ):
+        data = make_forecast_data(
+            times=("2000-01-01",),
+            lead_times=(
+                1,
+                2,
+            ),
+        )
+        stat = xr.Dataset(
+            {
+                "tas": (
+                    "month",
+                    np.arange(
+                        1,
+                        13,
+                        dtype=float,
+                    ),
+                ),
+                "pr": (
+                    "month",
+                    np.arange(
+                        101,
+                        113,
+                        dtype=float,
+                    ),
+                ),
+            },
+            coords={
+                "month": np.arange(
+                    1,
+                    13,
+                ),
+            },
+        )
+
+        result = align_stat_data_lead_time_inverse_transform(
+            data,
+            stat,
+        )
+
+        assert isinstance(
+            result,
+            xr.Dataset,
+        )
+        assert result["tas"].dims == (
+            TIME_DIM,
+            LEAD_TIME_DIM,
+        )
+        np.testing.assert_array_equal(
+            result["tas"].values,
+            [
+                [
+                    1.0,
+                    2.0,
+                ]
+            ],
+        )
+        np.testing.assert_array_equal(
+            result["pr"].values,
+            [
+                [
+                    101.0,
+                    102.0,
+                ]
+            ],
+        )
+
+    @pytest.mark.pruned
+    def test_alignment_for_cftime_initialization_times(
+        self,
+    ):
+        times = xr.DataArray(
+            np.asarray(
+                [
+                    cftime.Datetime360Day(
+                        2000,
+                        1,
+                        1,
+                    ),
+                    cftime.Datetime360Day(
+                        2000,
+                        2,
+                        1,
+                    ),
+                ],
+                dtype=object,
+            ),
+            dims=(TIME_DIM,),
+            coords={
+                TIME_DIM: np.asarray(
+                    [
+                        cftime.Datetime360Day(
+                            2000,
+                            1,
+                            1,
+                        ),
+                        cftime.Datetime360Day(
+                            2000,
+                            2,
+                            1,
+                        ),
+                    ],
+                    dtype=object,
+                )
+            },
+        )
+        stat = xr.DataArray(
+            np.arange(
+                1,
+                13,
+                dtype=float,
+            ),
+            dims=("month",),
+            coords={
+                "month": np.arange(
+                    1,
+                    13,
+                ),
+            },
+        )
+
+        result = align_stat_data_lead_time_inverse_transform(
+            times,
+            stat,
+        )
+
+        np.testing.assert_array_equal(
+            result.values,
+            [
+                1.0,
+                2.0,
+            ],
+        )
+        assert result.dims == (TIME_DIM,)

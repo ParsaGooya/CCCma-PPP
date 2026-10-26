@@ -424,7 +424,6 @@ class TestLoadXarrayData:
             61,
         ]
 
-    @pytest.mark.pruned
     def test_auxiliary_coordinates_require_init_time(self):
         dataset = make_dataset().drop_vars(INIT_TIME_DIM)
 
@@ -666,6 +665,7 @@ class TestValidateTimeSequence:
                 ]
             )
 
+    @pytest.mark.pruned
     def test_rejects_mixed_python_datetime_values(self):
         values = np.array(
             [
@@ -1130,7 +1130,6 @@ class TestAddMonths:
 
 
 class TestAddLeadTimes:
-    @pytest.mark.pruned
     def test_numpy_daily_offsets(self):
         result = add_lead_times(
             init_times=np.array(
@@ -1190,6 +1189,7 @@ class TestAddLeadTimes:
             ),
         )
 
+    @pytest.mark.pruned
     def test_accepts_integer_valued_float_lead_times(self):
         result = add_lead_times(
             init_times=np.array(
@@ -1368,7 +1368,6 @@ class TestAddLeadTimes:
                 ),
             )
 
-    @pytest.mark.pruned
     def test_rejects_invalid_numpy_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1385,6 +1384,7 @@ class TestAddLeadTimes:
                 lead_time_resolution="year",
             )
 
+    @pytest.mark.pruned
     def test_rejects_invalid_cftime_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1506,7 +1506,6 @@ class TestAddCftimeOffset:
             123456,
         )
 
-    @pytest.mark.pruned
     def test_rejects_invalid_resolution(self):
         with pytest.raises(
             ValueError,
@@ -2081,6 +2080,7 @@ class TestAdditionalLoadXarrayData:
                     },
                 )
 
+    @pytest.mark.pruned
     def test_empty_rename_dictionary_is_accepted(self):
         dataset = make_dataset()
 
@@ -3026,6 +3026,7 @@ class TestAdditionalCreateTrainMask:
             with_none,
         )
 
+    @pytest.mark.pruned
     def test_negative_integer_lead_count_raises(self):
         with pytest.raises(
             ValueError,
@@ -3288,7 +3289,6 @@ class TestAdditionalValidateTimeSequence:
             )
         )
 
-    @pytest.mark.pruned
     def test_accepts_single_cftime_datetime(self):
         _validate_time_sequence(
             [
@@ -3536,7 +3536,6 @@ class TestAdditionalDaysInCftimeMonth:
             == 30
         )
 
-    @pytest.mark.pruned
     def test_all_leap_thirty_one_day_month(self):
         assert (
             _days_in_cftime_month(

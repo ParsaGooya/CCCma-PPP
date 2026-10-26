@@ -186,7 +186,6 @@ def test_model_selector_register_lowercase_lookup():
     assert cfg.value == 3
 
 
-@pytest.mark.pruned
 def test_model_selector_unregistered_raises():
     selector = LocalModelSelector(type=unique_name("missing_model"), config={})
 

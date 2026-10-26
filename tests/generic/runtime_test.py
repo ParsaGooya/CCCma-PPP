@@ -119,6 +119,7 @@ class TestRuntimeContextDefaults:
 
 
 class TestRuntimeContextCustomDirectories:
+    @pytest.mark.pruned
     def test_preserves_custom_checkpoint_directory(
         self,
         tmp_path,
@@ -160,7 +161,6 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_LOG_DIR is custom
 
-    @pytest.mark.pruned
     def test_preserves_custom_monitoring_directory(
         self,
         tmp_path,

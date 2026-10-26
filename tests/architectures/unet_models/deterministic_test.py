@@ -269,7 +269,6 @@ def test_integer_kernel_size_is_repeated(kernel_size):
     ]
 
 
-@pytest.mark.pruned
 def test_explicit_kernel_list_is_preserved():
     kernel_sizes = [2, 3]
 
@@ -442,7 +441,6 @@ def test_config_build_passes_none_values():
     )
 
 
-@pytest.mark.pruned
 def test_model_defaults_output_shape_to_input_shape():
     model = make_model(
         input_shape=(2, 16, 16),
@@ -469,6 +467,7 @@ def test_model_rejects_invalid_input_rank(input_shape):
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "output_shape",
     [
@@ -486,6 +485,7 @@ def test_model_rejects_invalid_output_rank(output_shape):
         )
 
 
+@pytest.mark.pruned
 def test_model_rejects_different_spatial_shapes_without_hidden_output():
     config = make_config(
         output_block_hidden_channels=None,
@@ -689,6 +689,7 @@ def test_down_blocks_without_skip_processing():
     assert all(block.skip_processor is None for block in model.down_blocks)
 
 
+@pytest.mark.pruned
 def test_up_blocks_use_kernel_sizes_in_decoder_order():
     config = make_config(
         channels=[4, 8, 16],
@@ -1776,7 +1777,6 @@ def test_prepare_input_preserves_channel_order():
     )
 
 
-@pytest.mark.pruned
 def test_prepare_input_uses_broadcast_mask_before_adding_feature_mask():
     model = make_model(
         added_features_dim=2,

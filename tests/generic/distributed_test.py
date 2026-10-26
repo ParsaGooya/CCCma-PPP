@@ -74,6 +74,7 @@ def test_cleanup(monkeypatch):
     assert called.get("destroy", False)
 
 
+@pytest.mark.pruned
 def test_cleanup_not_initialized(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: False)
@@ -128,7 +129,6 @@ def test_all_reduce_called(monkeypatch):
     assert called.get("hit", False)
 
 
-@pytest.mark.pruned
 def test_all_reduce_not_called(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: False)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: False)

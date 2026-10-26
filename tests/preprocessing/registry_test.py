@@ -397,6 +397,7 @@ def test_register_decorator_rejects_non_class(value):
     assert "invalid" not in reg.available()
 
 
+@pytest.mark.pruned
 def test_non_class_registration_error_reports_value_type():
     reg = Registery()
 
@@ -551,7 +552,6 @@ def test_get_does_not_mutate_config_dictionary():
     assert config == original
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "config",
     [
@@ -780,6 +780,7 @@ def test_registered_inheritance_is_supported():
     )
 
 
+@pytest.mark.pruned
 def test_class_with_variadic_keywords_is_supported():
     reg = Registery()
 

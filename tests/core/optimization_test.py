@@ -242,6 +242,7 @@ def test_optimizer_build_scheduler_requires_num_batches_and_epochs_config_level(
         cfg.build(module)
 
 
+@pytest.mark.pruned
 def test_optimizer_build_scheduler_requires_num_batches_wrapper_level():
     module = make_module()
     cfg = OptimizerConfig(lr_scheduler_config=LRSchedulerConfig(total_epochs=2))
@@ -1011,7 +1012,6 @@ def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     scheduler_load_mock.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_optimizer_without_scheduler_ignores_scheduler_state(
     monkeypatch,
 ):

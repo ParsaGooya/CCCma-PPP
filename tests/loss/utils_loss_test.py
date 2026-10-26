@@ -374,7 +374,6 @@ def test_mse_mean_exact_value():
     assert result.item() == pytest.approx(4.0)
 
 
-@pytest.mark.pruned
 def test_mse_sum():
     result = WeightedMSE(
         w2d(),
@@ -581,6 +580,7 @@ def test_mse_no_threshold_trigger():
     assert result.item() == pytest.approx(0.0)
 
 
+@pytest.mark.pruned
 def test_mse_generator_averages_ensemble():
     loss = WeightedMSE(
         w2d(),
@@ -614,7 +614,6 @@ def test_mse_generator_valid_structure():
     assert result >= 0
 
 
-@pytest.mark.pruned
 def test_mse_generator_rejects_invalid_structure():
     loss = WeightedMSE(
         w2d(),
@@ -1288,7 +1287,6 @@ def test_frobenius_spatial_multiple_channels():
     assert result >= 0
 
 
-@pytest.mark.pruned
 def test_frobenius_channel():
     result = Frobenius_norm(
         w2d(),
@@ -1386,6 +1384,7 @@ def test_frobenius_generator_averages_ensemble():
     )
 
 
+@pytest.mark.pruned
 def test_frobenius_generator_rejects_invalid_structure():
     loss = Frobenius_norm(
         w2d(),
@@ -1420,6 +1419,7 @@ def test_frobenius_generative_spatial():
     assert torch.isfinite(result)
 
 
+@pytest.mark.pruned
 def test_frobenius_generative_channel():
     context = make_context(generative_modeling=True)
 
@@ -1439,7 +1439,6 @@ def test_frobenius_generative_channel():
     assert torch.isfinite(result)
 
 
-@pytest.mark.pruned
 def test_frobenius_generator_and_generative():
     context = make_context(
         generator=True,
@@ -1470,6 +1469,7 @@ def test_frobenius_generator_and_generative():
     )
 
 
+@pytest.mark.pruned
 def test_frobenius_print(capsys):
     Frobenius_norm(
         w2d(),

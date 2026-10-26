@@ -121,6 +121,7 @@ class TestCVaEMLPConfig:
 
         assert config.decoder_hidden_dims == [8, 16]
 
+    @pytest.mark.pruned
     def test_empty_encoder_creates_empty_decoder(self):
         config = make_config(
             encoder_hidden_dims=[],
@@ -205,7 +206,6 @@ class TestCVaEMLPConfig:
 
         assert config.dropout_rate == dropout_rate
 
-    @pytest.mark.pruned
     def test_build_returns_model(self):
         config = make_config()
 

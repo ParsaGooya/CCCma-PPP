@@ -281,7 +281,6 @@ def test_model_data_config_get_info_called():
     assert called["info"] is True
 
 
-@pytest.mark.pruned
 def test_obs_data_config_basic():
     with patch_common():
         cfg = ObsDataConfig(
@@ -316,6 +315,7 @@ def test_obs_data_config_check_realization_false():
     assert cfg.realization_list is None
 
 
+@pytest.mark.pruned
 def test_obs_data_config_check_realization_true():
     with patch_common():
         cfg = ObsDataConfig(

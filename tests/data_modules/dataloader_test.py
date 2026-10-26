@@ -780,6 +780,7 @@ class TestDataloader:
             5,
         ]
 
+    @pytest.mark.pruned
     def test_subset_loader_from_zero_returns_every_batch(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -1072,6 +1073,7 @@ def test_parse_year_bound_rejects_unsupported_types(
         config._parse_year_bound(bound)
 
 
+@pytest.mark.pruned
 def test_select_requested_times_accepts_integer_bounds():
     config = ConcreteDataloaderConfig()
 
@@ -1418,6 +1420,7 @@ def test_dataloader_forwards_zero_worker_options():
     assert kwargs["timeout"] == 0
 
 
+@pytest.mark.pruned
 def test_dataloader_forwards_nonzero_worker_options():
     config = ConcreteDataloaderConfig(
         num_data_workers=2,
@@ -1558,7 +1561,6 @@ def test_subset_loader_rejects_negative_start(
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "start_batch",
     [
