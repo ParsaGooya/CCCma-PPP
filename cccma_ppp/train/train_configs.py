@@ -22,7 +22,7 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
-from cccma_ppp.generic import registry_imports
+
 
 def set_seed(seed):
     """
@@ -121,7 +121,7 @@ class TrainConfig:
         UserWarning
             Description not yet provided.
         """
-        
+
         if self.module.GENERATOR is not None:
             if "crps" not in self.losspipeline.loss_types:
                 raise RuntimeError(
@@ -503,7 +503,6 @@ def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
         raise ValueError("only checks IO in data vs module.")
 
     if model_dims == 2:
-        
         if len(metadata.get("NN_dims")) != 2:
             if not all(
                 ["flattener" in pipeline for pipeline in metadata.get("preprocessors")]

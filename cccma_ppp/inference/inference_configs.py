@@ -15,7 +15,7 @@ from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
-from cccma_ppp.generic import registry_imports
+
 
 @dataclasses.dataclass
 class InferenceConfig:
@@ -339,7 +339,6 @@ def build_writer(
 
     module = config.load_module()
     module = module.to(distributed.device)
-
 
     log("creating data loader ...")
 
