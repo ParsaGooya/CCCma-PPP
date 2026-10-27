@@ -471,10 +471,6 @@ class TrainDataset(DatasetABC):
             Description not yet provided.
         """
         if self.config.observation is not None:
-            checklist = [
-                isinstance(item, Flattennanremove)
-                for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors
-            ]
 
             len_names = len(self.config.observation.names)
 

@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_cVAEUnet_SIC_PreTrDetUnfrozen_Gen
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_cVAEUnet_SIC_PreTrDetUnfrozen_Gen_testmerge
 max_epochs: 100
 train_loader:
   dataset_config:
@@ -79,7 +79,7 @@ optimization:
   lr: 0.00001
   optimizer_type: adam
   lr_scheduler_config:
-    min_lr: 1e-8
+    min_lr: 0.0000001
     # warmup_epochs : 1
     total_epochs: 10
     hold_min_lr: True

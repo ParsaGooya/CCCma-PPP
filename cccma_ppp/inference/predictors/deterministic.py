@@ -21,7 +21,7 @@ class DeterministicPredictorConfig:
     Document this class.
     """
 
-    chunk_output_samples: bool = (False,)
+    chunk_output_samples: bool = False
     _type: ClassVar[str] = "deterministic"
 
     def build(

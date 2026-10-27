@@ -703,13 +703,6 @@ class DatasetConfigABC(abc.ABC):
                 f"The following requested_times are unavailable: {missing}"
             )
 
-        missing = [t for t in requested_times.values if t not in self.available_times]
-
-        if missing:
-            raise ValueError(
-                f"The following requested_times are unavailable: {missing}"
-            )
-
         input_times = self.effective_input.coords[self.init_time_dim].to_index()
         return requested_times.sel(
             {self.init_time_dim: requested_times.to_index().intersection(input_times)}

@@ -49,7 +49,7 @@ class Registery:
             """
             if not inspect.isclass(cls):
                 raise TypeError(
-                    f"Can only register classesGot {type(cls).__name__} for {name!r}."
+                    f"Can only register classes. Got {type(cls).__name__} for {name!r}."
                 )
 
             self._modules[name] = cls
