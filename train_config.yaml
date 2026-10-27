@@ -1,92 +1,95 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_cVAEUnet_SIC_PreTrDetUnfrozen_Gen_testmerge
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_for_Reinel
 max_epochs: 100
 train_loader:
   dataset_config:
     model:
-      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/SI/forecast/Full/NOAA/datetime
-      names: [SICN]
-      ensemble_mean: True
-      concat_dim: time
-      rename_dict:
-        x: lon
-        y: lat
-
-    observation:
-      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/SI/observation/NOAA/datetime
-      names: [SICN]
-      concat_dim: time
-      rename_dict:
-        x: lon
-        y: lat
-
-    condition_method: ensemble_mean
-
-  batch_size: 10
-  time_features:
-    - lead_time
-    - month_sin
-    - month_cos
-
-  train_years_slice: [1980, 2019]
-  num_validation_years: 3
-  prefetch_factor: 4
-  num_data_workers: 4
-  reduce_spatial_mask: True
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime/forecast_like
+      names:
+      - tas
+      preprocessing_pipeline:
+        preprocessors_list:
+        - name: standardizer
+          args:
+            dims:
+            - time
+            frequency: month
+        - name: flattener # does flattener get verified for MLP and UNet correctly, you can add a line to check that with data as well
+      ensemble_mean: false
+      # concat_dim: time
+      # rename_dict:
+      #   year: time
+      # drop_vars_list: [height]
+    # observation:
+    #   paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
+    #   names:
+    #   - tas
+    #   preprocessing_pipeline:
+    #     preprocessors_list:
+    #     - name: anomalies
+    #       args:
+    #         dims:
+    #         - time
+    #         frequency: month
+    #     - name: flattener
+    #   concat_dim: time
+    condition_method: same_member 
+    lead_times:
+      start: 1
+      end: 1
+    # condition:
+    #   paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/dummy_mask
+    #   names:
+    #     - tas
+    #   preprocessing_pipeline:
+    #     preprocessors_list:
+    #     - name: flattener
+  batch_size: 100
+  # time_features:
+  # - time
+  # - lead_time
+  # - month_sin
+  # - month_cos
+  train_years_slice:
+  - 2000
+  - 2024
+  num_validation_years: 5
+  # num_data_workers: 0
+  # reduce_spatial_mask: False ## change the name of this arg
   load: True
-
 module:
   type: cvae
   config:
-    ModelConfig:
-      type: UNetSIC
+    ModelConfig:   ### Change this to architecture_config
+      type: MLP
       config:
-        channels: [16, 32, 64, 128, 256]
-        latent_size: 1000
-        latent_normalization: layer
-
-        condition_embedding_channels: [16, 32, 64, 128, 256]
-        condition_embedding_size: 1000
-        condition_dependant_latent: true
+        encoder_hidden_dims: [3000,3000, 3000, 3000, 3000]
+        latent_size: 500
+        decoder_hidden_dims: [3000,3000, 3000, 3000, 3000]
+        condition_embedding_dims: [3000,3000, 3000, 3000, 3000]
+        condition_embedding_size: 2
+        condition_dependant_latent: false
         condemb_to_decoder: true
-
-        block_config:
-          name: convnext
-          num_blocks: 2
-
-        deterministic_guess_config:
-          type: UNetSIC
-          share_output_block: true
-          load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_Unet_SIC/checkpoints/best.pt
-          freeze_weights: True
-
-        upsampling_method: bilinear
-        upsampling_alignment_method: padd
-        init_method: default
-
+        batch_normalization: false
+        dropout_rate: 0
+        # init_method: xavier
 losspipeline:
   loss_pipeline:
-    - name: mse
+  - name: mse
   reduction: mean
-
 trainer:
   beta_finder:
-    beta: 0.01
+    beta: 0.1
     num_epoch_to_warmup: 10
-  earlystoppingbuffer: 10
-  mixed_precision: True
-
+  mixed_precision: true
 optimization:
-  lr: 0.00001
+  lr: 0.0001
   optimizer_type: adam
   lr_scheduler_config:
-    min_lr: 0.0000001
-    # warmup_epochs : 1
-    total_epochs: 10
-    hold_min_lr: True
-
+    min_lr: 1.0e-06
+    warmup_epochs: 5
+    hold_min_lr: true
 weights:
   spatial_method: uniform
-
 log_every_n_epochs: 2
-save_checkpoint: True
+save_checkpoint: true
 seed: 10
