@@ -79,7 +79,7 @@ def run_one(name: str, data: xr.DataArray) -> None:
     print(f"  Output std over late half:  {float(late_out.std()):.6e}")
 
 
-def run_trend(prep_ds: xr.Dataset) -> None:
+def run_trend_old(prep_ds: xr.Dataset) -> None:
     section("TREND_REMOVER (fitted on all init times)")
     trend = TrendRemover()
     trend.fit(prep_ds)
@@ -102,6 +102,56 @@ def run_trend(prep_ds: xr.Dataset) -> None:
     print(
         f"  Round-trip error, max|x - inverse(transform(x))|: "
         f"{max_abs_diff(last, inv_last):.3e}"
+    )
+
+
+def run_trend(prep_ds: xr.Dataset) -> None:
+    section("TREND_REMOVER (fitted on all init times)")
+    trend = TrendRemover()
+    trend.fit(prep_ds)
+    data = prep_ds["data"]
+
+    # 1. Round trip over all lead times, first init time
+    sample = data.isel(time=[0])
+    fwd = as_dataarray(trend.transform(sample))
+    inv = as_dataarray(trend.inverse_transform(fwd))
+    err_all = np.abs(
+        np.asarray(sample.values, dtype=np.float64)
+        - np.asarray(inv.transpose(*sample.dims).values, dtype=np.float64)
+    )
+    print(f"  Round-trip error, all lead times: {err_all.max():.3e}")
+
+    # 2. Round trip at the last lead time, element-wise error map
+    lt = data.sizes["lead_time"]
+    last = data.isel(time=[0], lead_time=[lt - 1])
+    fwd_last = as_dataarray(trend.transform(last))
+    inv_last = as_dataarray(trend.inverse_transform(fwd_last))
+    err_last = np.abs(
+        np.asarray(last.values, dtype=np.float64)
+        - np.asarray(inv_last.transpose(*last.dims).values, dtype=np.float64)
+    )
+    print(f"  Round-trip error at lead {lt - 1}: {err_last.max():.3e}")
+
+    # 3. Predicted error from the offset alone: slope * (t_target - t_init)
+    target = trend._get_inverse_target_time(last)
+    t_init = trend._time_to_numeric(last["time"], origin=trend.time_origin).values
+    t_target = trend._time_to_numeric(target, origin=trend.time_origin).values
+    offset = xr.DataArray(
+        np.asarray(t_target - t_init, dtype=np.float64),
+        dims=("time", "lead_time"),
+        coords={"time": last["time"], "lead_time": last["lead_time"]},
+    )
+    trend_diff = (trend.slope["data"] * offset).broadcast_like(last)
+    diff_vals = np.abs(
+        np.asarray(trend_diff.transpose(*last.dims).values, dtype=np.float64)
+    )
+    print(f"  Predicted error, max|slope * (t_target - t_init)|: {diff_vals.max():.3e}")
+
+    # 4. Compare at the element where the round-trip error peaks
+    idx = np.unravel_index(np.argmax(err_last), err_last.shape)
+    print(
+        f"  At peak element {idx}: round-trip {err_last[idx]:.3e}, "
+        f"predicted {diff_vals[idx]:.3e}"
     )
 
 

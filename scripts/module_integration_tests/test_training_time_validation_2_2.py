@@ -192,6 +192,7 @@ def verify_and_print_times(config: TrainDatasetConfig):
     logger = logging.getLogger(__name__)
     common_times = config.get_common_time
     available_times = config.available_times
+    input_time = config.get_input_times(available_times)
 
     logger.info("COMMON TIMES (intersection of model and obs):")
     logger.info(f"   Count: {len(common_times)}")
@@ -202,6 +203,11 @@ def verify_and_print_times(config: TrainDatasetConfig):
     logger.info(f"   Count: {len(available_times)}")
     if len(available_times):
         logger.info(f"   Range: {available_times[0]} to {available_times[-1]}")
+
+    logger.info("INPUT TIMES (intersection of model and available):")
+    logger.info(f"   Count: {len(input_time)}")
+    if len(input_time):
+        logger.info(f"   Range: {input_time[0]} to {input_time[-1]}")
 
     logger.info("COMMON TIMES (first 5 and last 5):")
     for i, t in enumerate(common_times):
@@ -220,10 +226,14 @@ def verify_and_print_times(config: TrainDatasetConfig):
     return common_times, available_times
 
 
-def create_training_mask(config, available_times, output_dir: Path) -> np.ndarray:
+def create_training_mask(
+    config, available_times, max_allowed_time, output_dir: Path
+) -> np.ndarray:
     """Build the boolean training mask and save it as training_mask.npy."""
     logger = logging.getLogger(__name__)
-    model_init_times = config.get_common_time.to_series().index.unique()
+    model_init_times = (
+        config.get_input_times(available_times).to_series().index.unique()
+    )
     lead_times = list(config.lead_times)
 
     logger.info(f"Model init times: {len(model_init_times)}")
@@ -235,6 +245,7 @@ def create_training_mask(config, available_times, output_dir: Path) -> np.ndarra
         init_times=model_init_times.values,
         lead_times=lead_times,
         lead_time_resolution="month",  # check the allowed values of lead_time_unit
+        max_allowed_time=max_allowed_time,
     ).values
 
     # The function never sees available_times, so keep the obs check separately.
@@ -320,9 +331,11 @@ def validate_case(config_path: Path, output_dir: Path) -> None:
     config_dict = load_config(str(config_path))
     train_config = create_config_from_yaml(config_dict)
     common_times, available_times = verify_and_print_times(train_config)
-
+    max_allowed_time = common_times.max()
     lead_times = list(train_config.lead_times)
-    mask = create_training_mask(train_config, available_times, output_dir)
+    mask = create_training_mask(
+        train_config, available_times, max_allowed_time, output_dir
+    )
     plot_training_mask(mask, output_dir, lead_times=lead_times)
 
     report = {  # summary written to training_validation_report.json

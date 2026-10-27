@@ -17,6 +17,7 @@ train_loader:
       concat_dim: time
       rename_dict:
         year: time
+      drop_vars_list: [height]
     observation:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
       names:
@@ -36,10 +37,13 @@ train_loader:
       end: 120
     condition:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/dummy_mask
+      preprocessing_pipeline:
+        preprocessors_list:
+          - name: flattener
       names:
         - tas
 
-      concat_dim: time
+      # concat_dim: time
 
   batch_size: 2
   time_features:
