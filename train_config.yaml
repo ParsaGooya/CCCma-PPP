@@ -13,7 +13,7 @@ train_loader:
             dims:
             - time
             frequency: month
-        - name: flattener # does flattener get verified for MLP and UNet correctly, you can add a line to check that with data as well
+        - name: flattener 
       ensemble_mean: false
       # concat_dim: time
       # rename_dict:
@@ -54,7 +54,7 @@ train_loader:
   - 2024
   num_validation_years: 5
   # num_data_workers: 0
-  # reduce_spatial_mask: False ## change the name of this arg
+  # reduce_spatial_mask: False 
   load: True
 module:
   type: cvae

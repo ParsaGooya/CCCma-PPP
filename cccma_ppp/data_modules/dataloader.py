@@ -73,7 +73,7 @@ class DataloaderConfigABC(abc.ABC):
         Description not yet provided.
     return_spatial_mask : bool
         Description not yet provided.
-    reduce_spatial_mask : bool
+    share_spatial_mask : bool
         Description not yet provided.
     """
 
@@ -82,7 +82,7 @@ class DataloaderConfigABC(abc.ABC):
     time_features: AddedTimeFeatures | list[str] | None
     prefetch_factor: int | None
     return_spatial_mask: bool
-    reduce_spatial_mask: bool
+    share_spatial_mask: bool
 
     init_time_dim: ClassVar[str] = init_time_dim
     lead_time_dim: ClassVar[str] = lead_time_dim
@@ -254,7 +254,7 @@ class Dataloader:
             collate_fn=partial(
                 self.collate_fn,
                 return_spatial_mask=self.return_spatial_mask,
-                reduce_spatial_mask=self.config.reduce_spatial_mask,
+                share_spatial_mask=self.config.share_spatial_mask,
             ),
             num_workers=num_workers,
             prefetch_factor=self.config.prefetch_factor,

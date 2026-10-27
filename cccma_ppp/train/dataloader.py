@@ -34,7 +34,7 @@ class BatchData(BatchDataABC):
         Description not yet provided.
     return_spatial_mask : bool
         Description not yet provided.
-    reduce_spatial_mask : bool
+    share_spatial_mask : bool
         Description not yet provided.
     input_mask : torch.Tensor | None
         Description not yet provided.
@@ -47,7 +47,7 @@ class BatchData(BatchDataABC):
     added_features: torch.Tensor = None
     metadata: list[dict] | None = None
     return_spatial_mask: bool = False
-    reduce_spatial_mask: bool = True
+    share_spatial_mask: bool = True
     input_mask: torch.Tensor | None = dataclasses.field(
         init=False,
         default=None,
@@ -62,7 +62,7 @@ class BatchData(BatchDataABC):
         Document this function.
         """
         if self.return_spatial_mask:
-            if self.reduce_spatial_mask:
+            if self.share_spatial_mask:
                 if type(self)._shared_input_mask is None:
                     type(self)._shared_input_mask = (~torch.isnan(self.input)).all(
                         dim=0
@@ -137,7 +137,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         Description not yet provided.
     load : bool
         Description not yet provided.
-    reduce_spatial_mask : bool
+    share_spatial_mask : bool
         Description not yet provided.
     """
 
@@ -150,7 +150,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     prefetch_factor: int = 2
     drop_last: bool = False
     load: bool = False
-    reduce_spatial_mask: bool = False
+    share_spatial_mask: bool = False
 
     def __post_init__(self):
         """
@@ -405,7 +405,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 def collate_batch(
     batch,
     return_spatial_mask: bool = False,
-    reduce_spatial_mask: bool = False,
+    share_spatial_mask: bool = False,
 ):
     """
     Document this function.
@@ -416,7 +416,7 @@ def collate_batch(
         Description not yet provided.
     return_spatial_mask : bool
         Description not yet provided.
-    reduce_spatial_mask : bool
+    share_spatial_mask : bool
         Description not yet provided.
 
     Returns
@@ -442,5 +442,5 @@ def collate_batch(
         added_features=added_features,
         metadata=list(metadata) if metadata is not None else None,
         return_spatial_mask=return_spatial_mask,
-        reduce_spatial_mask=reduce_spatial_mask,
+        share_spatial_mask=share_spatial_mask,
     )
