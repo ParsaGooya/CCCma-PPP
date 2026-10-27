@@ -1,20 +1,45 @@
 cccma\_ppp.train package
 ========================
 
-.. automodule:: cccma_ppp.train
-   :no-index:
+Submodules
+----------
+
+cccma\_ppp.train.dataloader module
+----------------------------------
+
+.. automodule:: cccma_ppp.train.dataloader
    :members:
    :show-inheritance:
    :undoc-members:
 
-Submodules
-----------
+cccma\_ppp.train.dataset module
+-------------------------------
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: cccma_ppp.train.dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-   cccma_ppp.train.dataloader
-   cccma_ppp.train.datasets
-   cccma_ppp.train.registry_imports
-   cccma_ppp.train.train
-   cccma_ppp.train.train_configs
+cccma\_ppp.train.train module
+-----------------------------
+
+.. automodule:: cccma_ppp.train.train
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+cccma\_ppp.train.train\_configs module
+--------------------------------------
+
+.. automodule:: cccma_ppp.train.train_configs
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: cccma_ppp.train
+   :members:
+   :show-inheritance:
+   :undoc-members:

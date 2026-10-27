@@ -1,9 +1,9 @@
+from dataclasses import dataclass
+
 import pytest
 import torch
 
-
-from dataclasses import dataclass
-from cccma_ppp.loss.kld import BetaAnnealing, KLD
+from cccma_ppp.loss.kld import KLD, BetaAnnealing
 
 
 @dataclass
@@ -133,6 +133,7 @@ class DummyFlow:
         )
 
 
+@pytest.mark.pruned
 def test_kld_with_flow():
     kld = KLD()
 
@@ -146,7 +147,6 @@ def test_kld_with_flow():
     assert loss.item() >= 0
 
 
-@pytest.mark.pruned
 def test_kld_with_flow_and_condition():
     kld = KLD()
 

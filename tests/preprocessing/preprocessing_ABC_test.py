@@ -8,6 +8,9 @@ from cccma_ppp.preprocessing.preprocessing_ABC import (
 
 
 class ConcretePreprocessor(PreprocessModuleABC):
+    def _reset_fit(self):
+        self.fitted = False
+
     def __init__(
         self,
         *,
@@ -302,6 +305,7 @@ class TestGetReductionDims:
 
         assert preprocessor.dims == ("samples",)
 
+    @pytest.mark.pruned
     def test_dataset_input_is_supported(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -426,6 +430,7 @@ class TestAddGroupingCoordinate:
             ),
         )
 
+    @pytest.mark.pruned
     def test_unexpected_frequency_raises(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -434,8 +439,8 @@ class TestAddGroupingCoordinate:
         data = make_time_data()
 
         with pytest.raises(
-            RuntimeError,
-            match="Unexpected temporal frequency 'hour'",
+            ValueError,
+            match="Unsupported frequency 'hour'",
         ):
             preprocessor._add_grouping_coordinate(data)
 
@@ -570,6 +575,7 @@ class TestAlignStatForTransform:
         )
         assert result.dims == (PreprocessModuleABC.init_time_dim,)
 
+    @pytest.mark.pruned
     def test_builds_year_indexer_from_initialization_time(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -644,6 +650,7 @@ class TestAlignStatForTransform:
             ),
         )
 
+    @pytest.mark.pruned
     def test_builds_day_indexer_from_initialization_time(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -681,6 +688,7 @@ class TestAlignStatForTransform:
             ),
         )
 
+    @pytest.mark.pruned
     def test_missing_temporal_coordinates_raises(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -736,8 +744,8 @@ class TestAlignStatForTransform:
         )
 
         with pytest.raises(
-            RuntimeError,
-            match="Unexpected temporal frequency 'hour'",
+            ValueError,
+            match="Unsupported frequency 'hour'",
         ):
             preprocessor._align_stat_for_transform(
                 data,
@@ -977,3 +985,1096 @@ class TestCheckFitted:
         preprocessor.fit(data)
 
         assert preprocessor.inverse_transform(data) is data
+
+
+from unittest.mock import patch
+
+
+class TestAdditionalReductionDims:
+    def test_missing_configured_dimension_raises(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(
+                "latitude",
+                "longitude",
+            ),
+        )
+        data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    3,
+                )
+            ),
+            dims=(
+                "latitude",
+                "samples",
+            ),
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="longitude",
+        ):
+            preprocessor._get_reduction_dims(data)
+
+    @pytest.mark.pruned
+    def test_missing_dimension_error_lists_available_dimensions(self):
+        preprocessor = ConcretePreprocessor(
+            dims=("missing",),
+        )
+        data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    3,
+                )
+            ),
+            dims=(
+                "latitude",
+                "longitude",
+            ),
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Available",
+        ):
+            preprocessor._get_reduction_dims(data)
+
+    @pytest.mark.pruned
+    def test_large_ensemble_flag_is_reset_between_calls(self):
+        preprocessor = ConcretePreprocessor(
+            dims=("samples",),
+        )
+
+        ensemble_data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    3,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.realization_dim,
+                "samples",
+            ),
+        )
+        nonensemble_data = xr.DataArray(
+            np.ones(3),
+            dims=("samples",),
+        )
+
+        preprocessor._get_reduction_dims(
+            ensemble_data,
+        )
+        assert preprocessor.large_ensemble is True
+
+        result = preprocessor._get_reduction_dims(
+            nonensemble_data,
+        )
+
+        assert result == ("samples",)
+        assert preprocessor.large_ensemble is False
+
+    @pytest.mark.pruned
+    def test_empty_dimensions_with_no_realization_returns_none(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(),
+        )
+        data = xr.DataArray(
+            np.ones(3),
+            dims=("samples",),
+        )
+
+        result = preprocessor._get_reduction_dims(
+            data,
+        )
+
+        assert result is None
+        assert preprocessor.large_ensemble is False
+
+    @pytest.mark.pruned
+    def test_realization_only_reduction_is_preserved(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.realization_dim,),
+        )
+        data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    3,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.realization_dim,
+                "samples",
+            ),
+        )
+
+        result = preprocessor._get_reduction_dims(
+            data,
+        )
+
+        assert result == (PreprocessModuleABC.realization_dim,)
+        assert preprocessor.large_ensemble is False
+
+    @pytest.mark.pruned
+    def test_multiple_reduction_dimensions_preserve_order(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(
+                "longitude",
+                "latitude",
+            ),
+        )
+        data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    3,
+                    4,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.realization_dim,
+                "latitude",
+                "longitude",
+            ),
+        )
+
+        result = preprocessor._get_reduction_dims(
+            data,
+        )
+
+        assert result == (
+            PreprocessModuleABC.realization_dim,
+            "longitude",
+            "latitude",
+        )
+
+
+class TestExtractTemporalCoordinate:
+    def test_none_returns_original_coordinate(self):
+        preprocessor = ConcretePreprocessor()
+        init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
+
+        result = preprocessor._extract_temporal_coordinate(
+            init_time,
+            None,
+        )
+
+        assert result is init_time
+
+    @pytest.mark.pruned
+    def test_extracts_year(self):
+        preprocessor = ConcretePreprocessor()
+        init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
+
+        result = preprocessor._extract_temporal_coordinate(
+            init_time,
+            "year",
+        )
+
+        np.testing.assert_array_equal(
+            result.values,
+            np.asarray(
+                [
+                    2000,
+                    2000,
+                    2001,
+                ]
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_extracts_month(self):
+        preprocessor = ConcretePreprocessor()
+        init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
+
+        result = preprocessor._extract_temporal_coordinate(
+            init_time,
+            "month",
+        )
+
+        np.testing.assert_array_equal(
+            result.values,
+            np.asarray(
+                [
+                    1,
+                    2,
+                    3,
+                ]
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_extracts_day_of_year(self):
+        preprocessor = ConcretePreprocessor()
+        init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
+
+        result = preprocessor._extract_temporal_coordinate(
+            init_time,
+            "day",
+        )
+
+        np.testing.assert_array_equal(
+            result.values,
+            np.asarray(
+                [
+                    1,
+                    46,
+                    79,
+                ]
+            ),
+        )
+
+    @pytest.mark.pruned
+    @pytest.mark.parametrize(
+        "frequency",
+        [
+            "hour",
+            "week",
+            "",
+            "MONTH",
+        ],
+    )
+    def test_rejects_unsupported_frequency(
+        self,
+        frequency,
+    ):
+        preprocessor = ConcretePreprocessor()
+        init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
+
+        with pytest.raises(
+            ValueError,
+            match="Unsupported frequency",
+        ):
+            preprocessor._extract_temporal_coordinate(
+                init_time,
+                frequency,
+            )
+
+
+class TestAdditionalGroupingCoordinate:
+    @pytest.mark.pruned
+    def test_existing_grouping_coordinate_is_replaced(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.init_time_dim,),
+            frequency="month",
+        )
+        data = make_time_data().assign_coords(
+            month=(
+                PreprocessModuleABC.init_time_dim,
+                [
+                    12,
+                    12,
+                    12,
+                ],
+            )
+        )
+
+        result = preprocessor._add_grouping_coordinate(
+            data,
+        )
+
+        np.testing.assert_array_equal(
+            result["month"].values,
+            np.asarray(
+                [
+                    1,
+                    2,
+                    3,
+                ]
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_original_data_is_not_modified(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.init_time_dim,),
+            frequency="month",
+        )
+        data = make_time_data()
+
+        result = preprocessor._add_grouping_coordinate(
+            data,
+        )
+
+        assert "month" not in data.coords
+        assert "month" in result.coords
+        assert result is not data
+
+    @pytest.mark.pruned
+    def test_missing_initialization_coordinate_raises(self):
+        preprocessor = ConcretePreprocessor(
+            dims=("samples",),
+            frequency="month",
+        )
+        data = xr.DataArray(
+            np.ones(3),
+            dims=("samples",),
+        )
+
+        with pytest.raises(
+            KeyError,
+        ):
+            preprocessor._add_grouping_coordinate(
+                data,
+            )
+
+    @pytest.mark.pruned
+    def test_grouping_coordinate_preserves_initialization_dimension(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.init_time_dim,),
+            frequency="year",
+        )
+        data = make_time_data()
+
+        result = preprocessor._add_grouping_coordinate(
+            data,
+        )
+
+        assert result["year"].dims == (PreprocessModuleABC.init_time_dim,)
+        assert (
+            result.sizes[PreprocessModuleABC.init_time_dim]
+            == data.sizes[PreprocessModuleABC.init_time_dim]
+        )
+
+
+class TestAdditionalAlignStatistic:
+    @pytest.mark.pruned
+    def test_frequency_is_ignored_when_init_time_not_reduced(self):
+        preprocessor = ConcretePreprocessor(
+            dims=("latitude",),
+            frequency="month",
+        )
+        data = make_time_data()
+        stat = xr.DataArray(
+            np.arange(
+                12,
+                dtype=float,
+            ),
+            dims=("month",),
+            coords={
+                "month": np.arange(
+                    1,
+                    13,
+                )
+            },
+        )
+
+        result = preprocessor._align_stat_for_transform(
+            data,
+            stat,
+        )
+
+        assert result is stat
+
+    @pytest.mark.pruned
+    def test_existing_auxiliary_coordinate_takes_precedence(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.init_time_dim,),
+            frequency="month",
+        )
+        data = make_time_data().assign_coords(
+            month=(
+                PreprocessModuleABC.init_time_dim,
+                [
+                    12,
+                    11,
+                    10,
+                ],
+            )
+        )
+        stat = xr.DataArray(
+            np.arange(
+                1,
+                13,
+                dtype=float,
+            ),
+            dims=("month",),
+            coords={
+                "month": np.arange(
+                    1,
+                    13,
+                )
+            },
+        )
+
+        result = preprocessor._align_stat_for_transform(
+            data,
+            stat,
+        )
+
+        np.testing.assert_array_equal(
+            result.values,
+            np.asarray(
+                [
+                    12.0,
+                    11.0,
+                    10.0,
+                ]
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_existing_auxiliary_coordinate_avoids_temporal_extraction(
+        self,
+    ):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.init_time_dim,),
+            frequency="month",
+        )
+        data = make_time_data().assign_coords(
+            month=(
+                PreprocessModuleABC.init_time_dim,
+                [
+                    1,
+                    2,
+                    3,
+                ],
+            )
+        )
+        stat = xr.DataArray(
+            np.arange(
+                1,
+                13,
+                dtype=float,
+            ),
+            dims=("month",),
+            coords={
+                "month": np.arange(
+                    1,
+                    13,
+                )
+            },
+        )
+
+        with patch.object(
+            preprocessor,
+            "_extract_temporal_coordinate",
+        ) as extract:
+            result = preprocessor._align_stat_for_transform(
+                data,
+                stat,
+            )
+
+        extract.assert_not_called()
+        np.testing.assert_array_equal(
+            result.values,
+            np.asarray(
+                [
+                    1.0,
+                    2.0,
+                    3.0,
+                ]
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_dataset_statistic_is_aligned(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.init_time_dim,),
+            frequency="month",
+        )
+        data = make_time_data()
+        stat = xr.Dataset(
+            {
+                "mean": (
+                    "month",
+                    np.arange(
+                        1,
+                        13,
+                        dtype=float,
+                    ),
+                ),
+                "std": (
+                    "month",
+                    np.arange(
+                        101,
+                        113,
+                        dtype=float,
+                    ),
+                ),
+            },
+            coords={
+                "month": np.arange(
+                    1,
+                    13,
+                )
+            },
+        )
+
+        result = preprocessor._align_stat_for_transform(
+            data,
+            stat,
+        )
+
+        assert isinstance(
+            result,
+            xr.Dataset,
+        )
+        np.testing.assert_array_equal(
+            result["mean"].values,
+            np.asarray(
+                [
+                    1.0,
+                    2.0,
+                    3.0,
+                ]
+            ),
+        )
+        np.testing.assert_array_equal(
+            result["std"].values,
+            np.asarray(
+                [
+                    101.0,
+                    102.0,
+                    103.0,
+                ]
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_missing_statistical_group_raises_key_error(self):
+        preprocessor = ConcretePreprocessor(
+            dims=(PreprocessModuleABC.init_time_dim,),
+            frequency="month",
+        )
+        data = make_time_data(
+            times=np.asarray(
+                [
+                    "2000-12-01",
+                ],
+                dtype="datetime64[ns]",
+            )
+        )
+        stat = xr.DataArray(
+            [
+                1.0,
+                2.0,
+            ],
+            dims=("month",),
+            coords={
+                "month": [
+                    1,
+                    2,
+                ]
+            },
+        )
+
+        with pytest.raises(
+            KeyError,
+        ):
+            preprocessor._align_stat_for_transform(
+                data,
+                stat,
+            )
+
+
+class TestInverseTargetTime:
+    @pytest.mark.pruned
+    def test_without_lead_dimension_returns_initialization_coordinate(
+        self,
+    ):
+        preprocessor = ConcretePreprocessor()
+        data = make_time_data()
+
+        result = preprocessor._get_inverse_target_time(
+            data,
+        )
+
+        assert result.identical(data[PreprocessModuleABC.init_time_dim])
+
+    @pytest.mark.pruned
+    def test_builds_target_time_grid(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            np.zeros(
+                (
+                    2,
+                    3,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.init_time_dim,
+                PreprocessModuleABC.lead_time_dim,
+            ),
+            coords={
+                PreprocessModuleABC.init_time_dim: np.asarray(
+                    [
+                        "2000-01-01",
+                        "2001-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                PreprocessModuleABC.lead_time_dim: [
+                    1,
+                    2,
+                    3,
+                ],
+            },
+        )
+
+        result = preprocessor._get_inverse_target_time(
+            data,
+        )
+
+        assert result.dims == (
+            PreprocessModuleABC.init_time_dim,
+            PreprocessModuleABC.lead_time_dim,
+        )
+        assert result.shape == (
+            2,
+            3,
+        )
+        np.testing.assert_array_equal(
+            result[PreprocessModuleABC.init_time_dim].values,
+            data[PreprocessModuleABC.init_time_dim].values,
+        )
+        np.testing.assert_array_equal(
+            result[PreprocessModuleABC.lead_time_dim].values,
+            data[PreprocessModuleABC.lead_time_dim].values,
+        )
+
+    def test_flattens_init_and_lead_time_grids_before_calling_helper(
+        self,
+    ):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            np.zeros(
+                (
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.init_time_dim,
+                PreprocessModuleABC.lead_time_dim,
+            ),
+            coords={
+                PreprocessModuleABC.init_time_dim: np.asarray(
+                    [
+                        "2000-01-01",
+                        "2001-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                PreprocessModuleABC.lead_time_dim: [
+                    1,
+                    2,
+                ],
+            },
+        )
+
+        expected = np.asarray(
+            [
+                "2000-01-01",
+                "2000-02-01",
+                "2001-01-01",
+                "2001-02-01",
+            ],
+            dtype="datetime64[ns]",
+        )
+
+        with patch(
+            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            return_value=expected,
+        ) as add_times:
+            result = preprocessor._get_inverse_target_time(
+                data,
+            )
+
+        kwargs = add_times.call_args.kwargs
+
+        np.testing.assert_array_equal(
+            kwargs["init_times"],
+            np.asarray(
+                [
+                    "2000-01-01",
+                    "2000-01-01",
+                    "2001-01-01",
+                    "2001-01-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+        np.testing.assert_array_equal(
+            kwargs["lead_times"],
+            np.asarray(
+                [
+                    1,
+                    2,
+                    1,
+                    2,
+                ]
+            ),
+        )
+        assert kwargs["lead_time_resolution"] == preprocessor.lead_time_resolution
+        assert result.shape == (
+            2,
+            2,
+        )
+
+    def test_nat_target_times_raise(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            np.zeros(
+                (
+                    1,
+                    2,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.init_time_dim,
+                PreprocessModuleABC.lead_time_dim,
+            ),
+            coords={
+                PreprocessModuleABC.init_time_dim: np.asarray(
+                    [
+                        "2000-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                PreprocessModuleABC.lead_time_dim: [
+                    1,
+                    2,
+                ],
+            },
+        )
+
+        with patch(
+            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            return_value=np.asarray(
+                [
+                    "2000-01-01",
+                    "NaT",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        ):
+            with pytest.raises(
+                ValueError,
+                match="produced NaT",
+            ):
+                preprocessor._get_inverse_target_time(
+                    data,
+                )
+
+    @pytest.mark.pruned
+    def test_wrong_target_time_shape_raises(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            np.zeros(
+                (
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.init_time_dim,
+                PreprocessModuleABC.lead_time_dim,
+            ),
+            coords={
+                PreprocessModuleABC.init_time_dim: np.asarray(
+                    [
+                        "2000-01-01",
+                        "2001-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                PreprocessModuleABC.lead_time_dim: [
+                    1,
+                    2,
+                ],
+            },
+        )
+
+        with patch(
+            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            return_value=np.asarray(
+                [
+                    "2000-01-01",
+                    "2000-02-01",
+                    "2001-01-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        ):
+            with pytest.raises(
+                RuntimeError,
+                match="returned wrong shape",
+            ):
+                preprocessor._get_inverse_target_time(
+                    data,
+                )
+
+    @pytest.mark.pruned
+    def test_target_times_are_reshaped_in_init_lead_order(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            np.zeros(
+                (
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                PreprocessModuleABC.init_time_dim,
+                PreprocessModuleABC.lead_time_dim,
+            ),
+            coords={
+                PreprocessModuleABC.init_time_dim: np.asarray(
+                    [
+                        "2000-01-01",
+                        "2001-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                PreprocessModuleABC.lead_time_dim: [
+                    1,
+                    2,
+                ],
+            },
+        )
+
+        target_times = np.asarray(
+            [
+                "2000-01-01",
+                "2000-02-01",
+                "2001-01-01",
+                "2001-02-01",
+            ],
+            dtype="datetime64[ns]",
+        )
+
+        with patch(
+            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            return_value=target_times,
+        ):
+            result = preprocessor._get_inverse_target_time(
+                data,
+            )
+
+        np.testing.assert_array_equal(
+            result.values,
+            target_times.reshape(
+                2,
+                2,
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_dataset_input_is_supported(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.Dataset(
+            {
+                "tas": (
+                    (
+                        PreprocessModuleABC.init_time_dim,
+                        PreprocessModuleABC.lead_time_dim,
+                    ),
+                    np.zeros(
+                        (
+                            1,
+                            2,
+                        )
+                    ),
+                )
+            },
+            coords={
+                PreprocessModuleABC.init_time_dim: np.asarray(
+                    [
+                        "2000-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                PreprocessModuleABC.lead_time_dim: [
+                    1,
+                    2,
+                ],
+            },
+        )
+
+        result = preprocessor._get_inverse_target_time(
+            data,
+        )
+
+        assert isinstance(
+            result,
+            xr.DataArray,
+        )
+        assert result.dims == (
+            PreprocessModuleABC.init_time_dim,
+            PreprocessModuleABC.lead_time_dim,
+        )
+
+
+class TestCheckZeros:
+    @pytest.mark.pruned
+    def test_nonzero_dataarray_is_accepted(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            [
+                1.0,
+                2.0,
+                -1.0,
+            ],
+            dims=("samples",),
+            name="values",
+        )
+
+        assert preprocessor._check_zeros(data) is None
+
+    @pytest.mark.pruned
+    def test_named_dataarray_with_zero_raises(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            [
+                1.0,
+                0.0,
+                2.0,
+            ],
+            dims=("samples",),
+            name="temperature",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="temperature",
+        ):
+            preprocessor._check_zeros(data)
+
+    @pytest.mark.pruned
+    def test_unnamed_dataarray_with_zero_uses_data_name(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            [
+                1.0,
+                0.0,
+            ],
+            dims=("samples",),
+        )
+
+        with pytest.raises(
+            ValueError,
+            match=r"\['data'\]",
+        ):
+            preprocessor._check_zeros(data)
+
+    @pytest.mark.pruned
+    def test_dataset_with_no_zeros_is_accepted(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.Dataset(
+            {
+                "tas": (
+                    "samples",
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                ),
+                "pr": (
+                    "samples",
+                    [
+                        3.0,
+                        4.0,
+                    ],
+                ),
+            }
+        )
+
+        assert preprocessor._check_zeros(data) is None
+
+    @pytest.mark.pruned
+    def test_dataset_reports_one_zero_variable(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.Dataset(
+            {
+                "tas": (
+                    "samples",
+                    [
+                        1.0,
+                        0.0,
+                    ],
+                ),
+                "pr": (
+                    "samples",
+                    [
+                        3.0,
+                        4.0,
+                    ],
+                ),
+            }
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="tas",
+        ):
+            preprocessor._check_zeros(data)
+
+    def test_dataset_reports_all_zero_variables(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.Dataset(
+            {
+                "tas": (
+                    "samples",
+                    [
+                        1.0,
+                        0.0,
+                    ],
+                ),
+                "pr": (
+                    "samples",
+                    [
+                        0.0,
+                        4.0,
+                    ],
+                ),
+                "psl": (
+                    "samples",
+                    [
+                        5.0,
+                        6.0,
+                    ],
+                ),
+            }
+        )
+
+        with pytest.raises(
+            ValueError,
+        ) as error:
+            preprocessor._check_zeros(data)
+
+        assert "tas" in str(error.value)
+        assert "pr" in str(error.value)
+        assert "psl" not in str(error.value)
+
+    @pytest.mark.pruned
+    def test_nan_values_are_not_treated_as_zeros(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            [
+                1.0,
+                np.nan,
+                2.0,
+            ],
+            dims=("samples",),
+            name="values",
+        )
+
+        assert preprocessor._check_zeros(data) is None
+
+    @pytest.mark.pruned
+    def test_negative_values_are_not_treated_as_zeros(self):
+        preprocessor = ConcretePreprocessor()
+        data = xr.DataArray(
+            [
+                -2.0,
+                -1.0,
+            ],
+            dims=("samples",),
+            name="values",
+        )
+
+        assert preprocessor._check_zeros(data) is None

@@ -1,6 +1,7 @@
-from types import SimpleNamespace
-import logging
 import dataclasses
+import logging
+from types import SimpleNamespace
+
 import pytest
 import torch
 import torch.nn as nn

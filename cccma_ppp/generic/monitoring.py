@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil
 
-
 if TYPE_CHECKING:
     from cccma_ppp.generic.distributed import Distributed
 
@@ -26,24 +25,30 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 def resolve_physical_gpu_index(local_rank: int) -> int:
     """
-    Document this function.
+    Resolve a local CUDA rank to its physical GPU index.
+
+    When ``CUDA_VISIBLE_DEVICES`` is unset, the local rank is treated as the
+    physical GPU index. Numeric visible-device entries are resolved directly,
+    while GPU UUIDs are matched against physical devices through NVML.
 
     Parameters
     ----------
     local_rank : int
-        Description not yet provided.
+        Zero-based local CUDA rank to resolve.
 
     Returns
     -------
     int
-        Description not yet provided.
+        Physical GPU index corresponding to ``local_rank``.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If ``local_rank`` is not an integer.
     ValueError
-        Description not yet provided.
+        If ``local_rank`` is negative or outside the visible-device range, a
+        visible-device identifier is unsupported, or a GPU UUID cannot be
+        resolved through NVML.
     """
     if not isinstance(local_rank, int) or isinstance(local_rank, bool):
         raise TypeError("local_rank must be an integer")
@@ -68,39 +73,75 @@ def resolve_physical_gpu_index(local_rank: int) -> int:
 
     selected_device = devices[local_rank]
 
-    if not selected_device.isdigit():
+    if selected_device.isdigit():
+        return int(selected_device)
+
+    if not selected_device.startswith("GPU-"):
         raise ValueError(
-            "GPU monitoring requires numeric CUDA_VISIBLE_DEVICES entries; "
+            "GPU monitoring requires numeric GPU indices or GPU UUIDs; "
             f"received {selected_device!r} for local rank {local_rank}"
         )
 
-    return int(selected_device)
+    try:
+        import pynvml
+
+        pynvml.nvmlInit()
+
+        try:
+            device_count = pynvml.nvmlDeviceGetCount()
+
+            for physical_index in range(device_count):
+                handle = pynvml.nvmlDeviceGetHandleByIndex(physical_index)
+                device_uuid = pynvml.nvmlDeviceGetUUID(handle)
+
+                if isinstance(device_uuid, bytes):
+                    device_uuid = device_uuid.decode()
+
+                if device_uuid == selected_device:
+                    return physical_index
+        finally:
+            pynvml.nvmlShutdown()
+
+    except Exception as error:
+        raise ValueError(
+            f"Could not resolve GPU UUID {selected_device!r} through NVML"
+        ) from error
+
+    raise ValueError(
+        f"GPU UUID {selected_device!r} was not found among the "
+        f"{device_count} physical GPU device(s) reported by NVML"
+    )
 
 
 class Monitor:
     """
-    Document this class.
+    Monitor process resource utilization and execution stages.
+
+    Resource samples are collected periodically in a background thread and can
+    include process CPU usage, resident memory, and utilization and memory usage
+    for selected GPUs. Named spans and checkpoints can be recorded alongside
+    resource samples to associate utilization with execution stages.
 
     Parameters
     ----------
     cpu : bool
-        Description not yet provided.
+        Whether to collect process CPU utilization.
     ram : bool
-        Description not yet provided.
+        Whether to collect process resident memory usage.
     gpu0 : bool
-        Description not yet provided.
+        Whether to monitor physical GPU index 0.
     gpu1 : bool
-        Description not yet provided.
+        Whether to monitor physical GPU index 1.
     gpus : Iterable[int] | None
-        Description not yet provided.
+        Additional physical GPU indices to monitor.
     interval : float
-        Description not yet provided.
+        Sampling interval in seconds.
     rank : int
-        Description not yet provided.
+        Global rank associated with the monitored process.
     local_rank : int
-        Description not yet provided.
+        Local rank associated with the monitored process.
     world_size : int
-        Description not yet provided.
+        Number of processes participating in the distributed execution.
     """
 
     def __init__(
@@ -117,35 +158,37 @@ class Monitor:
         world_size: int = 1,
     ) -> None:
         """
-        Document this function.
+        Initialize a resource monitor.
 
         Parameters
         ----------
         cpu : bool
-            Description not yet provided.
+            Whether to collect process CPU utilization.
         ram : bool
-            Description not yet provided.
+            Whether to collect process resident memory usage.
         gpu0 : bool
-            Description not yet provided.
+            Whether to monitor physical GPU index 0.
         gpu1 : bool
-            Description not yet provided.
+            Whether to monitor physical GPU index 1.
         gpus : Iterable[int] | None
-            Description not yet provided.
+            Additional physical GPU indices to monitor.
         interval : float
-            Description not yet provided.
+            Sampling interval in seconds.
         rank : int
-            Description not yet provided.
+            Global rank associated with the monitored process.
         local_rank : int
-            Description not yet provided.
+            Local rank associated with the monitored process.
         world_size : int
-            Description not yet provided.
+            Number of processes participating in the distributed execution.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If distributed rank values or GPU indices are not integers.
         ValueError
-            Description not yet provided.
+            If ``interval`` is nonpositive, either rank is negative, ``world_size``
+            is nonpositive, ``rank`` is not smaller than ``world_size``, or a GPU
+            index is negative.
         """
         if interval <= 0:
             raise ValueError("interval must be greater than zero")
@@ -219,7 +262,11 @@ class Monitor:
 
     def _initialize_gpus(self) -> None:
         """
-        Document this function.
+        Initialize NVML monitoring for the requested GPUs.
+
+        Available GPU handles are cached for subsequent sampling. GPUs that cannot be
+        resolved or initialized are marked unavailable so monitoring can continue
+        without them.
         """
         try:
             import pynvml
@@ -266,7 +313,9 @@ class Monitor:
 
     def _shutdown_gpus(self) -> None:
         """
-        Document this function.
+        Shut down NVML and clear cached GPU monitoring state.
+
+        If NVML was not initialized, this method has no effect.
         """
         if not self._nvml_initialized or self._pynvml is None:
             return
@@ -286,12 +335,13 @@ class Monitor:
 
     def _get_stack(self) -> list:
         """
-        Document this function.
+        Return the monitoring stage stack for the current thread.
 
         Returns
         -------
         list
-            Description not yet provided.
+            Mutable stack containing the active nested stage names for the current
+            thread.
         """
         thread_id = threading.get_ident()
 
@@ -300,7 +350,7 @@ class Monitor:
 
     def _remove_empty_stack(self) -> None:
         """
-        Document this function.
+        Remove the current thread's stage stack when it is empty.
         """
         thread_id = threading.get_ident()
 
@@ -312,24 +362,29 @@ class Monitor:
 
     def current_stage(self) -> str:
         """
-        Document this function.
+        Return the active monitoring stage for the current thread.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Name of the innermost active stage, or ``"root"`` if no monitoring span
+            is active.
         """
         stack = self._get_stack()
         return stack[-1] if stack else "root"
 
     def _current_sample_stage(self) -> str:
         """
-        Document this function.
+        Determine the execution stage associated with a resource sample.
+
+        Active stages from monitored threads are combined while excluding the
+        background sampler thread.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Combined active stage names, or ``"root"`` when no monitored stage is
+            active.
         """
         sampler_thread_id = self._thread.ident if self._thread is not None else None
 
@@ -347,39 +402,40 @@ class Monitor:
 
     def _ram_gb(self) -> float:
         """
-        Document this function.
+        Return the process resident memory usage.
 
         Returns
         -------
         float
-            Description not yet provided.
+            Resident memory usage in gibibytes.
         """
         return self._process.memory_info().rss / (1024**3)
 
     def _cpu(self) -> float:
         """
-        Document this function.
+        Return the current process CPU utilization.
 
         Returns
         -------
         float
-            Description not yet provided.
+            Process CPU utilization percentage reported by psutil.
         """
         return float(self._process.cpu_percent(interval=None))
 
     def _gpu(self, index: int) -> tuple[float, float]:
         """
-        Document this function.
+        Collect utilization statistics for a physical GPU.
 
         Parameters
         ----------
         index : int
-            Description not yet provided.
+            Physical GPU index to query.
 
         Returns
         -------
         tuple[float, float]
-            Description not yet provided.
+            GPU utilization percentage and VRAM utilization percentage. NaN values
+            are returned when the GPU is unavailable or collection fails.
         """
         if (
             self._pynvml is None
@@ -421,21 +477,24 @@ class Monitor:
         span_id: str | None = None,
     ) -> dict[str, Any]:
         """
-        Document this function.
+        Create a monitoring event record.
+
+        The event includes timing, execution-stage, distributed-process, host, and
+        process metadata together with placeholders for enabled resource metrics.
 
         Parameters
         ----------
         stage : str
-            Description not yet provided.
+            Execution stage associated with the event.
         event : str
-            Description not yet provided.
+            Type of monitoring event.
         span_id : str | None
-            Description not yet provided.
+            Identifier associating matching span start and end events.
 
         Returns
         -------
         dict[str, Any]
-            Description not yet provided.
+            Monitoring event record.
         """
         record: dict[str, Any] = {
             "t": time.time(),
@@ -463,12 +522,12 @@ class Monitor:
 
     def _append_event(self, event: dict[str, Any]) -> None:
         """
-        Document this function.
+        Append an event to the monitoring history.
 
         Parameters
         ----------
         event : dict[str, Any]
-            Description not yet provided.
+            Monitoring event to record.
         """
         with self._lock:
             self._data.append(event)
@@ -476,24 +535,27 @@ class Monitor:
     @contextmanager
     def span(self, name: str) -> Iterator:
         """
-        Document this function.
+        Record a named execution span.
+
+        Spans may be nested. Their full names reflect the nesting hierarchy, and
+        matching start and end events share a unique span identifier.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name of the execution span.
 
         Yields
         ------
-        Iterator
-            Description not yet provided.
+        None
+            Control to the code executed within the monitored span.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``name`` is not a string.
         ValueError
-            Description not yet provided.
+            If ``name`` is empty after removing surrounding whitespace.
         """
         if not isinstance(name, str):
             raise TypeError("span name must be a string")
@@ -548,22 +610,23 @@ class Monitor:
 
     def observe(self, function: F) -> F:
         """
-        Document this function.
+        Decorate a callable so its execution is recorded as a monitoring span.
 
         Parameters
         ----------
         function : F
-            Description not yet provided.
+            Callable to monitor.
 
         Returns
         -------
         F
-            Description not yet provided.
+            Wrapped callable that executes within a span named after the original
+            function.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``function`` is not callable.
         """
         if not callable(function):
             raise TypeError("observe expects a callable")
@@ -571,19 +634,19 @@ class Monitor:
         @functools.wraps(function)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             """
-            Document this function.
+            Execute the wrapped callable within a monitoring span.
 
             Parameters
             ----------
             *args : Any
-                Description not yet provided.
+                Positional arguments passed to the wrapped callable.
             **kwargs : Any
-                Description not yet provided.
+                Keyword arguments passed to the wrapped callable.
 
             Returns
             -------
             Any
-                Description not yet provided.
+                Value returned by the wrapped callable.
             """
             with self.span(function.__name__):
                 return function(*args, **kwargs)
@@ -592,19 +655,22 @@ class Monitor:
 
     def checkpoint(self, name: str) -> None:
         """
-        Document this function.
+        Record an instantaneous named checkpoint.
+
+        The checkpoint name is qualified by the currently active monitoring stage
+        when applicable.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name of the checkpoint.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``name`` is not a string.
         ValueError
-            Description not yet provided.
+            If ``name`` is empty after removing surrounding whitespace.
         """
         if not isinstance(name, str):
             raise TypeError("checkpoint name must be a string")
@@ -627,12 +693,15 @@ class Monitor:
 
     def _collect_sample(self) -> dict[str, Any]:
         """
-        Document this function.
+        Collect a resource-utilization sample.
+
+        Enabled CPU, RAM, GPU, and VRAM metrics are collected and associated with the
+        currently active execution stage.
 
         Returns
         -------
         dict[str, Any]
-            Description not yet provided.
+            Monitoring event containing the collected resource metrics.
         """
         sample = self._create_event(
             stage=self._current_sample_stage(),
@@ -655,7 +724,10 @@ class Monitor:
 
     def _sampler(self) -> None:
         """
-        Document this function.
+        Run the background resource-sampling loop.
+
+        Samples are collected at approximately the configured interval until the
+        monitor's stop event is set.
         """
         if self.cpu_enabled:
             self._process.cpu_percent(interval=None)
@@ -678,12 +750,12 @@ class Monitor:
 
     def start(self, *, clear: bool = False) -> None:
         """
-        Document this function.
+        Start resource monitoring in a background thread.
 
         Parameters
         ----------
         clear : bool
-            Description not yet provided.
+            Whether to remove previously recorded monitoring events before starting.
         """
         if self.running:
             logger.warning(
@@ -717,17 +789,18 @@ class Monitor:
 
     def stop(self, timeout: float | None = None) -> None:
         """
-        Document this function.
+        Stop the background monitoring thread.
 
         Parameters
         ----------
         timeout : float | None
-            Description not yet provided.
+            Maximum number of seconds to wait for the monitoring thread to terminate.
+            If ``None``, waits until the thread exits.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``timeout`` is negative.
         """
         if timeout is not None and timeout < 0:
             raise ValueError("timeout cannot be negative")
@@ -756,7 +829,7 @@ class Monitor:
 
     def close(self) -> None:
         """
-        Document this function.
+        Stop resource monitoring and release GPU-monitoring resources.
         """
         self.stop()
         self._shutdown_gpus()
@@ -764,24 +837,24 @@ class Monitor:
     @property
     def running(self) -> bool:
         """
-        Document this function.
+        Indicate whether the background monitoring thread is running.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            ``True`` while the monitoring thread is alive, otherwise ``False``.
         """
         return self._thread is not None and self._thread.is_alive()
 
     @property
     def metric_names(self) -> tuple[str, ...]:
         """
-        Document this function.
+        Return the names of enabled resource metrics.
 
         Returns
         -------
         tuple[str, ...]
-            Description not yet provided.
+            Enabled CPU, RAM, GPU, and VRAM metric names.
         """
         metrics: list[str] = []
 
@@ -799,19 +872,19 @@ class Monitor:
 
     def clear(self) -> None:
         """
-        Document this function.
+        Remove all recorded monitoring events.
         """
         with self._lock:
             self._data.clear()
 
     def get_dataframe(self):
         """
-        Document this function.
+        Return recorded monitoring events as a dataframe.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        pandas.DataFrame
+            Copy of the recorded monitoring events in tabular form.
         """
         import pandas as pd
 
@@ -822,12 +895,12 @@ class Monitor:
 
     def __enter__(self) -> Monitor:
         """
-        Document this function.
+        Start monitoring when entering a context manager.
 
         Returns
         -------
         Monitor
-            Description not yet provided.
+            This resource monitor instance.
         """
         self.start()
         return self
@@ -839,21 +912,21 @@ class Monitor:
         traceback: Any,
     ) -> bool:
         """
-        Document this function.
+        Close the monitor when leaving a context manager.
 
         Parameters
         ----------
         exception_type : Any
-            Description not yet provided.
+            Type of exception raised within the context, if any.
         exception_value : Any
-            Description not yet provided.
+            Exception instance raised within the context, if any.
         traceback : Any
-            Description not yet provided.
+            Traceback associated with the exception, if any.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            ``False`` so exceptions raised within the context are not suppressed.
         """
         self.close()
         return False
@@ -865,26 +938,29 @@ class Monitor:
         measurement_variance: float = 25.0,
     ):
         """
-        Document this function.
+        Smooth a sequence using a one-dimensional Kalman filter.
+
+        Non-finite observations are skipped while the current estimate is propagated
+        forward.
 
         Parameters
         ----------
         values : Any
-            Description not yet provided.
+            Sequence of numeric observations to smooth.
         process_variance : float
-            Description not yet provided.
+            Variance assigned to evolution of the underlying process.
         measurement_variance : float
-            Description not yet provided.
+            Variance assigned to measurement noise.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        np.ndarray
+            Smoothed values with the same shape as the input sequence.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``process_variance`` or ``measurement_variance`` is negative.
         """
         import numpy as np
 
@@ -948,26 +1024,30 @@ class Monitor:
         **kwargs: Any,
     ):
         """
-        Document this function.
+        Apply a smoothing method to a metric series.
+
+        Supported methods are exponential moving average, centered rolling mean, and
+        Kalman filtering. If ``method`` is ``None``, the original series is returned.
 
         Parameters
         ----------
         series : Any
-            Description not yet provided.
+            Metric series to smooth.
         method : str | None
-            Description not yet provided.
+            Smoothing method: ``"ema"``, ``"rolling"``, ``"kalman"``, or ``None``.
         **kwargs : Any
-            Description not yet provided.
+            Method-specific smoothing parameters.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Smoothed metric values or the original series when smoothing is disabled.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the smoothing method is unsupported, EMA alpha is outside the interval
+            (0, 1], or the rolling window is nonpositive.
         """
         if method is None:
             return series
@@ -1036,24 +1116,24 @@ class Monitor:
         **smooth_kwargs: Any,
     ) -> None:
         """
-        Document this function.
+        Plot raw and optionally smoothed metric values.
 
         Parameters
         ----------
         ax : Any
-            Description not yet provided.
+            Matplotlib axis on which the metric is plotted.
         t : Any
-            Description not yet provided.
+            Time coordinates corresponding to the metric values.
         values : Any
-            Description not yet provided.
+            Metric values to plot.
         label : str
-            Description not yet provided.
+            Human-readable metric label.
         color : str
-            Description not yet provided.
+            Color used for the raw and smoothed curves.
         smooth : str | None
-            Description not yet provided.
+            Optional smoothing method applied to the metric values.
         **smooth_kwargs : Any
-            Description not yet provided.
+            Additional arguments passed to the selected smoothing method.
         """
         ax.plot(
             t,
@@ -1089,17 +1169,17 @@ class Monitor:
         metric: str,
     ) -> tuple[str, str]:
         """
-        Document this function.
+        Return a display label and unit for a resource metric.
 
         Parameters
         ----------
         metric : str
-            Description not yet provided.
+            Internal metric name.
 
         Returns
         -------
         tuple[str, str]
-            Description not yet provided.
+            Human-readable label and corresponding unit.
         """
         if metric == "cpu":
             return "CPU", "%"
@@ -1122,17 +1202,17 @@ class Monitor:
         samples: Any,
     ) -> list:
         """
-        Document this function.
+        Return collected metrics containing at least one valid value.
 
         Parameters
         ----------
         samples : Any
-            Description not yet provided.
+            Dataframe containing resource sample events.
 
         Returns
         -------
         list
-            Description not yet provided.
+            Enabled metric names that are present and contain non-missing data.
         """
         return [
             metric
@@ -1145,17 +1225,21 @@ class Monitor:
         df: Any,
     ) -> list[tuple[float, float, str]]:
         """
-        Document this function.
+        Extract completed monitoring span intervals.
+
+        Start and end events are matched using their span identifiers. Spans without
+        a corresponding end event are omitted.
 
         Parameters
         ----------
         df : Any
-            Description not yet provided.
+            Monitoring dataframe containing event, stage, span, and elapsed-time
+            information.
 
         Returns
         -------
         list[tuple[float, float, str]]
-            Description not yet provided.
+            Start time, end time, and stage name for each completed span.
         """
         intervals: list[tuple[float, float, str]] = []
 
@@ -1196,34 +1280,43 @@ class Monitor:
         **smooth_kwargs: Any,
     ):
         """
-        Document this function.
+        Plot resource utilization together with the execution timeline.
+
+        Resource samples are displayed in separate metric panels while completed
+        spans and checkpoints are shown on a timeline. Metrics may optionally be
+        smoothed before display.
 
         Parameters
         ----------
         df : Any
-            Description not yet provided.
+            Monitoring dataframe to plot. If ``None``, recorded monitoring events are
+            used.
         metrics : Iterable[str] | None
-            Description not yet provided.
+            Resource metrics to plot. If ``None``, all collected metrics containing
+            valid data are selected.
         save_path : str | os.PathLike[str] | None
-            Description not yet provided.
+            Path at which to save the generated figure.
         show : bool
-            Description not yet provided.
+            Whether to display the figure interactively.
         smooth : str | None
-            Description not yet provided.
+            Optional smoothing method applied to plotted metric values.
         **smooth_kwargs : Any
-            Description not yet provided.
+            Additional arguments passed to the selected smoothing method.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Generated Matplotlib figure, or ``None`` if there are no events or no
+            usable resource samples to plot.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``metrics`` is provided as a single string instead of an iterable of
+            metric names.
         ValueError
-            Description not yet provided.
+            If required dataframe columns are missing or a requested metric was not
+            collected.
         """
         import matplotlib.pyplot as plt
 
@@ -1572,33 +1665,33 @@ def monitor(
     world_size: int = 1,
 ) -> Monitor:
     """
-    Document this function.
+    Construct a resource monitor.
 
     Parameters
     ----------
     cpu : bool
-        Description not yet provided.
+        Whether to collect process CPU utilization.
     ram : bool
-        Description not yet provided.
+        Whether to collect process resident memory usage.
     gpu0 : bool
-        Description not yet provided.
+        Whether to monitor physical GPU index 0.
     gpu1 : bool
-        Description not yet provided.
+        Whether to monitor physical GPU index 1.
     gpus : Iterable[int] | None
-        Description not yet provided.
+        Additional physical GPU indices to monitor.
     interval : float
-        Description not yet provided.
+        Sampling interval in seconds.
     rank : int
-        Description not yet provided.
+        Global rank associated with the monitored process.
     local_rank : int
-        Description not yet provided.
+        Local rank associated with the monitored process.
     world_size : int
-        Description not yet provided.
+        Number of processes participating in the distributed execution.
 
     Returns
     -------
     Monitor
-        Description not yet provided.
+        Configured resource monitor.
     """
     return Monitor(
         cpu=cpu,
@@ -1622,39 +1715,53 @@ def build_distributed_monitor(
     interval: float = 0.1,
 ) -> Monitor:
     """
-    Document this function.
+    Build a resource monitor for a distributed process.
+
+    When GPU monitoring is enabled, the process's local CUDA rank is resolved to
+    a physical GPU index for NVML monitoring. Failure to resolve the GPU does not
+    disable CPU or RAM monitoring.
 
     Parameters
     ----------
     distributed : Distributed
-        Description not yet provided.
+        Distributed runtime containing rank, local-rank, and world-size
+        information.
     cpu : bool
-        Description not yet provided.
+        Whether to collect process CPU utilization.
     ram : bool
-        Description not yet provided.
+        Whether to collect process resident memory usage.
     gpu : bool
-        Description not yet provided.
+        Whether to monitor the GPU assigned to the distributed process.
     interval : float
-        Description not yet provided.
+        Sampling interval in seconds.
 
     Returns
     -------
     Monitor
-        Description not yet provided.
+        Resource monitor configured for the distributed process.
     """
-    import torch
-
     gpu_indices: list[int] = []
 
-    if gpu and torch.cuda.is_available():
+    if gpu:
         try:
-            gpu_indices.append(resolve_physical_gpu_index(distributed.local_rank))
+            physical_gpu_index = resolve_physical_gpu_index(distributed.local_rank)
         except (TypeError, ValueError):
             logger.warning(
-                "Rank %s could not resolve its physical GPU. "
-                "CPU and RAM monitoring will remain enabled.",
+                "Rank %s could not resolve the physical GPU for local rank %s. "
+                "CUDA_VISIBLE_DEVICES=%r. CPU and RAM monitoring will remain "
+                "enabled.",
                 distributed.rank,
+                distributed.local_rank,
+                os.environ.get("CUDA_VISIBLE_DEVICES"),
                 exc_info=True,
+            )
+        else:
+            gpu_indices.append(physical_gpu_index)
+
+            logger.info(
+                "Rank %s will monitor physical GPU %s through NVML",
+                distributed.rank,
+                physical_gpu_index,
             )
 
     return monitor(
@@ -1673,19 +1780,23 @@ def export_results(
     output_dir: str | os.PathLike[str],
 ) -> tuple[Path | None, Path | None]:
     """
-    Document this function.
+    Export resource-monitoring data and visualization for one rank.
+
+    Recorded events are written to CSV and plotted using Kalman-smoothed resource
+    metrics.
 
     Parameters
     ----------
     resource_monitor : Monitor
-        Description not yet provided.
+        Resource monitor containing the events to export.
     output_dir : str | os.PathLike[str]
-        Description not yet provided.
+        Directory in which the CSV and plot are saved.
 
     Returns
     -------
     tuple[Path | None, Path | None]
-        Description not yet provided.
+        Paths to the exported CSV file and plot, or ``(None, None)`` when no
+        monitoring data were collected.
     """
     import matplotlib.pyplot as plt
 
@@ -1748,26 +1859,29 @@ def combine_rank_results(
     world_size: int,
 ) -> Path | None:
     """
-    Document this function.
+    Combine resource-monitoring CSV files from multiple ranks.
+
+    Available rank files are concatenated and, when possible, sorted by timestamp
+    and rank before being written to a combined CSV file.
 
     Parameters
     ----------
     output_dir : str | os.PathLike[str]
-        Description not yet provided.
+        Directory containing per-rank monitoring CSV files.
     world_size : int
-        Description not yet provided.
+        Number of distributed ranks expected to have produced monitoring files.
 
     Returns
     -------
     Path | None
-        Description not yet provided.
+        Path to the combined CSV file, or ``None`` if no rank files are found.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If ``world_size`` is not an integer.
     ValueError
-        Description not yet provided.
+        If ``world_size`` is not positive.
     """
     import pandas as pd
 
@@ -1843,29 +1957,35 @@ def distributed_monitoring(
     combine_ranks: bool = True,
 ) -> Iterator:
     """
-    Document this function.
+    Monitor resources within a distributed execution context.
+
+    Monitoring starts when the context is entered and records whether execution
+    completed or was interrupted. Results are exported when leaving the context.
+    After successful completion, ranks synchronize and the root process can
+    combine per-rank monitoring results.
 
     Parameters
     ----------
     distributed : Distributed
-        Description not yet provided.
+        Distributed runtime associated with the monitored process.
     output_dir : str | os.PathLike[str]
-        Description not yet provided.
+        Directory in which monitoring results are written.
     cpu : bool
-        Description not yet provided.
+        Whether to collect process CPU utilization.
     ram : bool
-        Description not yet provided.
+        Whether to collect process resident memory usage.
     gpu : bool
-        Description not yet provided.
+        Whether to monitor the GPU assigned to each distributed process.
     interval : float
-        Description not yet provided.
+        Sampling interval in seconds.
     combine_ranks : bool
-        Description not yet provided.
+        Whether the root process combines per-rank CSV files after successful
+        completion.
 
     Yields
     ------
-    Iterator
-        Description not yet provided.
+    Monitor
+        Active resource monitor for the current distributed process.
     """
     resource_monitor = build_distributed_monitor(
         distributed,

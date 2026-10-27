@@ -212,7 +212,6 @@ def test_build_with_explicit_output_shape():
     assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([2]))
 
 
-@pytest.mark.pruned
 def test_build_shape_mismatch(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -403,6 +402,7 @@ def test_load_checkpoint_missing():
         cfg._load_from_checkpoint("missing.pt")
 
 
+@pytest.mark.pruned
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -847,7 +847,6 @@ class ConstantKLD(torch.nn.Module):
         return torch.tensor(self.value)
 
 
-@pytest.mark.pruned
 def test_forward_eval_uses_validation_noise_sample_count():
     selector = GeneratorSelector()
     module = make_module(
@@ -879,6 +878,7 @@ def test_predict_training_uses_training_noise_sample_count():
     assert request.output_sample_size == 7
 
 
+@pytest.mark.pruned
 def test_predict_eval_preserves_explicit_output_sample_size():
     selector = GeneratorSelector()
     module = make_module(
@@ -1084,6 +1084,7 @@ def test_init_loss_function_moves_losses_to_module_device():
     assert module.KLD.reduction == criterion.reduction
 
 
+@pytest.mark.pruned
 def test_build_load_dir_rejects_input_metadata_mismatch(
     monkeypatch,
 ):
@@ -1124,7 +1125,6 @@ def test_build_load_dir_rejects_input_metadata_mismatch(
         )
 
 
-@pytest.mark.pruned
 def test_build_load_dir_rejects_output_metadata_mismatch(
     monkeypatch,
 ):

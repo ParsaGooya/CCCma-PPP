@@ -1,5 +1,4 @@
 import pytest
-
 import torch
 
 import cccma_ppp.generic.distributed as mod
@@ -75,6 +74,7 @@ def test_cleanup(monkeypatch):
     assert called.get("destroy", False)
 
 
+@pytest.mark.pruned
 def test_cleanup_not_initialized(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: False)
@@ -110,7 +110,6 @@ def test_barrier_not_called(monkeypatch):
     d.barrier()
 
 
-@pytest.mark.pruned
 def test_all_reduce_called(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: True)

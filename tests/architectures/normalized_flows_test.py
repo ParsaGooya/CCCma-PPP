@@ -2,16 +2,15 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.core.selectors import FlowSelector
 from cccma_ppp.architectures.normalized_flows import (
     FCNN,
     MAF,
-    RealNVP,
     NormalizedFlowConfig,
     NormalizedFlowModel,
+    RealNVP,
     flowOutput,
 )
-
+from cccma_ppp.core.selectors import FlowSelector
 
 torch.manual_seed(0)
 

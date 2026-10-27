@@ -1,6 +1,6 @@
+import warnings
 from types import SimpleNamespace
 from unittest.mock import Mock, PropertyMock, patch
-import warnings
 
 import cftime
 import numpy as np
@@ -14,7 +14,6 @@ from cccma_ppp.train.dataset import (
     TrainDataset,
     TrainDatasetConfig,
 )
-
 
 INIT_TIME_DIM = "time"
 LEAD_TIME_DIM = "lead_time"
@@ -303,7 +302,6 @@ class TestTrainDatasetConfigObservationChecks:
         assert result is config
         assert caught == []
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [
@@ -353,6 +351,7 @@ class TestTrainDatasetConfigObservationChecks:
         ):
             config._check_observation()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [
@@ -927,7 +926,6 @@ class TestObservationIndexes:
             ),
         )
 
-    @pytest.mark.pruned
     def test_reports_missing_observation_times(self):
         dataset = make_dataset()
 
@@ -1021,6 +1019,7 @@ class TestTargetShape:
         config = make_config(
             observation=observation,
         )
+        observation.preprocessing_pipeline.has_flattener = False
         dataset = make_dataset(config=config)
         observation.coords = observation.info.coords
         dataset.observation_dataset = object()
@@ -1044,10 +1043,12 @@ class TestTargetShape:
         flattener.final_locations = np.zeros(5)
 
         pipeline = SimpleNamespace(
+            has_flattener=True,
             fitted_preprocessors=[
                 flattener,
             ],
             get_preprocessors=Mock(return_value=flattener),
+            get_flattener=Mock(return_value=flattener),
         )
         observation = make_data_config(
             name="observation",
@@ -1075,7 +1076,7 @@ class TestTargetShape:
             2,
             5,
         )
-        pipeline.get_preprocessors.assert_called_once_with("flattener")
+        pipeline.get_flattener.assert_called_once_with()
 
 
 class TestIndexObservationDataset:

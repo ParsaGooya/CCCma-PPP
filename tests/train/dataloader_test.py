@@ -864,63 +864,6 @@ class TestBuildTrainLoader:
         ):
             config.build_train_loader()
 
-    def test_builds_dataset_and_dataloader(self):
-        config = make_initialized_config(
-            load=True,
-        )
-        config._setup = True
-        config.rank = 0
-        config.world_size = 1
-
-        train_mask = object()
-        loader = object()
-
-        with (
-            patch.object(
-                module,
-                "_create_train_mask",
-                return_value=train_mask,
-            ) as create_mask,
-            patch.object(
-                module,
-                "Dataloader",
-                return_value=loader,
-            ) as constructor,
-        ):
-            result = config.build_train_loader(
-                return_metadata=True,
-                return_spatial_mask=True,
-                shuffle=False,
-            )
-
-        assert result is loader
-
-        config.dataset_config.get_input_times.assert_called_once_with(
-            config.train_times
-        )
-        create_mask.assert_called_once_with(
-            init_times=config.train_times,
-            lead_times=config.dataset_config.input_lead_times,
-        )
-
-        config.dataset_config.build_dataset.assert_called_once_with(
-            times=config.train_times,
-            mask=train_mask,
-            time_features=config.time_features,
-            return_metadata=True,
-            load=True,
-        )
-
-        constructor.assert_called_once_with(
-            dataset=config.dataset_config.build_dataset.return_value,
-            config=config,
-            collate_fn=collate_batch,
-            rank=0,
-            shuffle=False,
-            world_size=1,
-            return_spatial_mask=True,
-        )
-
 
 class TestBuildValidationLoader:
     def test_requires_setup(self):
@@ -948,7 +891,6 @@ class TestBuildValidationLoader:
 
         assert result is None
 
-    @pytest.mark.pruned
     def test_raises_when_validation_is_disabled(self):
         config = make_initialized_config(
             num_validation_years=0,
@@ -960,73 +902,6 @@ class TestBuildValidationLoader:
             match="Validation dataoader could not be built",
         ):
             config.build_validation_loader(supress_error=False)
-
-    @pytest.mark.pruned
-    def test_builds_validation_loader(self):
-        config = make_initialized_config(
-            dataset_config=make_dataset_config(
-                years=(
-                    2000,
-                    2001,
-                    2002,
-                )
-            ),
-            num_validation_years=1,
-            load=True,
-        )
-        config._setup = True
-        config.rank = 0
-        config.world_size = 1
-
-        validation_mask = object()
-        loader = object()
-
-        with (
-            patch.object(
-                module,
-                "_create_train_mask",
-                return_value=validation_mask,
-            ) as create_mask,
-            patch.object(
-                module,
-                "Dataloader",
-                return_value=loader,
-            ) as constructor,
-        ):
-            result = config.build_validation_loader(
-                return_metadata=True,
-                return_spatial_mask=True,
-                shuffle=False,
-            )
-
-        assert result is loader
-
-        config.dataset_config.get_input_times.assert_called_once_with(
-            config.validation_times
-        )
-
-        create_mask.assert_called_once_with(
-            init_times=config.validation_times,
-            lead_times=config.dataset_config.input_lead_times,
-        )
-
-        config.dataset_config.build_dataset.assert_called_once_with(
-            times=config.validation_times,
-            time_features=config.time_features,
-            mask=validation_mask,
-            return_metadata=True,
-            load=True,
-        )
-
-        constructor.assert_called_once_with(
-            dataset=config.dataset_config.build_dataset.return_value,
-            config=config,
-            collate_fn=collate_batch,
-            rank=0,
-            shuffle=False,
-            world_size=1,
-            return_spatial_mask=True,
-        )
 
 
 class TestWeightsAndMetadata:

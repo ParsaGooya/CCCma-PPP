@@ -273,7 +273,6 @@ def test_batchdata_to_device(
         assert batch.added_features is None
 
 
-@pytest.mark.pruned
 def test_batchdata_metadata_survives_to_device():
     metadata = [{"year": 2000}]
     batch = BatchData(
@@ -312,6 +311,7 @@ def make_collate_item(
     return data, metadata
 
 
+@pytest.mark.pruned
 def test_collate_batch_plain_inputs():
     result = collate_batch(
         [
@@ -333,7 +333,6 @@ def test_collate_batch_single_item():
     assert result.input.shape == (1, 2)
 
 
-@pytest.mark.pruned
 def test_collate_batch_with_metadata():
     result = collate_batch(
         [
@@ -354,7 +353,6 @@ def test_collate_batch_with_metadata():
     ]
 
 
-@pytest.mark.pruned
 def test_collate_batch_with_features():
     result = collate_batch(
         [
@@ -380,6 +378,7 @@ def test_collate_batch_with_features():
     )
 
 
+@pytest.mark.pruned
 def test_collate_batch_metadata_features_and_mask():
     result = collate_batch(
         [
@@ -439,7 +438,6 @@ def test_init_workers_zero_removes_prefetch():
     assert config.prefetch_factor is None
 
 
-@pytest.mark.pruned
 def test_init_workers_positive_preserves_prefetch(
     dataset_config,
 ):
@@ -512,7 +510,6 @@ def test_target_metadata_success(dataset_config):
     assert train_config.ds_operator.target_calls == 1
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("model_name", "condition_name", "existing", "expected"),
     [
@@ -1162,6 +1159,7 @@ def test_input_preprocessor_exists_condition_only_true(
     assert config._input_preprocessor_exists(tmp_path) is True
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_condition_only_false(
     dataset_config,
     tmp_path,
@@ -1196,7 +1194,6 @@ def test_input_preprocessor_exists_both_true(
     assert config._input_preprocessor_exists(tmp_path) is True
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("model_exists", "condition_exists"),
     [
@@ -1395,7 +1392,6 @@ def test_input_metadata_calls_operator_each_time(
     assert dataset_config.ds_operator.input_calls == 2
 
 
-@pytest.mark.pruned
 def test_target_metadata_calls_train_operator_each_time(
     dataset_config,
 ):

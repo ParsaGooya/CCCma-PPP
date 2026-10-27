@@ -1,12 +1,11 @@
-from pathlib import Path
-import pytest
-import cccma_ppp.train.train as train_mod
-from cccma_ppp.train.train import main
 from contextlib import contextmanager
-from unittest.mock import Mock, call
-from cccma_ppp.train.train import get_parser
-import runpy
-import sys
+from pathlib import Path
+from unittest.mock import Mock
+
+import pytest
+
+import cccma_ppp.train.train as train_mod
+from cccma_ppp.train.train import get_parser, main
 
 
 @pytest.mark.pruned
@@ -219,6 +218,7 @@ def test_main_setup_logger_called_with_training_name_and_log_dir(monkeypatch, tm
     assert captured["log_dir"] == config_obj.log_dir
 
 
+@pytest.mark.pruned
 def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -556,69 +556,30 @@ def test_get_parser_rejects_unknown_arguments():
 
 
 @pytest.mark.pruned
-def test_main_gets_distributed_singleton(
-    monkeypatch,
-    tmp_path,
-):
-    dependencies = patch_successful_main_dependencies(monkeypatch)
-
-    yaml_path = tmp_path / "config.yaml"
-
-    main(str(yaml_path))
-
-    train_mod.Distributed.get_instance.assert_called_once_with()
-
-    assert dependencies["distributed"].cleanup_called is True
-
-
-@pytest.mark.pruned
 def test_main_passes_yaml_path_to_prepare_config(
     monkeypatch,
     tmp_path,
 ):
-    patch_successful_main_dependencies(monkeypatch)
-
-    yaml_path = tmp_path / "config.yaml"
-
-    main(str(yaml_path))
-
-    train_mod.prepare_config.assert_called_once_with(str(yaml_path))
-
-
-@pytest.mark.pruned
-def test_main_constructs_strict_dacite_config(
-    monkeypatch,
-    tmp_path,
-):
-    config_data = {
-        "experiment_dir": "experiment",
-        "epochs": 4,
-    }
-
-    patch_successful_main_dependencies(
+    yaml_path = tmp_path / "training.yaml"
+    dependencies = patch_successful_main_dependencies(
         monkeypatch,
-        config_data=config_data,
     )
 
-    yaml_path = tmp_path / "config.yaml"
-
     main(str(yaml_path))
 
-    call_arguments = train_mod.dacite.from_dict.call_args
-
-    assert call_arguments.kwargs["data_class"] is train_mod.TrainConfig
-    assert call_arguments.kwargs["data"] is config_data
-    assert call_arguments.kwargs["config"].strict is True
+    train_mod.prepare_config.assert_called_once_with(
+        str(yaml_path),
+    )
+    assert dependencies["distributed"].cleanup_called is True
 
 
 @pytest.mark.pruned
-def test_main_sets_seed_from_distributed_rank(
+def test_main_sets_random_seed_with_distributed_rank(
     monkeypatch,
     tmp_path,
 ):
     distributed = DummyDistributed()
-    distributed.rank = 7
-
+    distributed.rank = 4
     config = DummyTrainConfig()
     config.set_random_seed = Mock()
 
@@ -628,59 +589,242 @@ def test_main_sets_seed_from_distributed_rank(
         config=config,
     )
 
-    main(str(tmp_path / "config.yaml"))
+    main(str(tmp_path / "training.yaml"))
 
-    config.set_random_seed.assert_called_once_with(7)
+    config.set_random_seed.assert_called_once_with(4)
 
 
 @pytest.mark.pruned
-def test_main_passes_monitoring_directory(
+def test_main_uses_strict_dacite_configuration(
+    monkeypatch,
+    tmp_path,
+):
+    dependencies = patch_successful_main_dependencies(
+        monkeypatch,
+        config_data={
+            "epochs": 10,
+        },
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    train_mod.dacite.from_dict.assert_called_once()
+
+    call = train_mod.dacite.from_dict.call_args
+
+    assert call.kwargs["data_class"] is train_mod.TrainConfig
+    assert call.kwargs["data"] is dependencies["config_data"]
+    assert isinstance(
+        call.kwargs["config"],
+        train_mod.dacite.Config,
+    )
+    assert call.kwargs["config"].strict is True
+
+
+@pytest.mark.pruned
+def test_main_sets_up_logger_after_random_seed(
+    monkeypatch,
+    tmp_path,
+):
+    events = []
+    config = DummyTrainConfig()
+    logger = DummyLogger()
+
+    config.set_random_seed = Mock(
+        side_effect=lambda rank: events.append("seed"),
+    )
+
+    dependencies = patch_successful_main_dependencies(
+        monkeypatch,
+        config=config,
+        logger=logger,
+    )
+
+    train_mod.setup_logger.side_effect = lambda **kwargs: (
+        events.append("logger"),
+        logger,
+    )[1]
+
+    main(str(tmp_path / "training.yaml"))
+
+    assert events == [
+        "seed",
+        "logger",
+    ]
+    assert dependencies["distributed"].cleanup_called is True
+
+
+@pytest.mark.pruned
+def test_main_prepares_directory_before_building_trainer(
+    monkeypatch,
+    tmp_path,
+):
+    events = []
+    config = DummyTrainConfig()
+    trainer = DummyTrainer()
+
+    config.prepare_directory = Mock(
+        side_effect=lambda *args: events.append("prepare_directory"),
+    )
+
+    dependencies = patch_successful_main_dependencies(
+        monkeypatch,
+        config=config,
+        trainer=trainer,
+    )
+
+    train_mod.build_trainer.side_effect = lambda *args: (
+        events.append("build_trainer"),
+        trainer,
+    )[1]
+
+    main(str(tmp_path / "training.yaml"))
+
+    assert events == [
+        "prepare_directory",
+        "build_trainer",
+    ]
+    assert dependencies["distributed"].cleanup_called is True
+
+
+@pytest.mark.pruned
+def test_main_passes_exact_directory_preparation_arguments(
+    monkeypatch,
+    tmp_path,
+):
+    yaml_path = tmp_path / "training.yaml"
+    config = DummyTrainConfig()
+    config.prepare_directory = Mock()
+
+    dependencies = patch_successful_main_dependencies(
+        monkeypatch,
+        config=config,
+    )
+
+    main(str(yaml_path))
+
+    config.prepare_directory.assert_called_once_with(
+        dependencies["distributed"],
+        str(yaml_path),
+    )
+
+
+@pytest.mark.pruned
+def test_main_passes_exact_logger_arguments(
+    monkeypatch,
+    tmp_path,
+):
+    config = DummyTrainConfig()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        config=config,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    train_mod.setup_logger.assert_called_once_with(
+        name="training",
+        log_dir=config.log_dir,
+    )
+
+
+@pytest.mark.pruned
+def test_main_passes_exact_build_trainer_arguments(
+    monkeypatch,
+    tmp_path,
+):
+    dependencies = patch_successful_main_dependencies(
+        monkeypatch,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    train_mod.build_trainer.assert_called_once_with(
+        dependencies["config"],
+        dependencies["distributed"],
+        dependencies["logger"],
+    )
+
+
+@pytest.mark.pruned
+def test_main_passes_exact_trainer_setup_arguments(
+    monkeypatch,
+    tmp_path,
+):
+    trainer = DummyTrainer()
+    trainer.setup_distributed = Mock()
+
+    dependencies = patch_successful_main_dependencies(
+        monkeypatch,
+        trainer=trainer,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    trainer.setup_distributed.assert_called_once_with(
+        distributed=dependencies["distributed"],
+        logger=dependencies["logger"],
+        log_every_n_epochs=(dependencies["config"].log_every_n_epochs),
+        save_checkpoint=(dependencies["config"].save_checkpoint),
+    )
+
+
+@pytest.mark.pruned
+def test_main_calls_train_once(
+    monkeypatch,
+    tmp_path,
+):
+    trainer = DummyTrainer()
+    trainer.train = Mock()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        trainer=trainer,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    trainer.train.assert_called_once_with()
+
+
+@pytest.mark.pruned
+def test_main_uses_expected_monitoring_directory(
     monkeypatch,
     tmp_path,
 ):
     config = DummyTrainConfig()
     config.monitoring_dir = tmp_path / "monitoring"
-
-    calls = []
-    monitor = RecordingMonitor()
+    captured = {}
 
     dependencies = patch_successful_main_dependencies(
         monkeypatch,
         config=config,
-        monitor=monitor,
     )
 
     @contextmanager
-    def fake_monitoring(
+    def monitoring(
         distributed,
         output_dir,
     ):
-        calls.append(
-            (
-                distributed,
-                output_dir,
-            )
-        )
-        yield monitor
+        captured["distributed"] = distributed
+        captured["output_dir"] = output_dir
+        yield dependencies["monitor"]
 
     monkeypatch.setattr(
         train_mod,
         "distributed_monitoring",
-        fake_monitoring,
+        monitoring,
     )
 
-    main(str(tmp_path / "config.yaml"))
+    main(str(tmp_path / "training.yaml"))
 
-    assert calls == [
-        (
-            dependencies["distributed"],
-            config.monitoring_dir,
-        )
-    ]
+    assert captured["distributed"] is dependencies["distributed"]
+    assert captured["output_dir"] == config.monitoring_dir
 
 
 @pytest.mark.pruned
-def test_main_records_monitoring_spans_in_order(
+def test_main_records_expected_monitor_spans(
     monkeypatch,
     tmp_path,
 ):
@@ -691,7 +835,7 @@ def test_main_records_monitoring_spans_in_order(
         monitor=monitor,
     )
 
-    main(str(tmp_path / "config.yaml"))
+    main(str(tmp_path / "training.yaml"))
 
     assert monitor.spans == [
         (
@@ -733,7 +877,7 @@ def test_main_records_trainer_ready_checkpoint(
         monitor=monitor,
     )
 
-    main(str(tmp_path / "config.yaml"))
+    main(str(tmp_path / "training.yaml"))
 
     assert monitor.checkpoints == [
         "trainer_ready",
@@ -741,85 +885,67 @@ def test_main_records_trainer_ready_checkpoint(
 
 
 @pytest.mark.pruned
-def test_build_trainer_runs_inside_monitoring_span(
+def test_main_checkpoint_occurs_after_setup_and_before_training(
+    monkeypatch,
+    tmp_path,
+):
+    events = []
+    trainer = DummyTrainer()
+
+    trainer.setup_distributed = Mock(
+        side_effect=lambda **kwargs: events.append("setup"),
+    )
+    trainer.train = Mock(
+        side_effect=lambda: events.append("train"),
+    )
+
+    class Monitor:
+        @contextmanager
+        def span(self, name):
+            yield
+
+        def checkpoint(self, name):
+            events.append(name)
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        trainer=trainer,
+        monitor=Monitor(),
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    assert events == [
+        "setup",
+        "trainer_ready",
+        "train",
+    ]
+
+
+@pytest.mark.pruned
+def test_main_operations_run_inside_expected_spans(
     monkeypatch,
     tmp_path,
 ):
     monitor = RecordingMonitor()
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        monitor=monitor,
-    )
+    trainer = DummyTrainer()
+    captured = {}
 
     def build_trainer(
         config,
         distributed,
         logger,
     ):
-        assert monitor.active_spans == [
-            "build_trainer",
-        ]
+        captured["build"] = list(monitor.active_spans)
+        return trainer
 
-        return DummyTrainer()
-
-    monkeypatch.setattr(
-        train_mod,
-        "build_trainer",
-        build_trainer,
-    )
-
-    main(str(tmp_path / "config.yaml"))
-
-
-@pytest.mark.pruned
-def test_setup_distributed_runs_inside_monitoring_span(
-    monkeypatch,
-    tmp_path,
-):
-    monitor = RecordingMonitor()
-    trainer = DummyTrainer()
-
-    def setup_distributed(
-        distributed,
-        logger,
-        log_every_n_epochs,
-        save_checkpoint,
-    ):
-        assert monitor.active_spans == [
-            "setup_distributed",
-        ]
-
-        trainer.setup_called = True
-
-    trainer.setup_distributed = setup_distributed
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        trainer=trainer,
-        monitor=monitor,
-    )
-
-    main(str(tmp_path / "config.yaml"))
-
-    assert trainer.setup_called is True
-
-
-@pytest.mark.pruned
-def test_train_runs_inside_monitoring_span(
-    monkeypatch,
-    tmp_path,
-):
-    monitor = RecordingMonitor()
-    trainer = DummyTrainer()
+    def setup_distributed(**kwargs):
+        captured["setup"] = list(monitor.active_spans)
 
     def train():
-        assert monitor.active_spans == [
-            "train",
-        ]
+        captured["train"] = list(monitor.active_spans)
 
-        trainer.train_called = True
-
+    trainer.setup_distributed = setup_distributed
     trainer.train = train
 
     patch_successful_main_dependencies(
@@ -827,414 +953,702 @@ def test_train_runs_inside_monitoring_span(
         trainer=trainer,
         monitor=monitor,
     )
+    monkeypatch.setattr(
+        train_mod,
+        "build_trainer",
+        build_trainer,
+    )
 
-    main(str(tmp_path / "config.yaml"))
+    main(str(tmp_path / "training.yaml"))
 
-    assert trainer.train_called is True
+    assert captured == {
+        "build": [
+            "build_trainer",
+        ],
+        "setup": [
+            "setup_distributed",
+        ],
+        "train": [
+            "train",
+        ],
+    }
 
 
 @pytest.mark.pruned
-def test_checkpoint_occurs_between_setup_and_train(
+def test_main_root_logs_before_directory_preparation(
     monkeypatch,
     tmp_path,
 ):
     events = []
+    logger = DummyLogger()
+    config = DummyTrainConfig()
 
-    class EventMonitor:
-        @contextmanager
-        def span(self, name):
-            events.append(f"start:{name}")
-
-            try:
-                yield
-            finally:
-                events.append(f"end:{name}")
-
-        def checkpoint(self, name):
-            events.append(f"checkpoint:{name}")
+    logger.info = Mock(
+        side_effect=lambda message: events.append(message),
+    )
+    config.prepare_directory = Mock(
+        side_effect=lambda *args: events.append("prepare_directory"),
+    )
 
     patch_successful_main_dependencies(
         monkeypatch,
-        monitor=EventMonitor(),
+        logger=logger,
+        config=config,
     )
 
-    main(str(tmp_path / "config.yaml"))
+    main(str(tmp_path / "training.yaml"))
 
-    assert events.index("end:setup_distributed") < events.index(
-        "checkpoint:trainer_ready"
+    assert events[:2] == [
+        "Setting up directories ...",
+        "prepare_directory",
+    ]
+
+
+@pytest.mark.pruned
+def test_main_root_logs_build_message_after_directory_preparation(
+    monkeypatch,
+    tmp_path,
+):
+    events = []
+    logger = DummyLogger()
+    config = DummyTrainConfig()
+
+    logger.info = Mock(
+        side_effect=lambda message: events.append(message),
+    )
+    config.prepare_directory = Mock(
+        side_effect=lambda *args: events.append("prepare_directory"),
     )
 
-    assert events.index("checkpoint:trainer_ready") < events.index("start:train")
+    patch_successful_main_dependencies(
+        monkeypatch,
+        logger=logger,
+        config=config,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    assert events == [
+        "Setting up directories ...",
+        "prepare_directory",
+        "Building objects:",
+    ]
+
+
+@pytest.mark.pruned
+def test_main_non_root_never_calls_logger_info(
+    monkeypatch,
+    tmp_path,
+):
+    distributed = DummyDistributed(
+        root=False,
+    )
+    logger = DummyLogger()
+    logger.info = Mock()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        logger=logger,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    logger.info.assert_not_called()
+    assert distributed.cleanup_called is True
 
 
 @pytest.mark.pruned
 @pytest.mark.parametrize(
     (
-        "failing_stage",
-        "expected_message",
+        "attribute",
+        "value",
     ),
     [
         (
-            "prepare_config",
-            "prepare failed",
+            "log_every_n_epochs",
+            7,
         ),
         (
-            "from_dict",
-            "dacite failed",
-        ),
-        (
-            "set_random_seed",
-            "seed failed",
-        ),
-        (
-            "setup_logger",
-            "logger failed",
-        ),
-        (
-            "prepare_directory",
-            "directory failed",
-        ),
-        (
-            "monitoring",
-            "monitoring failed",
-        ),
-        (
-            "build_trainer",
-            "build failed",
-        ),
-        (
-            "setup_distributed",
-            "setup failed",
-        ),
-        (
-            "checkpoint",
-            "checkpoint failed",
-        ),
-        (
-            "train",
-            "train failed",
+            "save_checkpoint",
+            False,
         ),
     ],
 )
-def test_main_always_cleans_up_after_stage_failure(
+def test_main_forwards_trainer_setup_configuration(
     monkeypatch,
     tmp_path,
-    failing_stage,
-    expected_message,
+    attribute,
+    value,
 ):
+    config = DummyTrainConfig()
+    setattr(
+        config,
+        attribute,
+        value,
+    )
+
+    trainer = DummyTrainer()
+    trainer.setup_distributed = Mock()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        config=config,
+        trainer=trainer,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    assert trainer.setup_distributed.call_args.kwargs[attribute] == value
+
+
+@pytest.mark.pruned
+def test_main_cleanup_occurs_after_successful_training(
+    monkeypatch,
+    tmp_path,
+):
+    events = []
+    distributed = DummyDistributed()
+    trainer = DummyTrainer()
+
+    trainer.train = Mock(
+        side_effect=lambda: events.append("train"),
+    )
+    distributed.cleanup = Mock(
+        side_effect=lambda: events.append("cleanup"),
+    )
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        trainer=trainer,
+    )
+
+    main(str(tmp_path / "training.yaml"))
+
+    assert events == [
+        "train",
+        "cleanup",
+    ]
+    distributed.cleanup.assert_called_once_with()
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_prepare_config_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+
+    monkeypatch.setattr(
+        train_mod.Distributed,
+        "get_instance",
+        Mock(
+            return_value=distributed,
+        ),
+    )
+    monkeypatch.setattr(
+        train_mod,
+        "prepare_config",
+        Mock(
+            side_effect=RuntimeError("configuration failed"),
+        ),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="configuration failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_dacite_conversion_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+
+    monkeypatch.setattr(
+        train_mod.Distributed,
+        "get_instance",
+        Mock(
+            return_value=distributed,
+        ),
+    )
+    monkeypatch.setattr(
+        train_mod,
+        "prepare_config",
+        Mock(
+            return_value={
+                "invalid": True,
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        train_mod.dacite,
+        "from_dict",
+        Mock(
+            side_effect=RuntimeError("conversion failed"),
+        ),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="conversion failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_seed_setup_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+    config = DummyTrainConfig()
+    config.set_random_seed = Mock(
+        side_effect=RuntimeError("seed failed"),
+    )
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        config=config,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="seed failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    train_mod.setup_logger.assert_not_called()
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_logger_setup_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+    )
+    train_mod.setup_logger.side_effect = RuntimeError("logger failed")
+
+    with pytest.raises(
+        RuntimeError,
+        match="logger failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    train_mod.build_trainer.assert_not_called()
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_directory_preparation_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+    config = DummyTrainConfig()
+    config.prepare_directory = Mock(
+        side_effect=RuntimeError("directory failed"),
+    )
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        config=config,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="directory failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    train_mod.build_trainer.assert_not_called()
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_monitoring_context_entry_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+    )
+
+    @contextmanager
+    def failing_monitoring(
+        distributed,
+        output_dir,
+    ):
+        raise RuntimeError("monitoring failed")
+        yield
+
+    monkeypatch.setattr(
+        train_mod,
+        "distributed_monitoring",
+        failing_monitoring,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="monitoring failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    train_mod.build_trainer.assert_not_called()
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_build_trainer_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+    monitor = RecordingMonitor()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        monitor=monitor,
+    )
+    train_mod.build_trainer.side_effect = RuntimeError("build failed")
+
+    with pytest.raises(
+        RuntimeError,
+        match="build failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    assert monitor.spans == [
+        (
+            "start",
+            "build_trainer",
+        ),
+        (
+            "end",
+            "build_trainer",
+        ),
+    ]
+    assert monitor.checkpoints == []
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_trainer_setup_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+    trainer = DummyTrainer()
+    trainer.setup_distributed = Mock(
+        side_effect=RuntimeError("setup failed"),
+    )
+    trainer.train = Mock()
+    monitor = RecordingMonitor()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        trainer=trainer,
+        monitor=monitor,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="setup failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    trainer.train.assert_not_called()
+    assert monitor.checkpoints == []
+
+
+@pytest.mark.pruned
+def test_main_cleanup_runs_when_checkpoint_fails(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+    trainer = DummyTrainer()
+    trainer.train = Mock()
+
+    class FailingMonitor(RecordingMonitor):
+        def checkpoint(self, name):
+            super().checkpoint(name)
+            raise RuntimeError("checkpoint failed")
+
+    monitor = FailingMonitor()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        trainer=trainer,
+        monitor=monitor,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="checkpoint failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    trainer.train.assert_not_called()
+    assert monitor.checkpoints == [
+        "trainer_ready",
+    ]
+
+
+@pytest.mark.pruned
+def test_main_training_error_closes_train_span(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+    trainer = DummyTrainer()
+    trainer.train = Mock(
+        side_effect=RuntimeError("training failed"),
+    )
+    monitor = RecordingMonitor()
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+        trainer=trainer,
+        monitor=monitor,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="training failed",
+    ):
+        main("training.yaml")
+
+    assert distributed.cleanup_called is True
+    assert monitor.spans[-2:] == [
+        (
+            "start",
+            "train",
+        ),
+        (
+            "end",
+            "train",
+        ),
+    ]
+
+
+@pytest.mark.pruned
+def test_main_cleanup_error_propagates_after_success(
+    monkeypatch,
+):
+    distributed = DummyDistributed()
+    distributed.cleanup = Mock(
+        side_effect=RuntimeError("cleanup failed"),
+    )
+
+    patch_successful_main_dependencies(
+        monkeypatch,
+        distributed=distributed,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="cleanup failed",
+    ):
+        main("training.yaml")
+
+    distributed.cleanup.assert_called_once_with()
+
+
+@pytest.mark.pruned
+def test_get_instance_failure_does_not_attempt_cleanup(
+    monkeypatch,
+):
+    get_instance = Mock(
+        side_effect=RuntimeError("distributed initialization failed"),
+    )
+    monkeypatch.setattr(
+        train_mod.Distributed,
+        "get_instance",
+        get_instance,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="distributed initialization failed",
+    ):
+        main("training.yaml")
+
+    get_instance.assert_called_once_with()
+
+
+@pytest.mark.pruned
+def test_get_parser_config_argument_is_string():
+    parser = get_parser()
+
+    arguments = parser.parse_args(
+        [
+            str(Path("training.yaml")),
+        ]
+    )
+
+    assert arguments.config == "training.yaml"
+    assert isinstance(
+        arguments.config,
+        str,
+    )
+
+
+@pytest.mark.pruned
+def test_get_parser_accepts_relative_config_path():
+    parser = get_parser()
+
+    arguments = parser.parse_args(
+        [
+            "configs/training.yaml",
+        ]
+    )
+
+    assert arguments.config == "configs/training.yaml"
+
+
+@pytest.mark.pruned
+def test_get_parser_accepts_absolute_config_path(
+    tmp_path,
+):
+    parser = get_parser()
+    config_path = tmp_path / "training.yaml"
+
+    arguments = parser.parse_args(
+        [
+            str(config_path),
+        ]
+    )
+
+    assert arguments.config == str(config_path)
+
+
+@pytest.mark.pruned
+def test_get_parser_help_exits_successfully(
+    capsys,
+):
+    parser = get_parser()
+
+    with pytest.raises(
+        SystemExit,
+    ) as error:
+        parser.parse_args(
+            [
+                "--help",
+            ]
+        )
+
+    assert error.value.code == 0
+
+    output = capsys.readouterr().out
+
+    assert "Train model from config file" in output
+    assert "Path to the YAML config file" in output
+    assert "config" in output
+
+
+def test_module_main_guard_executes_cli(
+    monkeypatch,
+    tmp_path,
+):
+    import argparse
+    import runpy
+
+    import cccma_ppp.generic.logger as logger_module
+    import cccma_ppp.generic.monitoring as monitoring_module
+    import cccma_ppp.train.train_configs as train_configs_module
+
+    yaml_path = tmp_path / "training.yaml"
+
     distributed = DummyDistributed()
     config = DummyTrainConfig()
     logger = DummyLogger()
     trainer = DummyTrainer()
     monitor = RecordingMonitor()
 
-    dependencies = patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-        config=config,
-        logger=logger,
-        trainer=trainer,
-        monitor=monitor,
-    )
-
-    if failing_stage == "prepare_config":
-        train_mod.prepare_config.side_effect = RuntimeError(expected_message)
-
-    elif failing_stage == "from_dict":
-        train_mod.dacite.from_dict.side_effect = RuntimeError(expected_message)
-
-    elif failing_stage == "set_random_seed":
-        config.set_random_seed = Mock(side_effect=RuntimeError(expected_message))
-
-    elif failing_stage == "setup_logger":
-        train_mod.setup_logger.side_effect = RuntimeError(expected_message)
-
-    elif failing_stage == "prepare_directory":
-        config.prepare_directory = Mock(side_effect=RuntimeError(expected_message))
-
-    elif failing_stage == "monitoring":
-
-        @contextmanager
-        def failed_monitoring(
-            distributed_argument,
-            output_dir,
-        ):
-            raise RuntimeError(expected_message)
-            yield
-
-        monkeypatch.setattr(
-            train_mod,
-            "distributed_monitoring",
-            failed_monitoring,
-        )
-
-    elif failing_stage == "build_trainer":
-        train_mod.build_trainer.side_effect = RuntimeError(expected_message)
-
-    elif failing_stage == "setup_distributed":
-        trainer.setup_distributed = Mock(side_effect=RuntimeError(expected_message))
-
-    elif failing_stage == "checkpoint":
-        monitor.checkpoint = Mock(side_effect=RuntimeError(expected_message))
-
-    elif failing_stage == "train":
-        trainer.train = Mock(side_effect=RuntimeError(expected_message))
-
-    with pytest.raises(
-        RuntimeError,
-        match=expected_message,
-    ):
-        main(str(tmp_path / "config.yaml"))
-
-    assert distributed.cleanup_called is True
-
-
-@pytest.mark.pruned
-def test_cleanup_runs_once_after_success(
-    monkeypatch,
-    tmp_path,
-):
-    distributed = DummyDistributed()
-    distributed.cleanup = Mock()
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-    )
-
-    main(str(tmp_path / "config.yaml"))
-
-    distributed.cleanup.assert_called_once_with()
-
-
-@pytest.mark.pruned
-def test_cleanup_runs_once_after_failure(
-    monkeypatch,
-    tmp_path,
-):
-    distributed = DummyDistributed()
-    distributed.cleanup = Mock()
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-    )
-
-    train_mod.prepare_config.side_effect = RuntimeError("failure")
-
-    with pytest.raises(
-        RuntimeError,
-        match="failure",
-    ):
-        main(str(tmp_path / "config.yaml"))
-
-    distributed.cleanup.assert_called_once_with()
-
-
-@pytest.mark.pruned
-def test_cleanup_error_replaces_successful_result(
-    monkeypatch,
-    tmp_path,
-):
-    distributed = DummyDistributed()
-    distributed.cleanup = Mock(side_effect=RuntimeError("cleanup failed"))
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-    )
-
-    with pytest.raises(
-        RuntimeError,
-        match="cleanup failed",
-    ):
-        main(str(tmp_path / "config.yaml"))
-
-
-@pytest.mark.pruned
-def test_cleanup_error_replaces_original_error(
-    monkeypatch,
-    tmp_path,
-):
-    distributed = DummyDistributed()
-    distributed.cleanup = Mock(side_effect=RuntimeError("cleanup failed"))
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-    )
-
-    train_mod.prepare_config.side_effect = ValueError("configuration failed")
-
-    with pytest.raises(
-        RuntimeError,
-        match="cleanup failed",
-    ):
-        main(str(tmp_path / "config.yaml"))
-
-
-@pytest.mark.pruned
-def test_non_root_still_prepares_directory(
-    monkeypatch,
-    tmp_path,
-):
-    distributed = DummyDistributed(root=False)
-    config = DummyTrainConfig()
-    config.prepare_directory = Mock()
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-        config=config,
-    )
-
-    yaml_path = tmp_path / "config.yaml"
-
-    main(str(yaml_path))
-
-    config.prepare_directory.assert_called_once_with(
-        distributed,
-        str(yaml_path),
-    )
-
-
-@pytest.mark.pruned
-def test_root_logger_messages_are_emitted_once(
-    monkeypatch,
-    tmp_path,
-):
-    distributed = DummyDistributed(root=True)
-    logger = DummyLogger()
-    logger.info = Mock()
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-        logger=logger,
-    )
-
-    main(str(tmp_path / "config.yaml"))
-
-    assert logger.info.call_args_list == [
-        call("Setting up directories ..."),
-        call("Building objects:"),
-    ]
-
-
-@pytest.mark.pruned
-def test_non_root_logger_info_is_not_called(
-    monkeypatch,
-    tmp_path,
-):
-    distributed = DummyDistributed(root=False)
-    logger = DummyLogger()
-    logger.info = Mock()
-
-    patch_successful_main_dependencies(
-        monkeypatch,
-        distributed=distributed,
-        logger=logger,
-    )
-
-    main(str(tmp_path / "config.yaml"))
-
-    logger.info.assert_not_called()
-
-
-@pytest.mark.pruned
-@pytest.mark.parametrize(
-    (
-        "log_every_n_epochs",
-        "save_checkpoint",
-    ),
-    [
-        (
-            1,
-            True,
-        ),
-        (
-            1,
-            False,
-        ),
-        (
-            7,
-            True,
-        ),
-        (
-            7,
-            False,
-        ),
-    ],
-)
-def test_main_forwards_setup_configuration(
-    monkeypatch,
-    tmp_path,
-    log_every_n_epochs,
-    save_checkpoint,
-):
-    config = DummyTrainConfig()
-    config.log_every_n_epochs = log_every_n_epochs
-    config.save_checkpoint = save_checkpoint
-
-    trainer = DummyTrainer()
-    trainer.setup_distributed = Mock()
-
-    dependencies = patch_successful_main_dependencies(
-        monkeypatch,
-        config=config,
-        trainer=trainer,
-    )
-
-    main(str(tmp_path / "config.yaml"))
-
-    trainer.setup_distributed.assert_called_once_with(
-        distributed=dependencies["distributed"],
-        logger=dependencies["logger"],
-        log_every_n_epochs=(log_every_n_epochs),
-        save_checkpoint=(save_checkpoint),
-    )
-
-
-def test_train_module_main_guard(monkeypatch):
     monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "cccma_ppp.train.train",
-        ],
+        argparse.ArgumentParser,
+        "parse_args",
+        Mock(
+            return_value=argparse.Namespace(
+                config=str(yaml_path),
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        train_mod.Distributed,
+        "get_instance",
+        Mock(
+            return_value=distributed,
+        ),
+    )
+    monkeypatch.setattr(
+        train_configs_module,
+        "prepare_config",
+        Mock(
+            return_value={
+                "experiment_dir": "test",
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        train_mod.dacite,
+        "from_dict",
+        Mock(
+            return_value=config,
+        ),
+    )
+    monkeypatch.setattr(
+        logger_module,
+        "setup_logger",
+        Mock(
+            return_value=logger,
+        ),
+    )
+    monkeypatch.setattr(
+        train_configs_module,
+        "build_trainer",
+        Mock(
+            return_value=trainer,
+        ),
     )
 
-    with pytest.raises(
-        SystemExit,
-    ) as error:
-        runpy.run_module(
-            "cccma_ppp.train.train",
-            run_name="__main__",
-        )
+    @contextmanager
+    def monitoring(
+        distributed_argument,
+        output_dir,
+    ):
+        assert distributed_argument is distributed
+        assert output_dir == config.monitoring_dir
+        yield monitor
 
-    assert error.value.code == 2
-
-
-@pytest.mark.pruned
-def test_get_parser_accepts_config_path():
-    parser = train_mod.get_parser()
-
-    arguments = parser.parse_args(
-        [
-            "train_config.yaml",
-        ]
+    monkeypatch.setattr(
+        monitoring_module,
+        "distributed_monitoring",
+        monitoring,
     )
 
-    assert arguments.config == "train_config.yaml"
+    runpy.run_path(
+        train_mod.__file__,
+        run_name="__main__",
+    )
 
-
-@pytest.mark.pruned
-def test_get_parser_requires_config_path():
-    parser = train_mod.get_parser()
-
-    with pytest.raises(
-        SystemExit,
-    ) as error:
-        parser.parse_args([])
-
-    assert error.value.code == 2
+    assert config.prepare_args["yaml_config"] == str(yaml_path)
+    assert trainer.setup_called is True
+    assert trainer.train_called is True
+    assert distributed.cleanup_called is True

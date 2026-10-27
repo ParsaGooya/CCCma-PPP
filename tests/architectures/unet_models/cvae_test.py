@@ -1,18 +1,24 @@
+import warnings
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
-import warnings
 
 import numpy as np
 import pytest
-from cccma_ppp.architectures.models_abc import DeterministicRequest
-from cccma_ppp.architectures.unet.deterministic import UNetConfig
 import torch
 import torch.nn as nn
+
 import cccma_ppp.architectures.unet.cvae as cvae_module
+from cccma_ppp.architectures.layers.conv import (
+    ConvBlockConfig,
+    ConvNeXtBlockConfig,
+    LatentVector,
+    PartialConvBlockConfig,
+    TensorMask,
+)
 from cccma_ppp.architectures.layers.unet import (
     UNetOutputSIC,
 )
-
+from cccma_ppp.architectures.models_abc import DeterministicRequest
 from cccma_ppp.architectures.unet.cvae import (
     Generation,
     Recognition,
@@ -21,13 +27,8 @@ from cccma_ppp.architectures.unet.cvae import (
     cVAEUNetSIC,
     cVAEUNetSICEConfig,
 )
-from cccma_ppp.architectures.layers.conv import (
-    ConvBlockConfig,
-    ConvNeXtBlockConfig,
-    LatentVector,
-    PartialConvBlockConfig,
-    TensorMask,
-)
+from cccma_ppp.architectures.unet.deterministic import UNetConfig
+from cccma_ppp.core.models.cvae import cVAEOutput
 
 
 def make_config(**overrides):
@@ -207,6 +208,7 @@ class TestCVAEUNetConfig:
             16,
         ]
 
+    @pytest.mark.pruned
     def test_condition_embedding_size_defaults_to_latent_size(self):
         config = make_config(
             latent_size=7,
@@ -333,7 +335,6 @@ class TestCVAEUNetConfig:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "activation,hidden_channels",
         [
@@ -407,7 +408,6 @@ class TestCVAEUNetConfig:
 
 
 class TestCVAEUNetInitialization:
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "input_shape",
         [
@@ -499,7 +499,6 @@ class TestCVAEUNetInitialization:
                 ),
             )
 
-    @pytest.mark.pruned
     def test_rejects_depth_larger_than_input(self):
         with pytest.raises(
             ValueError,
@@ -1339,6 +1338,7 @@ class TestForward:
             3,
         )
 
+    @pytest.mark.pruned
     def test_forward_clamps_posterior_variance(self):
         model = self.make_stubbed_model()
 
@@ -1514,95 +1514,7 @@ class TestPredict:
             "latent_samples": None,
         }
         values.update(overrides)
-        return SimpleNamespace(**values)
-
-    @pytest.mark.pruned
-    def test_predict_returns_cvae_output(self):
-        model = self.make_stubbed_model()
-        request = self.make_request()
-
-        result = model.predict(request)
-
-        model._sample_prior.assert_called_once_with(request)
-        assert result.output.shape == (
-            4,
-            2,
-            1,
-            8,
-            8,
-        )
-        assert result.mu is None
-        assert result.log_var is None
-        assert result.samples is None
-        assert result.cond_mu.shape == (
-            2,
-            3,
-        )
-
-    def test_predict_restores_output_sample_dimension(self):
-        model = self.make_stubbed_model()
-
-        model._generate.return_value = torch.zeros(
-            5,
-            4,
-            2,
-            4,
-            8,
-            8,
-        )
-        model._output_block.return_value = torch.zeros(
-            5,
-            4,
-            2,
-            1,
-            8,
-            8,
-        )
-
-        model.predict(
-            self.make_request(
-                output_sample_size=5,
-            )
-        )
-
-        model._output_block.assert_called_once_with(
-            model._generate.return_value,
-            (
-                5,
-                4,
-                2,
-            ),
-        )
-
-    @pytest.mark.pruned
-    def test_predict_adds_deterministic_guess(self):
-        model = self.make_stubbed_model()
-
-        generated = torch.ones(
-            4,
-            2,
-            4,
-            8,
-            8,
-        )
-        deterministic = torch.full_like(
-            generated,
-            2.0,
-        )
-
-        model._generate.return_value = generated
-        model._deterministic_guess.return_value = deterministic
-
-        model.predict(self.make_request())
-
-        passed = model._output_block.call_args.args[0]
-        torch.testing.assert_close(
-            passed,
-            torch.full_like(
-                passed,
-                3.0,
-            ),
-        )
+        return SimpleNamespace(chunk_size=None, **values)
 
 
 class TestRecognitionModule:
@@ -1784,7 +1696,6 @@ class TestGenerationModule:
 
         assert len(generation.up_blocks) == 1
 
-    @pytest.mark.pruned
     def test_forward_without_generator(self):
         generation = self.make_generation()
 
@@ -1853,11 +1764,13 @@ class TestAdditionalCVAEUNetConfig:
     def test_false_partial_conv_attribute_does_not_expect_mask(self):
         config = object.__new__(cVAEUNetConfig)
         config.block_config = SimpleNamespace(
+            chunk_size=None,
             use_partial_conv=False,
         )
 
         assert config.EXPECTS_MASK is False
 
+    @pytest.mark.pruned
     def test_unshared_guess_allows_different_output_settings(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -1867,7 +1780,8 @@ class TestAdditionalCVAEUNetConfig:
             output_block_hidden_channels=7,
         )
         selector = SimpleNamespace(
-            checkpoint_config=SimpleNamespace(freeze_weights=False),
+            chunk_size=None,
+            checkpoint_config=SimpleNamespace(chunk_size=None, freeze_weights=False),
             share_output_block=False,
             get_model_config=Mock(
                 return_value=resolved,
@@ -1909,10 +1823,11 @@ class TestAdditionalCVAEUNetInitialization:
         ):
             recognition.side_effect = [
                 SimpleNamespace(
+                    chunk_size=None,
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
-                    ]
+                    ],
                 ),
                 Mock(),
             ]
@@ -1955,10 +1870,11 @@ class TestAdditionalCVAEUNetInitialization:
         ):
             recognition.side_effect = [
                 SimpleNamespace(
+                    chunk_size=None,
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
-                    ]
+                    ],
                 ),
                 Mock(),
             ]
@@ -2125,6 +2041,7 @@ class TestAdditionalForwardPredict:
         helper = TestForward()
         model = helper.make_stubbed_model()
         model.config.GENERATOR = SimpleNamespace(
+            chunk_size=None,
             num_training_noise_samples=7,
         )
         model.eval()
@@ -2156,44 +2073,6 @@ class TestAdditionalForwardPredict:
         model._output_block.assert_called_once_with(
             model._generate.return_value,
             (2, 4, 2),
-        )
-
-    @pytest.mark.pruned
-    def test_predict_passes_condition_to_deterministic_guess(self):
-        helper = TestPredict()
-        model = helper.make_stubbed_model()
-
-        condition = torch.ones(
-            2,
-            2,
-            8,
-            8,
-        )
-        condition_mask = torch.ones(
-            2,
-            1,
-            8,
-            8,
-        )
-        features = torch.ones(
-            2,
-            1,
-            8,
-            8,
-        )
-
-        model.predict(
-            helper.make_request(
-                condition=condition,
-                condition_mask=condition_mask,
-                added_features=features,
-            )
-        )
-
-        model._deterministic_guess.assert_called_once_with(
-            input=condition,
-            input_mask=condition_mask,
-            added_features=features,
         )
 
 
@@ -2287,7 +2166,9 @@ def make_deterministic_selector(
     freeze_weights=False,
 ):
     return SimpleNamespace(
+        chunk_size=None,
         checkpoint_config=SimpleNamespace(
+            chunk_size=None,
             freeze_weights=freeze_weights,
         ),
         share_output_block=share_output_block,
@@ -2314,7 +2195,6 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is False
         assert config.freeze_deterministic is False
 
-    @pytest.mark.pruned
     def test_resolved_deterministic_configuration_is_stored(self):
         resolved = make_real_unet_config()
 
@@ -2332,9 +2212,11 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is False
         assert config.freeze_deterministic is True
 
+    @pytest.mark.pruned
     def test_resolved_configuration_must_be_unet_config(self):
         selector = make_deterministic_selector(
             SimpleNamespace(
+                chunk_size=None,
                 channels=[4, 8],
             )
         )
@@ -2347,6 +2229,7 @@ class TestAdditionalDeterministicGuessConfiguration:
                 deterministic_guess_config=selector,
             )
 
+    @pytest.mark.pruned
     def test_shared_output_rejects_clip_output_mismatch(self):
         resolved = make_real_unet_config()
         resolved.clip_output = True
@@ -2437,6 +2320,7 @@ class TestAdditionalConfigProperties:
 
         assert config.transpose_kernel_sizes == []
 
+    @pytest.mark.pruned
     def test_condition_channels_reference_model_channels(self):
         channels = [4, 8, 16]
 
@@ -2476,10 +2360,11 @@ class TestAdditionalInitializationBranches:
         ):
             recognition.side_effect = [
                 SimpleNamespace(
+                    chunk_size=None,
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
-                    ]
+                    ],
                 ),
                 Mock(),
             ]
@@ -2555,6 +2440,7 @@ class TestAdditionalInitializationBranches:
     ):
         shared_output = nn.Identity()
         deterministic_model = SimpleNamespace(
+            chunk_size=None,
             output_block=shared_output,
         )
         deterministic_config = Mock(
@@ -2588,6 +2474,7 @@ class TestAdditionalInitializationBranches:
             parameter.requires_grad = False
 
         deterministic_model = SimpleNamespace(
+            chunk_size=None,
             output_block=output,
         )
         deterministic_config = Mock(
@@ -2614,6 +2501,7 @@ class TestAdditionalInitializationBranches:
         self,
     ):
         deterministic_model = SimpleNamespace(
+            chunk_size=None,
             output_block=nn.Identity(),
         )
         deterministic_config = Mock(
@@ -2978,121 +2866,7 @@ class TestAdditionalForwardBranches:
         assert sample_size == 7
 
 
-class TestAdditionalPredictBranches:
-    @pytest.mark.pruned
-    def test_deterministic_only_replaces_generated_output(
-        self,
-    ):
-        helper = TestPredict()
-        model = helper.make_stubbed_model()
-
-        generated = torch.full(
-            (
-                4,
-                2,
-                1,
-                8,
-                8,
-            ),
-            -5.0,
-        )
-        deterministic = torch.full(
-            (
-                2,
-                1,
-                8,
-                8,
-            ),
-            2.0,
-        )
-
-        model._generate.return_value = generated
-        model._deterministic_guess.return_value = deterministic
-
-        with pytest.warns(
-            UserWarning,
-            match="DETERMINISTIC GUESS",
-        ):
-            result = model.predict(
-                helper.make_request(
-                    output_sample_size=5,
-                ),
-                deterministic_guess_only=True,
-            )
-
-        passed = model._output_block.call_args.args[0]
-
-        torch.testing.assert_close(
-            passed,
-            deterministic.unsqueeze(0),
-        )
-        assert model._output_block.call_args.args[1] == (
-            1,
-            2,
-        )
-        assert result.deterministic_guess is True
-
-    def test_deterministic_only_warns_once(self):
-        helper = TestPredict()
-        model = helper.make_stubbed_model()
-        model._deterministic_guess.return_value = torch.ones(
-            2,
-            1,
-            8,
-            8,
-        )
-
-        with pytest.warns(
-            UserWarning,
-            match="DETERMINISTIC GUESS",
-        ):
-            model.predict(
-                helper.make_request(),
-                deterministic_guess_only=True,
-            )
-
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-
-            model.predict(
-                helper.make_request(),
-                deterministic_guess_only=True,
-            )
-
-        assert not captured
-
-    @pytest.mark.pruned
-    def test_deterministic_only_without_guess_keeps_generated_output(
-        self,
-    ):
-        helper = TestPredict()
-        model = helper.make_stubbed_model()
-        model._deterministic_guess.return_value = None
-
-        generated = model._generate.return_value
-
-        result = model.predict(
-            helper.make_request(),
-            deterministic_guess_only=True,
-        )
-
-        assert model._output_block.call_args.args[0] is generated
-        assert result.deterministic_guess is True
-
-    @pytest.mark.pruned
-    def test_predict_sets_predict_called(self):
-        helper = TestPredict()
-        model = helper.make_stubbed_model()
-
-        assert model._predict_called is False
-
-        model.predict(helper.make_request())
-
-        assert model._predict_called is True
-
-
 class TestAdditionalDeterministicGuessRequest:
-    @pytest.mark.pruned
     def test_request_contains_all_inputs(self):
         model = make_model()
 
@@ -3105,6 +2879,7 @@ class TestAdditionalDeterministicGuessRequest:
             )
         )
         model.deterministic_guess = SimpleNamespace(
+            chunk_size=None,
             forward_decoder=decoder,
         )
 
@@ -3250,6 +3025,7 @@ class TestAdditionalGenerationConfiguration:
         expected_block_noise,
     ):
         generator = SimpleNamespace(
+            chunk_size=None,
             noise_level=noise_level,
             num_training_noise_samples=2,
         )
@@ -3282,6 +3058,7 @@ class TestAdditionalGenerationConfiguration:
         self,
     ):
         generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="medium",
             num_training_noise_samples=2,
         )
@@ -3334,6 +3111,7 @@ class TestAdditionalGenerationConfiguration:
         self,
     ):
         generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="low",
             num_training_noise_samples=2,
         )
@@ -3387,6 +3165,7 @@ class TestAdditionalGenerationConfiguration:
         self,
     ):
         generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="full",
             num_training_noise_samples=2,
         )
@@ -3441,6 +3220,7 @@ class TestAdditionalGenerationForward:
         monkeypatch,
     ):
         generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="full",
             num_training_noise_samples=3,
         )
@@ -3535,6 +3315,7 @@ class TestAdditionalGenerationForward:
         monkeypatch,
     ):
         generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="full",
             num_training_noise_samples=3,
         )
@@ -3601,6 +3382,7 @@ class TestAdditionalGenerationForward:
             8,
         )
 
+    @pytest.mark.pruned
     def test_generation_passes_resize_shapes_in_order(
         self,
     ):
@@ -3623,6 +3405,7 @@ class TestAdditionalGenerationForward:
             ),
         ]
         generation.config = SimpleNamespace(
+            chunk_size=None,
             GENERATOR=None,
         )
         generation.combine_latent = nn.Linear(
@@ -3865,7 +3648,6 @@ class TestSICModel:
             clip_output=True,
         )
 
-    @pytest.mark.pruned
     def test_sic_model_clips_output(self):
         model = self.make_sic_model(
             clip_output=True,
@@ -3890,6 +3672,7 @@ class TestSICModel:
         assert torch.all(result >= 0)
         assert torch.all(result <= 1)
 
+    @pytest.mark.pruned
     def test_sic_model_without_clipping_can_exceed_one(
         self,
     ):
@@ -3914,3 +3697,763 @@ class TestSICModel:
         )
 
         assert torch.any(result > 1)
+
+
+class ChunkRecordingGeneration(nn.Module):
+    def __init__(
+        self,
+        channels=4,
+        height=8,
+        width=8,
+    ):
+        super().__init__()
+        self.channels = channels
+        self.height = height
+        self.width = width
+        self.calls = []
+
+    def forward(
+        self,
+        latent_samples,
+        num_output_samples=1,
+    ):
+        self.calls.append(
+            {
+                "latent_samples": latent_samples,
+                "num_output_samples": num_output_samples,
+            }
+        )
+
+        batch_size = latent_samples.shape[0]
+
+        if num_output_samples > 1:
+            return torch.zeros(
+                num_output_samples,
+                batch_size,
+                self.channels,
+                self.height,
+                self.width,
+                dtype=latent_samples.dtype,
+                device=latent_samples.device,
+            )
+
+        return torch.zeros(
+            batch_size,
+            self.channels,
+            self.height,
+            self.width,
+            dtype=latent_samples.dtype,
+            device=latent_samples.device,
+        )
+
+
+class TestPredictBehavior:
+    @pytest.mark.pruned
+    def test_predict_returns_cvae_output(self):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+        request = helper.make_request()
+
+        result = model.predict(request)
+
+        assert isinstance(result, cVAEOutput)
+        assert result.output is model._output_block.return_value
+        assert result.mu is None
+        assert result.log_var is None
+        assert result.samples is None
+        assert result.cond_mu is model._sample_prior.return_value[1]
+        assert result.cond_log_var is model._sample_prior.return_value[2]
+        assert result.deterministic_guess is False
+
+    @pytest.mark.pruned
+    def test_predict_passes_request_to_sample_prior(self):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+        request = helper.make_request()
+
+        model.predict(request)
+
+        model._sample_prior.assert_called_once_with(request)
+
+    def test_predict_forwards_latents_and_condition_embedding(self):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+        request = helper.make_request(
+            output_sample_size=3,
+        )
+
+        latent_samples, cond_mu, _ = model._sample_prior.return_value
+
+        model.predict(request)
+
+        model._generate.assert_called_once_with(
+            latent_samples,
+            condition_embedding=cond_mu,
+            num_output_samples=3,
+            chunk_size=None,
+        )
+
+    @pytest.mark.pruned
+    def test_predict_without_output_samples_uses_latent_and_batch_dimensions(
+        self,
+    ):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+        request = helper.make_request(
+            latent_sample_size=4,
+            output_sample_size=0,
+        )
+
+        model.predict(request)
+
+        model._output_block.assert_called_once_with(
+            model._generate.return_value,
+            (
+                4,
+                2,
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_predict_with_output_samples_uses_all_sample_dimensions(
+        self,
+    ):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+        request = helper.make_request(
+            latent_sample_size=4,
+            output_sample_size=3,
+        )
+
+        model._generate.return_value = torch.zeros(
+            3,
+            4,
+            2,
+            4,
+            8,
+            8,
+        )
+        model._output_block.return_value = torch.zeros(
+            3,
+            4,
+            2,
+            1,
+            8,
+            8,
+        )
+
+        model.predict(request)
+
+        model._output_block.assert_called_once_with(
+            model._generate.return_value,
+            (
+                3,
+                4,
+                2,
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_predict_passes_inputs_to_deterministic_guess(self):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+
+        condition = torch.ones(
+            2,
+            2,
+            8,
+            8,
+        )
+        condition_mask = torch.ones(
+            2,
+            1,
+            8,
+            8,
+        )
+        features = torch.ones(
+            2,
+            3,
+            8,
+            8,
+        )
+
+        request = helper.make_request(
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=features,
+        )
+
+        model.predict(request)
+
+        model._deterministic_guess.assert_called_once_with(
+            input=condition,
+            input_mask=condition_mask,
+            added_features=features,
+        )
+
+    def test_predict_adds_deterministic_guess_to_generation(self):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+
+        generated = torch.ones(
+            4,
+            2,
+            4,
+            8,
+            8,
+        )
+        deterministic = torch.full(
+            (
+                4,
+                2,
+                4,
+                8,
+                8,
+            ),
+            2.0,
+        )
+
+        model._generate.return_value = generated
+        model._deterministic_guess.return_value = deterministic
+
+        model.predict(helper.make_request())
+
+        passed = model._output_block.call_args.args[0]
+
+        torch.testing.assert_close(
+            passed,
+            torch.full_like(
+                passed,
+                3.0,
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_predict_marks_model_as_called(self):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+
+        assert model._predict_called is False
+
+        model.predict(helper.make_request())
+
+        assert model._predict_called is True
+
+
+class TestDeterministicGuessOnlyPrediction:
+    def make_model_and_request(self):
+        helper = TestPredict()
+        model = helper.make_stubbed_model()
+        request = helper.make_request(
+            latent_sample_size=4,
+            output_sample_size=3,
+        )
+
+        deterministic = torch.full(
+            (
+                2,
+                4,
+                8,
+                8,
+            ),
+            2.0,
+        )
+
+        model._deterministic_guess.return_value = deterministic
+        model._output_block = Mock(
+            side_effect=lambda value, sample_sizes: value,
+        )
+
+        return model, request, deterministic
+
+    @pytest.mark.pruned
+    def test_deterministic_guess_only_replaces_generated_output(self):
+        model, request, deterministic = self.make_model_and_request()
+
+        result = model.predict(
+            request,
+            deterministic_guess_only=True,
+        )
+
+        torch.testing.assert_close(
+            result.output,
+            deterministic.unsqueeze(0),
+        )
+
+    @pytest.mark.pruned
+    def test_deterministic_guess_only_sets_output_flag(self):
+        model, request, _ = self.make_model_and_request()
+
+        result = model.predict(
+            request,
+            deterministic_guess_only=True,
+        )
+
+        assert result.deterministic_guess is True
+
+    @pytest.mark.pruned
+    def test_deterministic_guess_only_warns_on_first_prediction(self):
+        model, request, _ = self.make_model_and_request()
+
+        with pytest.warns(
+            UserWarning,
+            match="DETERMINISTIC GUESS BRANCH OUTPUT ONLY",
+        ):
+            model.predict(
+                request,
+                deterministic_guess_only=True,
+            )
+
+    def test_deterministic_guess_only_warning_is_emitted_once(self):
+        model, request, _ = self.make_model_and_request()
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+
+            model.predict(
+                request,
+                deterministic_guess_only=True,
+            )
+            model.predict(
+                request,
+                deterministic_guess_only=True,
+            )
+
+        matching = [
+            warning
+            for warning in caught
+            if "DETERMINISTIC GUESS BRANCH OUTPUT ONLY" in str(warning.message)
+        ]
+
+        assert len(matching) == 1
+
+
+class TestBuildOutput:
+    @pytest.mark.pruned
+    def test_build_output_returns_unet_output(self):
+        model = make_model()
+
+        output = model._build_output(
+            in_channels=7,
+            out_channels=3,
+        )
+
+        assert isinstance(
+            output,
+            cvae_module.UNetOutput,
+        )
+
+    @pytest.mark.pruned
+    def test_build_output_forwards_configuration(
+        self,
+        monkeypatch,
+    ):
+        model = make_model(
+            output_block_hidden_channels=9,
+            output_activation="sigmoid",
+        )
+
+        constructor = Mock(
+            return_value=nn.Identity(),
+        )
+        monkeypatch.setattr(
+            cvae_module,
+            "UNetOutput",
+            constructor,
+        )
+
+        result = model._build_output(
+            in_channels=7,
+            out_channels=3,
+        )
+
+        assert result is constructor.return_value
+        constructor.assert_called_once_with(
+            in_channels=7,
+            out_channels=3,
+            hidden_channels=9,
+            activation="sigmoid",
+        )
+
+
+class TestGenerationConstruction:
+    @pytest.mark.pruned
+    def test_up_blocks_receive_each_transpose_kernel_size(
+        self,
+        monkeypatch,
+    ):
+        created_blocks = []
+
+        class DummyUpBlock(nn.Module):
+            def __init__(self, **kwargs):
+                super().__init__()
+                self.kwargs = kwargs
+                created_blocks.append(self)
+
+            def forward(
+                self,
+                input,
+                skip=None,
+                resize_shape=None,
+            ):
+                return input
+
+        monkeypatch.setattr(
+            cvae_module,
+            "UpBlock",
+            DummyUpBlock,
+        )
+
+        Generation(
+            latent_size=3,
+            channels=[
+                16,
+                8,
+                4,
+            ],
+            resize_shapes=[
+                (
+                    2,
+                    2,
+                ),
+                (
+                    4,
+                    4,
+                ),
+                (
+                    8,
+                    8,
+                ),
+            ],
+            config=make_config(
+                channels=[
+                    4,
+                    8,
+                    16,
+                ],
+                condition_embedding_channels=[
+                    4,
+                    8,
+                    16,
+                ],
+                transpose_kernel_sizes=[
+                    5,
+                    7,
+                ],
+            ),
+        )
+
+        assert [block.kwargs["upsampling_kernel_size"] for block in created_blocks] == [
+            5,
+            7,
+        ]
+
+    @pytest.mark.pruned
+    def test_up_blocks_receive_channel_progression(
+        self,
+        monkeypatch,
+    ):
+        created_blocks = []
+
+        class DummyUpBlock(nn.Module):
+            def __init__(self, **kwargs):
+                super().__init__()
+                self.kwargs = kwargs
+                created_blocks.append(self)
+
+            def forward(
+                self,
+                input,
+                skip=None,
+                resize_shape=None,
+            ):
+                return input
+
+        monkeypatch.setattr(
+            cvae_module,
+            "UpBlock",
+            DummyUpBlock,
+        )
+
+        Generation(
+            latent_size=3,
+            channels=[
+                16,
+                8,
+                4,
+            ],
+            resize_shapes=[
+                (
+                    2,
+                    2,
+                ),
+                (
+                    4,
+                    4,
+                ),
+                (
+                    8,
+                    8,
+                ),
+            ],
+            config=make_config(
+                channels=[
+                    4,
+                    8,
+                    16,
+                ],
+                condition_embedding_channels=[
+                    4,
+                    8,
+                    16,
+                ],
+                transpose_kernel_sizes=[
+                    3,
+                    3,
+                ],
+            ),
+        )
+
+        assert [
+            (
+                block.kwargs["input_channels"],
+                block.kwargs["out_channels"],
+            )
+            for block in created_blocks
+        ] == [
+            (
+                16,
+                8,
+            ),
+            (
+                8,
+                4,
+            ),
+        ]
+
+    @pytest.mark.pruned
+    def test_up_blocks_are_constructed_without_skip_channels(
+        self,
+        monkeypatch,
+    ):
+        created_blocks = []
+
+        class DummyUpBlock(nn.Module):
+            def __init__(self, **kwargs):
+                super().__init__()
+                self.kwargs = kwargs
+                created_blocks.append(self)
+
+            def forward(
+                self,
+                input,
+                skip=None,
+                resize_shape=None,
+            ):
+                return input
+
+        monkeypatch.setattr(
+            cvae_module,
+            "UpBlock",
+            DummyUpBlock,
+        )
+
+        Generation(
+            latent_size=3,
+            channels=[
+                8,
+                4,
+            ],
+            resize_shapes=[
+                (
+                    4,
+                    4,
+                ),
+                (
+                    8,
+                    8,
+                ),
+            ],
+            config=make_config(),
+        )
+
+        assert created_blocks[0].kwargs["skip_channels"] is None
+        assert created_blocks[0].kwargs["skip_alignment_method"] == "padd"
+        assert created_blocks[0].kwargs["upsampling_method"] == "bilinear"
+
+
+class TestAdditionalGenerationEdgeCases:
+    @pytest.mark.pruned
+    def test_generation_without_up_blocks_returns_bottleneck_tensor(
+        self,
+    ):
+        generation = Generation(
+            latent_size=3,
+            channels=[8],
+            resize_shapes=[
+                (
+                    4,
+                    4,
+                )
+            ],
+            config=make_config(
+                channels=[8],
+                condition_embedding_channels=[8],
+                transpose_kernel_sizes=[],
+            ),
+        )
+
+        result = generation(
+            torch.ones(
+                2,
+                3,
+            )
+        )
+
+        assert result.shape == (
+            2,
+            8,
+            4,
+            4,
+        )
+
+    @pytest.mark.pruned
+    def test_generator_repeats_for_one_requested_output_sample(
+        self,
+        monkeypatch,
+    ):
+        generator = SimpleNamespace(
+            noise_level="full",
+            num_training_noise_samples=1,
+        )
+
+        generation = Generation(
+            latent_size=3,
+            channels=[8],
+            resize_shapes=[
+                (
+                    4,
+                    4,
+                )
+            ],
+            config=make_config(
+                channels=[8],
+                condition_embedding_channels=[8],
+                transpose_kernel_sizes=[],
+                GENERATOR=generator,
+            ),
+        )
+
+        original_repeat = cvae_module._repeat_tensor_mask
+        repeat = Mock(
+            side_effect=original_repeat,
+        )
+        monkeypatch.setattr(
+            cvae_module,
+            "_repeat_tensor_mask",
+            repeat,
+        )
+
+        result = generation(
+            torch.ones(
+                2,
+                3,
+            ),
+            num_output_samples=1,
+        )
+
+        repeat.assert_not_called()
+        assert result.shape == (
+            2,
+            8,
+            4,
+            4,
+        )
+
+    @pytest.mark.pruned
+    def test_non_generator_ignores_requested_output_sample_count(
+        self,
+        monkeypatch,
+    ):
+        generation = Generation(
+            latent_size=3,
+            channels=[8],
+            resize_shapes=[
+                (
+                    4,
+                    4,
+                )
+            ],
+            config=make_config(
+                channels=[8],
+                condition_embedding_channels=[8],
+                transpose_kernel_sizes=[],
+                GENERATOR=None,
+            ),
+        )
+
+        repeat = Mock(
+            side_effect=AssertionError("Non-generator models must not repeat tensors.")
+        )
+        monkeypatch.setattr(
+            cvae_module,
+            "_repeat_tensor_mask",
+            repeat,
+        )
+
+        result = generation(
+            torch.ones(
+                2,
+                3,
+            ),
+            num_output_samples=4,
+        )
+
+        repeat.assert_not_called()
+        assert result.shape == (
+            2,
+            8,
+            4,
+            4,
+        )
+
+
+class TestSICAdditionalBranches:
+    @pytest.mark.pruned
+    def test_sic_build_output_forwards_false_clip_value(
+        self,
+        monkeypatch,
+    ):
+        config_helper = TestSICConfiguration()
+        config = config_helper.make_sic_config(
+            clip_output=False,
+            output_activation="identity",
+            output_block_hidden_channels=5,
+        )
+
+        constructor = Mock(
+            return_value=nn.Identity(),
+        )
+        monkeypatch.setattr(
+            cvae_module,
+            "UNetOutputSIC",
+            constructor,
+        )
+
+        model = object.__new__(cVAEUNetSIC)
+        nn.Module.__init__(model)
+        model.config = config
+
+        result = model._build_output(
+            in_channels=4,
+            out_channels=2,
+        )
+
+        assert result is constructor.return_value
+        constructor.assert_called_once_with(
+            in_channels=4,
+            out_channels=2,
+            hidden_channels=5,
+            activation="identity",
+            clip_output=False,
+        )

@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -13,17 +13,14 @@ from cccma_ppp.architectures.layers.conv import (
     PartialConvBlockConfig,
     TensorMask,
 )
+from cccma_ppp.architectures.layers.unet import (
+    UNetOutputSIC,
+)
 from cccma_ppp.architectures.unet.deterministic import (
     UNet,
     UNetConfig,
     UNetSIC,
     UNetSICConfig,
-)
-
-from unittest.mock import Mock
-
-from cccma_ppp.architectures.layers.unet import (
-    UNetOutputSIC,
 )
 
 
@@ -151,6 +148,7 @@ def make_request(
         input_mask=input_mask,
         added_features=added_features,
         output_sample_size=output_sample_size,
+        chunk_output_samples=None,
     )
 
 
@@ -271,7 +269,6 @@ def test_integer_kernel_size_is_repeated(kernel_size):
     ]
 
 
-@pytest.mark.pruned
 def test_explicit_kernel_list_is_preserved():
     kernel_sizes = [2, 3]
 
@@ -470,6 +467,7 @@ def test_model_rejects_invalid_input_rank(input_shape):
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "output_shape",
     [
@@ -487,6 +485,7 @@ def test_model_rejects_invalid_output_rank(output_shape):
         )
 
 
+@pytest.mark.pruned
 def test_model_rejects_different_spatial_shapes_without_hidden_output():
     config = make_config(
         output_block_hidden_channels=None,
@@ -503,7 +502,6 @@ def test_model_rejects_different_spatial_shapes_without_hidden_output():
         )
 
 
-@pytest.mark.pruned
 def test_model_accepts_different_spatial_shapes_with_hidden_output():
     config = make_config(
         output_block_hidden_channels=4,
@@ -518,7 +516,6 @@ def test_model_accepts_different_spatial_shapes_with_hidden_output():
     assert model.output_shape == (1, 8, 8)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "input_shape",
     [
@@ -556,7 +553,6 @@ def test_model_rejects_depth_too_large_for_input():
         )
 
 
-@pytest.mark.pruned
 def test_depth_error_reports_allowed_levels():
     config = make_config(
         channels=[4, 8, 16, 32, 64],
@@ -693,6 +689,7 @@ def test_down_blocks_without_skip_processing():
     assert all(block.skip_processor is None for block in model.down_blocks)
 
 
+@pytest.mark.pruned
 def test_up_blocks_use_kernel_sizes_in_decoder_order():
     config = make_config(
         channels=[4, 8, 16],
@@ -785,7 +782,6 @@ def test_prepare_input_broadcasts_mask(
     assert result.mask is expected
 
 
-@pytest.mark.pruned
 def test_prepare_input_concatenates_added_features():
     model = make_model(
         added_features_dim=3,
@@ -883,6 +879,7 @@ def test_forward_without_generator_ignores_output_sample_size():
     assert result.output.shape == (2, 1, 16, 16)
 
 
+@pytest.mark.pruned
 def test_forward_with_added_features():
     model = make_model(
         added_features_dim=2,
@@ -898,6 +895,7 @@ def test_forward_with_added_features():
     assert result.output.shape == (2, 1, 16, 16)
 
 
+@pytest.mark.pruned
 def test_forward_resizes_to_output_shape(
     monkeypatch,
 ):
@@ -2827,3 +2825,603 @@ def test_processed_skip_model_forward():
         16,
         16,
     )
+
+
+class ChunkIdentityBlock(nn.Module):
+    def forward(self, value):
+        return value
+
+
+class ChunkDownBlock(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.calls = []
+
+    def forward(self, value):
+        self.calls.append(value)
+
+        downsampled = TensorMask(
+            tensor=value.tensor[
+                :,
+                :,
+                ::2,
+                ::2,
+            ],
+            mask=None,
+        )
+
+        return downsampled, value
+
+
+class ChunkUpBlock(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.calls = []
+
+    def forward(
+        self,
+        value,
+        skip=None,
+        resize_shape=None,
+    ):
+        self.calls.append(
+            {
+                "value": value,
+                "skip": skip,
+                "resize_shape": resize_shape,
+            }
+        )
+
+        if skip is not None:
+            spatial_shape = skip.tensor.shape[-2:]
+        else:
+            spatial_shape = resize_shape
+
+        return TensorMask(
+            tensor=torch.nn.functional.interpolate(
+                value.tensor,
+                size=spatial_shape,
+                mode="nearest",
+            ),
+            mask=None,
+        )
+
+
+def make_chunk_request(
+    *,
+    input=None,
+    input_mask=None,
+    added_features=None,
+    output_sample_size=3,
+    chunk_output_samples=True,
+):
+    if input is None:
+        input = torch.randn(
+            2,
+            2,
+            16,
+            16,
+        )
+
+    return SimpleNamespace(
+        input=input,
+        input_mask=input_mask,
+        added_features=added_features,
+        output_sample_size=output_sample_size,
+        chunk_output_samples=chunk_output_samples,
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_decoder_runs_once_per_requested_output_sample():
+    model = make_model(
+        config=make_config(
+            channels=[4, 8],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    initial_mapping = ChunkIdentityBlock()
+    down_block = ChunkDownBlock()
+    up_block = ChunkUpBlock()
+
+    model.initial_mapping = initial_mapping
+    model.down_blocks = nn.ModuleList([down_block])
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList([up_block])
+
+    result = model.forward_decoder(
+        make_chunk_request(
+            output_sample_size=3,
+            chunk_output_samples=True,
+        )
+    )
+
+    assert len(down_block.calls) == 1
+    assert len(up_block.calls) == 3
+    assert result.shape == (
+        6,
+        2,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_decoder_reuses_skip_for_each_output_sample():
+    model = make_model(
+        config=make_config(
+            channels=[4, 8],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    down_block = ChunkDownBlock()
+    up_block = ChunkUpBlock()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList([down_block])
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList([up_block])
+
+    model.forward_decoder(
+        make_chunk_request(
+            output_sample_size=4,
+            chunk_output_samples=True,
+        )
+    )
+
+    assert len(up_block.calls) == 4
+
+    expected_skip = down_block.calls[0]
+
+    assert all(call["skip"] is expected_skip for call in up_block.calls)
+    assert all(call["resize_shape"] is None for call in up_block.calls)
+
+
+@pytest.mark.pruned
+def test_chunked_decoder_does_not_repeat_bottleneck_or_skips():
+    model = make_model(
+        config=make_config(
+            channels=[4, 8],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList([ChunkDownBlock()])
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList([ChunkUpBlock()])
+
+    with patch.object(
+        module,
+        "_repeat_tensor_mask",
+    ) as repeat:
+        model.forward_decoder(
+            make_chunk_request(
+                output_sample_size=3,
+                chunk_output_samples=True,
+            )
+        )
+
+    repeat.assert_not_called()
+
+
+def test_chunked_forward_restores_output_sample_and_batch_dimensions():
+    model = make_model(
+        config=make_config(
+            channels=[4, 8],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList([ChunkDownBlock()])
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList([ChunkUpBlock()])
+    model._modules["output"] = nn.Conv2d(
+        in_channels=2,
+        out_channels=1,
+        kernel_size=1,
+    )
+
+    result = model.forward(
+        make_chunk_request(
+            output_sample_size=3,
+            chunk_output_samples=True,
+        )
+    )
+
+    assert result.output.shape == (
+        3,
+        2,
+        1,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_decoder_resizes_every_generated_sample():
+    model = make_model(
+        config=make_config(
+            channels=[4],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList()
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList()
+
+    expected = torch.randn(
+        2,
+        2,
+        16,
+        16,
+    )
+
+    with patch.object(
+        module,
+        "_resize_tensor",
+        return_value=expected,
+    ) as resize:
+        result = model.forward_decoder(
+            make_chunk_request(
+                output_sample_size=4,
+                chunk_output_samples=True,
+            )
+        )
+
+    assert resize.call_count == 4
+    assert all(call.args[1] == (16, 16) for call in resize.call_args_list)
+    assert result.shape == (
+        8,
+        2,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_decoder_without_skips_uses_recorded_resize_shapes():
+    model = make_model(
+        config=make_config(
+            channels=[4, 8],
+            add_skip_connections=False,
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    down_block = NoSkipDownBlock()
+    up_block = ChunkUpBlock()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList([down_block])
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList([up_block])
+
+    result = model.forward_decoder(
+        make_chunk_request(
+            output_sample_size=3,
+            chunk_output_samples=True,
+        )
+    )
+
+    assert len(up_block.calls) == 3
+    assert all(call["skip"] is None for call in up_block.calls)
+    assert all(call["resize_shape"] == (16, 16) for call in up_block.calls)
+    assert result.shape == (
+        6,
+        2,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunking_is_ignored_without_generator():
+    model = make_model(
+        config=make_config(
+            channels=[4],
+            GENERATOR=None,
+        )
+    )
+    model.eval()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList()
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList()
+
+    with patch.object(
+        module,
+        "_resize_tensor",
+        side_effect=lambda tensor, shape: tensor,
+    ) as resize:
+        result = model.forward_decoder(
+            make_chunk_request(
+                output_sample_size=4,
+                chunk_output_samples=True,
+            )
+        )
+
+    resize.assert_called_once()
+    assert result.shape == (
+        2,
+        2,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunking_is_ignored_for_single_output_sample():
+    model = make_model(
+        config=make_config(
+            channels=[4],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList()
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList()
+
+    with patch.object(
+        module,
+        "_resize_tensor",
+        side_effect=lambda tensor, shape: tensor,
+    ) as resize:
+        result = model.forward_decoder(
+            make_chunk_request(
+                output_sample_size=1,
+                chunk_output_samples=True,
+            )
+        )
+
+    resize.assert_called_once()
+    assert result.shape == (
+        2,
+        2,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_false_chunk_setting_uses_vectorized_repeat_path():
+    model = make_model(
+        config=make_config(
+            channels=[4],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList()
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList()
+
+    original_repeat = module._repeat_tensor_mask
+
+    with patch.object(
+        module,
+        "_repeat_tensor_mask",
+        side_effect=original_repeat,
+    ) as repeat:
+        result = model.forward_decoder(
+            make_chunk_request(
+                output_sample_size=3,
+                chunk_output_samples=False,
+            )
+        )
+
+    repeat.assert_called_once()
+    assert repeat.call_args.kwargs["repeats"] == 3
+    assert result.shape == (
+        6,
+        2,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_decoder_training_uses_configured_sample_count():
+    model = make_model(
+        config=make_config(
+            channels=[4],
+            GENERATOR=make_generator(
+                noise_level="full",
+                num_training_noise_samples=4,
+            ),
+        )
+    )
+    model.train()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList()
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList()
+
+    with patch.object(
+        module,
+        "_resize_tensor",
+        side_effect=lambda tensor, shape: tensor,
+    ) as resize:
+        result = model.forward_decoder(
+            make_chunk_request(
+                output_sample_size=2,
+                chunk_output_samples=True,
+            )
+        )
+
+    assert resize.call_count == 4
+    assert result.shape == (
+        8,
+        2,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_forward_training_restores_configured_sample_dimension():
+    model = make_model(
+        config=make_config(
+            channels=[4],
+            GENERATOR=make_generator(
+                noise_level="full",
+                num_training_noise_samples=4,
+            ),
+        )
+    )
+    model.train()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList()
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList()
+    model._modules["output"] = nn.Conv2d(
+        in_channels=2,
+        out_channels=1,
+        kernel_size=1,
+    )
+
+    result = model.forward(
+        make_chunk_request(
+            output_sample_size=2,
+            chunk_output_samples=True,
+        )
+    )
+
+    assert result.output.shape == (
+        4,
+        2,
+        1,
+        16,
+        16,
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_samples_are_concatenated_in_generation_order():
+    model = make_model(
+        config=make_config(
+            channels=[4],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList()
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList()
+
+    generated = [
+        torch.full((2, 2, 16, 16), 1.0),
+        torch.full((2, 2, 16, 16), 2.0),
+        torch.full((2, 2, 16, 16), 3.0),
+    ]
+
+    with patch.object(
+        module,
+        "_resize_tensor",
+        side_effect=generated,
+    ):
+        result = model.forward_decoder(
+            make_chunk_request(
+                output_sample_size=3,
+                chunk_output_samples=True,
+            )
+        )
+
+    torch.testing.assert_close(
+        result[:2],
+        generated[0],
+    )
+    torch.testing.assert_close(
+        result[2:4],
+        generated[1],
+    )
+    torch.testing.assert_close(
+        result[4:],
+        generated[2],
+    )
+
+
+@pytest.mark.pruned
+def test_chunked_decoder_passes_each_up_block_output_to_next_block():
+    model = make_model(
+        config=make_config(
+            channels=[4, 8, 16],
+            GENERATOR=make_generator(
+                noise_level="full",
+            ),
+        )
+    )
+    model.eval()
+
+    first_up = ChunkUpBlock()
+    second_up = ChunkUpBlock()
+
+    model.initial_mapping = ChunkIdentityBlock()
+    model.down_blocks = nn.ModuleList(
+        [
+            ChunkDownBlock(),
+            ChunkDownBlock(),
+        ]
+    )
+    model.bottleneck = ChunkIdentityBlock()
+    model.up_blocks = nn.ModuleList(
+        [
+            first_up,
+            second_up,
+        ]
+    )
+
+    model.forward_decoder(
+        make_chunk_request(
+            output_sample_size=2,
+            chunk_output_samples=True,
+        )
+    )
+
+    assert len(first_up.calls) == 2
+    assert len(second_up.calls) == 2
+
+    for index in range(2):
+        assert (
+            second_up.calls[index]["value"].tensor.shape[-2:]
+            == first_up.calls[index]["skip"].tensor.shape[-2:]
+        )

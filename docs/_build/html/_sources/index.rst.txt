@@ -2,8 +2,8 @@ CCCma PPP
 =========
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Start Here
+   :maxdepth: 3
+   :caption: Overview
 
    start_here/readme
    start_here/installation
@@ -12,6 +12,15 @@ CCCma PPP
 
 .. toctree::
    :maxdepth: 3
-   :caption: API Reference
+   :caption: Module Overviews
+   :glob:
 
-   api/cccma_ppp
+   module_overviews/*
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API Reference
+   :glob:
+
+   api/modules

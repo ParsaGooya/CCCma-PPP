@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cccma_ppp package" href="../api/cccma_ppp.html" />
+    <link rel="next" title="Architectures" href="../module_overviews/architectures.html" />
     <link rel="prev" title="Usage" href="usage.html" /> 
 </head>
 
@@ -42,16 +42,38 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development-setup">Development setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#project-layout">Project layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-a-component">Adding a component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding-conventions">Coding conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-and-pruning-steps">Build and pruning steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pull-requests">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reporting-issues">Reporting issues</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../api/cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">cccma_ppp</a></li>
 </ul>
 
         </div>
@@ -80,6 +102,99 @@
              
   <section id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading"></a></h1>
+<p>Thank you for contributing to CCCma-PPP. This guide covers how to set up a development environment, how the package is organized, how to add new components, and what we expect in a pull request.</p>
+<section id="development-setup">
+<h2>Development setup<a class="headerlink" href="#development-setup" title="Link to this heading"></a></h2>
+<p>Follow the instructions in <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a></p>
+<p>GPU features are optional. <code class="docutils literal notranslate"><span class="pre">Distributed</span></code> falls back to a single CPU process when <code class="docutils literal notranslate"><span class="pre">RANK</span></code> and <code class="docutils literal notranslate"><span class="pre">WORLD_SIZE</span></code> are not set, and <code class="docutils literal notranslate"><span class="pre">Monitor</span></code> logs a warning rather than failing when NVML is unavailable.</p>
+</section>
+<section id="project-layout">
+<h2>Project layout<a class="headerlink" href="#project-layout" title="Link to this heading"></a></h2>
+<p>Each top-level package has one job. See the module overview files in <code class="docutils literal notranslate"><span class="pre">docs/</span></code> for details.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">architectures</span></code>: neural network models and layers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">configs</span></code>: project-wide settings loaded from <code class="docutils literal notranslate"><span class="pre">configs.yaml</span></code>. Change dimension names here, not in code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">core</span></code>: model wrappers, selectors, trainer, optimizer, and writer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_modules</span></code>: data loading, dataset construction, and weights.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generic</span></code>: distributed setup, logging, metrics, runtime state, and monitoring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inference</span></code>: prediction entry point, predictors, and output writing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loss</span></code>: loss terms, the loss pipeline, and the KL term.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>: reversible data transforms.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train</span></code>: the training entry point and config wiring.</p></li>
+</ul>
+<p>Keep dependencies one-directional where possible. <code class="docutils literal notranslate"><span class="pre">generic</span></code> and <code class="docutils literal notranslate"><span class="pre">configs</span></code> should not import from the higher-level packages.</p>
+</section>
+<section id="adding-a-component">
+<h2>Adding a component<a class="headerlink" href="#adding-a-component" title="Link to this heading"></a></h2>
+<p>Most extensions use a registry. Classes are registered with a decorator and then selected by name from a YAML config. Follow the pattern for the component you are adding.</p>
+<p><strong>Model architecture</strong></p>
+<ol class="arabic simple">
+<li><p>Write a config dataclass that subclasses <code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC</span></code> or <code class="docutils literal notranslate"><span class="pre">modelConfigABC</span></code>. Set <code class="docutils literal notranslate"><span class="pre">NUM_INPUT_DIMS</span></code>, <code class="docutils literal notranslate"><span class="pre">NUM_OUTPUT_DIMS</span></code>, and an <code class="docutils literal notranslate"><span class="pre">EXPECTS_MASK</span></code> property. Validate arguments in <code class="docutils literal notranslate"><span class="pre">__post_init__</span></code>.</p></li>
+<li><p>Implement a <code class="docutils literal notranslate"><span class="pre">build</span></code> method that returns the module.</p></li>
+<li><p>Write the module as a subclass of <code class="docutils literal notranslate"><span class="pre">deterministicmodelsABC</span></code> or <code class="docutils literal notranslate"><span class="pre">cVAEmodelsABC</span></code>. Call <code class="docutils literal notranslate"><span class="pre">_initialize_weights</span></code> or <code class="docutils literal notranslate"><span class="pre">_load_state_dict</span></code> at the end of <code class="docutils literal notranslate"><span class="pre">__init__</span></code> depending on whether a checkpoint is provided.</p></li>
+<li><p>Register it with <code class="docutils literal notranslate"><span class="pre">&#64;deterministicModelSelector.register(&quot;name&quot;)</span></code> or <code class="docutils literal notranslate"><span class="pre">&#64;cVAEModelSelector.register(&quot;name&quot;)</span></code>.</p></li>
+<li><p>Import the module in <code class="docutils literal notranslate"><span class="pre">generic/registry_imports.py</span></code> so the registration runs before configs are parsed.</p></li>
+</ol>
+<p><strong>Loss term</strong></p>
+<ol class="arabic simple">
+<li><p>Subclass <code class="docutils literal notranslate"><span class="pre">lossABC</span></code> and implement <code class="docutils literal notranslate"><span class="pre">forward</span></code>, <code class="docutils literal notranslate"><span class="pre">_aggregate</span></code>, and <code class="docutils literal notranslate"><span class="pre">_print_loss</span></code>.</p></li>
+<li><p>Register it with <code class="docutils literal notranslate"><span class="pre">&#64;Losspipeline.register(&quot;name&quot;)</span></code>.</p></li>
+<li><p>Accept the reserved arguments (<code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">reduction</span></code>, <code class="docutils literal notranslate"><span class="pre">num_output_dimensions</span></code>, <code class="docutils literal notranslate"><span class="pre">generative_context</span></code>) explicitly. <code class="docutils literal notranslate"><span class="pre">LosspipelineConfig</span></code> rejects user-supplied values for them.</p></li>
+</ol>
+<p><strong>Preprocessing step</strong></p>
+<ol class="arabic simple">
+<li><p>Subclass <code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code> and implement <code class="docutils literal notranslate"><span class="pre">fit</span></code>, <code class="docutils literal notranslate"><span class="pre">transform</span></code>, and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">_get_reduction_dims</span></code> and <code class="docutils literal notranslate"><span class="pre">_align_stat_for_transform</span></code> rather than reimplementing them.</p></li>
+<li><p>Register it with <code class="docutils literal notranslate"><span class="pre">&#64;PreprocessingStepSelector.register(&quot;name&quot;)</span></code>.</p></li>
+<li><p>Make <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> the exact inverse of <code class="docutils literal notranslate"><span class="pre">transform</span></code>. Predictions depend on this.</p></li>
+</ol>
+<p><strong>Normalizing flow</strong></p>
+<p>Subclass <code class="docutils literal notranslate"><span class="pre">flowABC</span></code> and register it with <code class="docutils literal notranslate"><span class="pre">&#64;FlowSelector.register(&quot;name&quot;)</span></code>. Implement <code class="docutils literal notranslate"><span class="pre">forward</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse</span></code>, both returning a log-determinant, and make <code class="docutils literal notranslate"><span class="pre">build</span></code> accept <code class="docutils literal notranslate"><span class="pre">dim</span></code> and <code class="docutils literal notranslate"><span class="pre">condition_size</span></code>.</p>
+</section>
+<section id="coding-conventions">
+<h2>Coding conventions<a class="headerlink" href="#coding-conventions" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Use type hints on all public functions and classes. The codebase uses <code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">|</span> <span class="pre">None</span></code> union syntax.</p></li>
+<li><p>Document every public class and function with a NumPy-style docstring following the <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy docstring standard</a>. Include the sections that apply: Parameters, Returns, Yields, Raises, Warns, Notes, and Examples. Placeholder text such as “Description not yet provided.” must be replaced in any code you touch.</p></li>
+<li><p>Put shared constants and dimension names in <code class="docutils literal notranslate"><span class="pre">configs</span></code>, not in function defaults.</p></li>
+<li><p>Raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for bad user input and <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> for inconsistent state, such as a checkpoint that does not match the data. Include the offending values in the message.</p></li>
+<li><p>Do not put tensors or large arrays in configs. Configs must stay serializable to YAML, since checkpoints store them.</p></li>
+<li><p>Keep distributed-aware code behind <code class="docutils literal notranslate"><span class="pre">Distributed</span></code>. Use <code class="docutils literal notranslate"><span class="pre">is_root()</span></code> before writing files and <code class="docutils literal notranslate"><span class="pre">barrier()</span></code> before reading files that rank 0 has written.</p></li>
+</ul>
+</section>
+<section id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h2>
+<p>Unit tests are required for every change. Each module must reach at least <strong>90% branch coverage</strong>. Check coverage with branch measurement enabled, for example <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--cov=cccma_ppp</span> <span class="pre">--cov-branch</span> <span class="pre">--cov-fail-under=90</span></code>, and do not merge a change that drops any module below the threshold.</p>
+<p>Before opening a pull request, also check that:</p>
+<ul class="simple">
+<li><p>New configs round-trip through <code class="docutils literal notranslate"><span class="pre">dacite.from_dict</span></code> with <code class="docutils literal notranslate"><span class="pre">strict=True</span></code>.</p></li>
+<li><p>A new model runs a forward pass and a <code class="docutils literal notranslate"><span class="pre">predict</span></code> pass on a small random tensor with the expected output shape.</p></li>
+<li><p>A new loss or preprocessing step passes a fit-then-transform-then-inverse check, with the inverse reproducing the input within floating-point tolerance.</p></li>
+<li><p>Checkpoint save and reload produce identical outputs.</p></li>
+</ul>
+<p>Add tests alongside the code they cover, and run the full suite with GPU features disabled.</p>
+</section>
+<section id="build-and-pruning-steps">
+<h2>Build and pruning steps<a class="headerlink" href="#build-and-pruning-steps" title="Link to this heading"></a></h2>
+<p>Two steps are required before a pull request is ready for review:</p>
+<ol class="arabic simple">
+<li><p><strong>Rebuild the documentation.</strong> Run the docs build script from the repository root after any change to docstrings or to the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> files, and confirm it completes without warnings. Include the rebuilt output in your change if the build artifacts are tracked.</p></li>
+<li><p><strong>Run the pruning pipeline.</strong> Run the pruning pipeline on your branch and commit any changes it makes. Do not hand-edit its output.</p></li>
+</ol>
+</section>
+<section id="pull-requests">
+<h2>Pull requests<a class="headerlink" href="#pull-requests" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Keep changes focused. Separate refactors from behavior changes.</p></li>
+<li><p>Describe what changed and why, and note any change to saved checkpoint format or <code class="docutils literal notranslate"><span class="pre">configs.yaml</span></code> keys. Those break existing experiments and need a mention in the description.</p></li>
+<li><p>Update the matching module overview in <code class="docutils literal notranslate"><span class="pre">docs/</span></code> if you add a public component.</p></li>
+<li><p>Use a clear commit message in the imperative mood (for example, “Add Huber loss term”).</p></li>
+</ul>
+</section>
+<section id="reporting-issues">
+<h2>Reporting issues<a class="headerlink" href="#reporting-issues" title="Link to this heading"></a></h2>
+<p>Include the config file (with paths redacted if needed), the full traceback, the output of <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-c</span> <span class="pre">&quot;import</span> <span class="pre">torch;</span> <span class="pre">print(torch.__version__)&quot;</span></code>, and whether the run was single-process or distributed.</p>
+</section>
 </section>
 
 
@@ -87,7 +202,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../api/cccma_ppp.html" class="btn btn-neutral float-right" title="cccma_ppp package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../module_overviews/architectures.html" class="btn btn-neutral float-right" title="Architectures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

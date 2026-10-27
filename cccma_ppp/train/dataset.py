@@ -178,10 +178,9 @@ class TrainDatasetConfig(DatasetConfigABC):
             max_year = model_times.year.max()
 
             return common_times[
-                (common_times.year >= min_year)
-                & (common_times.year <= max_year)
+                (common_times.year >= min_year) & (common_times.year <= max_year)
             ]
-        
+
         elif time_freq == "month" and self.lead_time_resolution == "day":
             min_time = model_times.min()
             max_time = model_times.max()
@@ -189,19 +188,14 @@ class TrainDatasetConfig(DatasetConfigABC):
             min_month = min_time.year * 12 + min_time.month
             max_month = max_time.year * 12 + max_time.month
 
-            common_months = (
-                common_times.year * 12
-                + common_times.month
-            )
+            common_months = common_times.year * 12 + common_times.month
 
             return common_times[
-                (common_months >= min_month)
-                & (common_months <= max_month)
+                (common_months >= min_month) & (common_months <= max_month)
             ]
 
         return common_times[
-            (common_times >= model_times.min())
-            & (common_times <= model_times.max())
+            (common_times >= model_times.min()) & (common_times <= model_times.max())
         ]
 
     def fit_preprocessors(
@@ -481,10 +475,10 @@ class TrainDataset(DatasetABC):
             len_names = len(self.config.observation.names)
 
             if self.config.observation.preprocessing_pipeline.has_flattener:
-                flattener = self.config.observation.preprocessing_pipeline.get_flattener()
-                out_shape = (
-                    flattener.final_locations.shape
+                flattener = (
+                    self.config.observation.preprocessing_pipeline.get_flattener()
                 )
+                out_shape = flattener.final_locations.shape
 
             else:
                 out_shape = tuple(

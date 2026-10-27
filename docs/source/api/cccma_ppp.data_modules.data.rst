@@ -1,17 +1,29 @@
 cccma\_ppp.data\_modules.data package
 =====================================
 
-.. automodule:: cccma_ppp.data_modules.data
-   :no-index:
+Submodules
+----------
+
+cccma\_ppp.data\_modules.data.data\_abc module
+----------------------------------------------
+
+.. automodule:: cccma_ppp.data_modules.data.data_abc
    :members:
    :show-inheritance:
    :undoc-members:
 
-Submodules
-----------
+cccma\_ppp.data\_modules.data.data\_configs module
+--------------------------------------------------
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: cccma_ppp.data_modules.data.data_configs
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-   cccma_ppp.data_modules.data.data_abc
-   cccma_ppp.data_modules.data.data_configs
+Module contents
+---------------
+
+.. automodule:: cccma_ppp.data_modules.data
+   :members:
+   :show-inheritance:
+   :undoc-members:

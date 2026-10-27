@@ -1,6 +1,6 @@
-import pytest
-
 import logging
+
+import pytest
 
 from cccma_ppp.generic.logger import setup_logger
 

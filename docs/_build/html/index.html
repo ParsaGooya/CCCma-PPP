@@ -41,16 +41,28 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">cccma_ppp</a></li>
 </ul>
 
         </div>
@@ -80,7 +92,7 @@
   <section id="cccma-ppp">
 <h1>CCCma PPP<a class="headerlink" href="#cccma-ppp" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
+<p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="start_here/readme.html">README</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="start_here/readme.html#cccma-post-processing-package-ppp">CCCma Post-Processing Package (PPP)</a></li>
@@ -94,27 +106,77 @@
 <li class="toctree-l2"><a class="reference internal" href="start_here/installation.html#install-the-package">Install the package</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="start_here/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="start_here/usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="start_here/usage.html#job-scheduling">Job Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/usage.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/usage.html#inference">Inference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="start_here/contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#development-setup">Development setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#project-layout">Project layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#adding-a-component">Adding a component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#coding-conventions">Coding conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#build-and-pruning-steps">Build and pruning steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#pull-requests">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/contributing.html#reporting-issues">Reporting issues</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/architectures.html">Architectures</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/architectures.html#subpackages-and-modules">Subpackages and modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/architectures.html#model-selection">Model selection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/configs.html">Configs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/configs.html#configs-init-py"><code class="docutils literal notranslate"><span class="pre">configs/__init__.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/configs.html#configs-configs-yaml"><code class="docutils literal notranslate"><span class="pre">configs/configs.yaml</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/core.html">Core</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/core.html#modules">Modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/data_modules.html">Data Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/data_modules.html#modules">Modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/generic.html">Generic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/generic.html#modules">Modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/inference.html">Inference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/inference.html#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/inference.html#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/loss.html">Loss</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/loss.html#modules">Modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/preprocessing.html">Preprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/preprocessing.html#modules">Modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_overviews/train.html">Train</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/train.html#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/train.html#typical-flow">Typical flow</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/cccma_ppp.html">cccma_ppp package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/cccma_ppp.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.core.html">cccma_ppp.core package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.models.html">cccma_ppp.models package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.train.html">cccma_ppp.train package</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="api/cccma_ppp.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.monitoring.html">cccma_ppp.monitoring module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">cccma_ppp</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/cccma_ppp.html">cccma_ppp package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.html#subpackages">Subpackages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cccma_ppp.html#module-cccma_ppp">Module contents</a></li>
 </ul>
 </li>
 </ul>

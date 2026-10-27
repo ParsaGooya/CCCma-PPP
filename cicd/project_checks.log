@@ -1,0 +1,759 @@
+========================================
+Running project checks
+========================================
+Working directory: /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp
+
+Running compilation check...
+Compilation check passed.
+
+Running Ruff linting...
+E731 Do not assign a `lambda` expression, use a `def`
+   --> architectures/models_abc.py:811:9
+    |
+810 |       elif method == "kaiming":
+811 | /         initializer = lambda t: nn.init.kaiming_uniform_(
+812 | |             t,
+813 | |             a=math.sqrt(5),
+814 | |             mode="fan_in",
+815 | |             nonlinearity="leaky_relu",
+816 | |         )
+    | |_________^
+817 |
+818 |       elif method == "xavier":
+    |
+help: Rewrite `initializer` as a `def`
+
+F821 Undefined name `math`
+   --> architectures/models_abc.py:813:15
+    |
+811 |         initializer = lambda t: nn.init.kaiming_uniform_(
+812 |             t,
+813 |             a=math.sqrt(5),
+    |               ^^^^
+814 |             mode="fan_in",
+815 |             nonlinearity="leaky_relu",
+    |
+
+E731 Do not assign a `lambda` expression, use a `def`
+   --> architectures/models_abc.py:822:9
+    |
+821 |       elif method == "trunc_normal":
+822 | /         initializer = lambda t: trunc_normal_(
+823 | |             t,
+824 | |             std=0.02,
+825 | |         )
+    | |_________^
+826 |
+827 |       else:
+    |
+help: Rewrite `initializer` as a `def`
+
+F841 Local variable `output_spatial_shape` is assigned to but never used
+   --> architectures/unet/cvae.py:390:9
+    |
+389 |         output_channels = output_shape[0]
+390 |         output_spatial_shape = output_shape[1:]
+    |         ^^^^^^^^^^^^^^^^^^^^
+391 |         channels = config.channels
+    |
+help: Remove assignment to unused variable `output_spatial_shape`
+
+F402 Import `time` from line 6 shadowed by loop variable
+   --> core/writer.py:589:13
+    |
+587 |         year_datasets = []
+588 |
+589 |         for time in year_times:
+    |             ^^^^
+590 |             time_datasets = []
+    |
+
+Found 5 errors.
+No fixes available (3 hidden fixes can be enabled with the `--unsafe-fixes` option).
+Ruff reported: No fixes available.
+
+Running Ruff formatting check...
+74 files already formatted
+Ruff formatting check passed.
+
+Regenerating Sphinx documentation...
+Running Sphinx v9.1.0
+loading translations [en]... done
+making output directory... done
+[autosummary] generating autosummary for: api/cccma_ppp.core.cVAE_module.rst, api/cccma_ppp.core.core_abc.rst, api/cccma_ppp.core.deterministic_module.rst, api/cccma_ppp.core.optimization.rst, api/cccma_ppp.core.registery.rst, api/cccma_ppp.core.rst, api/cccma_ppp.core.selectors.rst, api/cccma_ppp.core.trainer.rst, api/cccma_ppp.data_modules.data.data_abc.rst, api/cccma_ppp.data_modules.data.data_configs.rst, ..., api/cccma_ppp.train.datasets.rst, api/cccma_ppp.train.registry_imports.rst, api/cccma_ppp.train.rst, api/cccma_ppp.train.train.rst, api/cccma_ppp.train.train_configs.rst, index.rst, start_here/contributing.rst, start_here/installation.rst, start_here/readme.rst, start_here/usage.rst
+WARNING: Failed to import cccma_ppp.core.cVAE_module.
+Possible hints:
+* AttributeError: module 'cccma_ppp.core' has no attribute 'cVAE_module'
+* ModuleNotFoundError: No module named 'cccma_ppp.core.cVAE_module'
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+WARNING: Failed to import cccma_ppp.core.deterministic_module.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
+* AttributeError: module 'cccma_ppp.core' has no attribute 'deterministic_module'
+WARNING: Failed to import cccma_ppp.monitoring.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'monitoring'
+* ModuleNotFoundError: No module named 'cccma_ppp.monitoring'
+WARNING: Failed to import cccma_ppp.inference.train.
+Possible hints:
+* AttributeError: module 'cccma_ppp.inference' has no attribute 'train'
+* ModuleNotFoundError: No module named 'cccma_ppp.inference.train'
+WARNING: Failed to import cccma_ppp.models.normalized_flows.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.inference.registry_imports.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.inference.registry_imports'
+* AttributeError: module 'cccma_ppp.inference' has no attribute 'registry_imports'
+WARNING: Failed to import cccma_ppp.data_modules.dataset.config_abc.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.data_modules.dataset.config_abc'
+* AttributeError: module 'cccma_ppp.data_modules.dataset' has no attribute 'config_abc'
+WARNING: Failed to import cccma_ppp.models.mlp_models.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.models.models_abc.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.train.datasets.
+Possible hints:
+* AttributeError: module 'cccma_ppp.train' has no attribute 'datasets'
+* ModuleNotFoundError: No module named 'cccma_ppp.train.datasets'
+WARNING: Failed to import cccma_ppp.models.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.train.registry_imports.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.train.registry_imports'
+* AttributeError: module 'cccma_ppp.train' has no attribute 'registry_imports'
+building [mo]: targets for 0 po files that are out of date
+writing output... 
+building [html]: targets for 56 source files that are out of date
+updating environment: [new config] 56 added, 0 changed, 0 removed
+reading sources... [  2%] api/cccma_ppp
+reading sources... [  4%] api/cccma_ppp.core
+reading sources... [  5%] api/cccma_ppp.core.cVAE_module
+reading sources... [  7%] api/cccma_ppp.core.core_abc
+reading sources... [  9%] api/cccma_ppp.core.deterministic_module
+reading sources... [ 11%] api/cccma_ppp.core.optimization
+reading sources... [ 12%] api/cccma_ppp.core.registery
+reading sources... [ 14%] api/cccma_ppp.core.selectors
+reading sources... [ 16%] api/cccma_ppp.core.trainer
+reading sources... [ 18%] api/cccma_ppp.data_modules
+reading sources... [ 20%] api/cccma_ppp.data_modules.data
+reading sources... [ 21%] api/cccma_ppp.data_modules.data.data_abc
+reading sources... [ 23%] api/cccma_ppp.data_modules.data.data_configs
+reading sources... [ 25%] api/cccma_ppp.data_modules.dataloader
+reading sources... [ 27%] api/cccma_ppp.data_modules.dataset
+reading sources... [ 29%] api/cccma_ppp.data_modules.dataset.config_abc
+reading sources... [ 30%] api/cccma_ppp.data_modules.dataset.operator
+reading sources... [ 32%] api/cccma_ppp.data_modules.utils
+reading sources... [ 34%] api/cccma_ppp.generic
+reading sources... [ 36%] api/cccma_ppp.generic.aggregator
+reading sources... [ 38%] api/cccma_ppp.generic.distributed
+reading sources... [ 39%] api/cccma_ppp.generic.logger
+reading sources... [ 41%] api/cccma_ppp.generic.runtime
+reading sources... [ 43%] api/cccma_ppp.inference
+reading sources... [ 45%] api/cccma_ppp.inference.dataloader
+reading sources... [ 46%] api/cccma_ppp.inference.dataset
+reading sources... [ 48%] api/cccma_ppp.inference.inference_configs
+reading sources... [ 50%] api/cccma_ppp.inference.registry_imports
+reading sources... [ 52%] api/cccma_ppp.inference.train
+reading sources... [ 54%] api/cccma_ppp.loss
+reading sources... [ 55%] api/cccma_ppp.loss.kld
+reading sources... [ 57%] api/cccma_ppp.loss.loss
+reading sources... [ 59%] api/cccma_ppp.loss.loss_abc
+reading sources... [ 61%] api/cccma_ppp.loss.registery
+reading sources... [ 62%] api/cccma_ppp.loss.utils_loss
+reading sources... [ 64%] api/cccma_ppp.models
+reading sources... [ 66%] api/cccma_ppp.models.mlp_models
+reading sources... [ 68%] api/cccma_ppp.models.models_abc
+reading sources... [ 70%] api/cccma_ppp.models.normalized_flows
+reading sources... [ 71%] api/cccma_ppp.monitoring
+reading sources... [ 73%] api/cccma_ppp.preprocessing
+reading sources... [ 75%] api/cccma_ppp.preprocessing.preprocessing
+reading sources... [ 77%] api/cccma_ppp.preprocessing.preprocessing_ABC
+reading sources... [ 79%] api/cccma_ppp.preprocessing.registery
+reading sources... [ 80%] api/cccma_ppp.preprocessing.utils_preprocessing
+reading sources... [ 82%] api/cccma_ppp.train
+reading sources... [ 84%] api/cccma_ppp.train.dataloader
+reading sources... [ 86%] api/cccma_ppp.train.datasets
+reading sources... [ 88%] api/cccma_ppp.train.registry_imports
+reading sources... [ 89%] api/cccma_ppp.train.train
+reading sources... [ 91%] api/cccma_ppp.train.train_configs
+reading sources... [ 93%] index
+reading sources... [ 95%] start_here/contributing
+reading sources... [ 96%] start_here/installation
+reading sources... [ 98%] start_here/readme
+reading sources... [100%] start_here/usage
+
+WARNING: autodoc: failed to import 'cVAE_module' from module 'cccma_ppp.core'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.core.cVAE_module'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'deterministic_module' from module 'cccma_ppp.core'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
+ [autodoc.import_object]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:42: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:50: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.wrapattr:3: ERROR: Unexpected indentation. [docutils]
+WARNING: autodoc: failed to import 'config_abc' from module 'cccma_ppp.data_modules.dataset'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.data_modules.dataset.config_abc'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'registry_imports' from module 'cccma_ppp.inference'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.inference.registry_imports'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'train' from module 'cccma_ppp.inference'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.inference.train'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models.mlp_models' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models.models_abc' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models.normalized_flows' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'monitoring' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.monitoring'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'datasets' from module 'cccma_ppp.train'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.train.datasets'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'registry_imports' from module 'cccma_ppp.train'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.train.registry_imports'
+ [autodoc.import_object]
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... done
+preparing documents... done
+copying assets... 
+copying static files... 
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/documentation_options.js
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/basic.css
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/language_data.js
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/js/versions.js
+copying static files: done
+copying extra files... 
+copying extra files: done
+copying assets: done
+writing output... [  2%] api/cccma_ppp
+writing output... [  4%] api/cccma_ppp.core
+writing output... [  5%] api/cccma_ppp.core.cVAE_module
+writing output... [  7%] api/cccma_ppp.core.core_abc
+writing output... [  9%] api/cccma_ppp.core.deterministic_module
+writing output... [ 11%] api/cccma_ppp.core.optimization
+writing output... [ 12%] api/cccma_ppp.core.registery
+writing output... [ 14%] api/cccma_ppp.core.selectors
+writing output... [ 16%] api/cccma_ppp.core.trainer
+writing output... [ 18%] api/cccma_ppp.data_modules
+writing output... [ 20%] api/cccma_ppp.data_modules.data
+writing output... [ 21%] api/cccma_ppp.data_modules.data.data_abc
+writing output... [ 23%] api/cccma_ppp.data_modules.data.data_configs
+writing output... [ 25%] api/cccma_ppp.data_modules.dataloader
+writing output... [ 27%] api/cccma_ppp.data_modules.dataset
+writing output... [ 29%] api/cccma_ppp.data_modules.dataset.config_abc
+writing output... [ 30%] api/cccma_ppp.data_modules.dataset.operator
+writing output... [ 32%] api/cccma_ppp.data_modules.utils
+writing output... [ 34%] api/cccma_ppp.generic
+writing output... [ 36%] api/cccma_ppp.generic.aggregator
+writing output... [ 38%] api/cccma_ppp.generic.distributed
+writing output... [ 39%] api/cccma_ppp.generic.logger
+writing output... [ 41%] api/cccma_ppp.generic.runtime
+writing output... [ 43%] api/cccma_ppp.inference
+writing output... [ 45%] api/cccma_ppp.inference.dataloader
+writing output... [ 46%] api/cccma_ppp.inference.dataset
+writing output... [ 48%] api/cccma_ppp.inference.inference_configs
+writing output... [ 50%] api/cccma_ppp.inference.registry_imports
+writing output... [ 52%] api/cccma_ppp.inference.train
+writing output... [ 54%] api/cccma_ppp.loss
+writing output... [ 55%] api/cccma_ppp.loss.kld
+writing output... [ 57%] api/cccma_ppp.loss.loss
+writing output... [ 59%] api/cccma_ppp.loss.loss_abc
+writing output... [ 61%] api/cccma_ppp.loss.registery
+writing output... [ 62%] api/cccma_ppp.loss.utils_loss
+writing output... [ 64%] api/cccma_ppp.models
+writing output... [ 66%] api/cccma_ppp.models.mlp_models
+writing output... [ 68%] api/cccma_ppp.models.models_abc
+writing output... [ 70%] api/cccma_ppp.models.normalized_flows
+writing output... [ 71%] api/cccma_ppp.monitoring
+writing output... [ 73%] api/cccma_ppp.preprocessing
+writing output... [ 75%] api/cccma_ppp.preprocessing.preprocessing
+writing output... [ 77%] api/cccma_ppp.preprocessing.preprocessing_ABC
+writing output... [ 79%] api/cccma_ppp.preprocessing.registery
+writing output... [ 80%] api/cccma_ppp.preprocessing.utils_preprocessing
+writing output... [ 82%] api/cccma_ppp.train
+writing output... [ 84%] api/cccma_ppp.train.dataloader
+writing output... [ 86%] api/cccma_ppp.train.datasets
+writing output... [ 88%] api/cccma_ppp.train.registry_imports
+writing output... [ 89%] api/cccma_ppp.train.train
+writing output... [ 91%] api/cccma_ppp.train.train_configs
+writing output... [ 93%] index
+writing output... [ 95%] start_here/contributing
+writing output... [ 96%] start_here/installation
+writing output... [ 98%] start_here/readme
+writing output... [100%] start_here/usage
+
+generating indices... genindex done
+highlighting module code... [  2%] cccma_ppp.architectures.models_abc
+highlighting module code... [  5%] cccma_ppp.architectures.normalized_flows
+highlighting module code... [  7%] cccma_ppp.core.core_abc
+highlighting module code... [ 10%] cccma_ppp.core.models.cvae
+highlighting module code... [ 12%] cccma_ppp.core.optimization
+highlighting module code... [ 15%] cccma_ppp.core.registery
+highlighting module code... [ 17%] cccma_ppp.core.selectors
+highlighting module code... [ 20%] cccma_ppp.core.trainer
+highlighting module code... [ 22%] cccma_ppp.core.writer
+highlighting module code... [ 24%] cccma_ppp.data_modules.data.data_abc
+highlighting module code... [ 27%] cccma_ppp.data_modules.data.data_configs
+highlighting module code... [ 29%] cccma_ppp.data_modules.dataloader
+highlighting module code... [ 32%] cccma_ppp.data_modules.dataset.dataset_abc
+highlighting module code... [ 34%] cccma_ppp.data_modules.dataset.operator
+highlighting module code... [ 37%] cccma_ppp.data_modules.utils
+highlighting module code... [ 39%] cccma_ppp.data_modules.weights
+highlighting module code... [ 41%] cccma_ppp.generic.aggregator
+highlighting module code... [ 44%] cccma_ppp.generic.distributed
+highlighting module code... [ 46%] cccma_ppp.generic.logger
+highlighting module code... [ 49%] cccma_ppp.generic.monitoring
+highlighting module code... [ 51%] cccma_ppp.generic.runtime
+highlighting module code... [ 54%] cccma_ppp.inference.dataloader
+highlighting module code... [ 56%] cccma_ppp.inference.dataset
+highlighting module code... [ 59%] cccma_ppp.inference.inference_configs
+highlighting module code... [ 61%] cccma_ppp.loss.kld
+highlighting module code... [ 63%] cccma_ppp.loss.loss
+highlighting module code... [ 66%] cccma_ppp.loss.loss_abc
+highlighting module code... [ 68%] cccma_ppp.loss.registery
+highlighting module code... [ 71%] cccma_ppp.loss.utils_loss
+highlighting module code... [ 73%] cccma_ppp.preprocessing.preprocessing
+highlighting module code... [ 76%] cccma_ppp.preprocessing.preprocessing_ABC
+highlighting module code... [ 78%] cccma_ppp.preprocessing.registery
+highlighting module code... [ 80%] cccma_ppp.preprocessing.selector
+highlighting module code... [ 83%] cccma_ppp.preprocessing.utils_preprocessing
+highlighting module code... [ 85%] cccma_ppp.train.dataloader
+highlighting module code... [ 88%] cccma_ppp.train.dataset
+highlighting module code... [ 90%] cccma_ppp.train.train
+highlighting module code... [ 93%] cccma_ppp.train.train_configs
+highlighting module code... [ 95%] functools
+highlighting module code... [ 98%] itertools
+highlighting module code... [100%] tqdm.std
+
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 33 warnings.
+
+The HTML pages are in docs/_build/html.
+
+HTML:
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/index.html
+
+Warnings: 33
+WARNING: Failed to import cccma_ppp.core.cVAE_module.
+WARNING: Failed to import cccma_ppp.core.deterministic_module.
+WARNING: Failed to import cccma_ppp.monitoring.
+WARNING: Failed to import cccma_ppp.inference.train.
+WARNING: Failed to import cccma_ppp.models.normalized_flows.
+WARNING: Failed to import cccma_ppp.inference.registry_imports.
+WARNING: Failed to import cccma_ppp.data_modules.dataset.config_abc.
+WARNING: Failed to import cccma_ppp.models.mlp_models.
+WARNING: Failed to import cccma_ppp.models.models_abc.
+WARNING: Failed to import cccma_ppp.train.datasets.
+WARNING: Failed to import cccma_ppp.models.
+WARNING: Failed to import cccma_ppp.train.registry_imports.
+WARNING: autodoc: failed to import 'cVAE_module' from module 'cccma_ppp.core'; the following exception was raised:
+WARNING: autodoc: failed to import 'deterministic_module' from module 'cccma_ppp.core'; the following exception was raised:
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+... and 13 more
+
+Documentation build completed. Server disabled.
+
+Marking failed unit tests...
+........................................................................ [  7%]
+........................................................................ [ 15%]
+........................................................................ [ 22%]
+........................................................................ [ 30%]
+........................................................................ [ 38%]
+........................................................................ [ 45%]
+........................................................................ [ 53%]
+........................................................................ [ 60%]
+........................................................................ [ 68%]
+........................................................................ [ 76%]
+........................................................................ [ 83%]
+........................................................................ [ 91%]
+........................................................................ [ 98%]
+...........                                                              [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+    import pynvml  # type: ignore[import]
+
+tests/core/optimization_test.py::test_scheduler_does_not_increment_after_final_step_when_holding_minimum
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/optimization.py:420: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+    self.scheduler.step()
+
+tests/core/trainer_test.py: 15 warnings
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/trainer.py:251: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+    self.scaler = GradScaler(enabled=self.config.mixed_precision)
+
+tests/core/trainer_test.py::test_train_on_batch_with_beta
+tests/core/trainer_test.py::test_train_loop_distributed_stop_broadcast
+tests/core/trainer_test.py::test_train_loop_final_leftover_optimizer_step_no_validation
+tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
+tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
+tests/core/trainer_test.py::test_train_loop_no_validation_no_plot_when_non_root
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/trainer.py:485: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+    with torch.cuda.amp.autocast(
+
+tests/core/trainer_test.py::test_train_loop_distributed_stop_broadcast
+tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
+tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/trainer.py:548: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+    with torch.cuda.amp.autocast(
+
+tests/core/writer_test.py::test_aggregate_predictions_postprocessor_branch
+  <frozen importlib._bootstrap>:488: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
+
+tests/generic/aggregator_test.py::test_state_dict_roundtrip
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/generic/aggregator.py:260: UserWarning: 
+   you are resetting batch losses before submitting any epochs. 
+  
+    warnings.warn(
+
+tests/generic/aggregator_test.py::test_plot_skips_empty_epoch_times
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/generic/aggregator.py:447: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+    ax.legend()
+
+tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_requires_variables
+tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_pads_variables
+tests/inference/predictors/cvae_test.py::test_infer_on_batch_save_latent_requires_target
+tests/inference/predictors/cvae_test.py::test_infer_on_batch_training_stats_takes_precedence_over_save_latent
+tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_padding_uses_negative_infinity
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/inference/predictors/cvae.py:65: UserWarning: 
+  ===================================================
+  save_latent is True. No predictions will be saved! 
+  ===================================================
+  
+    warnings.warn(
+
+tests/train/train_test.py::test_train_module_main_guard
+  <frozen runpy>:128: RuntimeWarning: 'cccma_ppp.train.train' found in sys.modules after import of package 'cccma_ppp.train', but prior to execution of 'cccma_ppp.train.train'; this may result in unpredictable behaviour
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+947 passed, 35 warnings in 15.13s
+Removed pytest cache: /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.pytest_cache
+
+Running the complete pytest suite from scratch...
+
+
+Pytest finished with exit code 0.
+
+No pytest lastfailed cache was created.
+
+No failed test functions were found.
+Unit test check passed.
+
+Checking unit test suite coverage...
+============================= test session starts ==============================
+platform linux -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0
+rootdir: /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP
+configfile: pyproject.toml
+plugins: hydra-core-1.3.2, anyio-4.13.0, cov-7.1.0
+collected 3540 items
+
+tests/architectures/layers/conv_test.py ....................             [  2%]
+tests/architectures/layers/generic_test.py ............                  [  3%]
+tests/architectures/layers/mlp_test.py ..                                [  3%]
+tests/architectures/layers/unet_test.py ...............                  [  5%]
+tests/architectures/layers/utils_test.py .................               [  6%]
+tests/architectures/mlp_models/cvae_test.py ...............              [  8%]
+tests/architectures/mlp_models/deterministic_test.py ..........          [  9%]
+tests/architectures/models_abc_test.py ....................              [ 11%]
+tests/architectures/normalized_flows_test.py .....                       [ 12%]
+tests/architectures/unet_models/cvae_test.py ........................... [ 15%]
+..                                                                       [ 15%]
+tests/architectures/unet_models/deterministic_test.py .................. [ 17%]
+                                                                         [ 17%]
+tests/architectures/unet_models/utils_test.py ......................     [ 19%]
+tests/core/cVAE_module_test.py ...............                           [ 21%]
+tests/core/core_abc_test.py ....                                         [ 21%]
+tests/core/deterministic_module_test.py ........                         [ 22%]
+tests/core/optimization_test.py .........................                [ 25%]
+tests/core/registry_test.py ..                                           [ 25%]
+tests/core/selectors_test.py ......                                      [ 25%]
+tests/core/trainer_test.py .....................                         [ 28%]
+tests/core/writer_test.py ...........................                    [ 30%]
+tests/data_modules/data/data_abc_test.py ................                [ 32%]
+tests/data_modules/data/data_configs_test.py .......                     [ 33%]
+tests/data_modules/dataloader_test.py ......                             [ 34%]
+tests/data_modules/dataset/dataset_abc_test.py ......................... [ 36%]
+.....................................................................    [ 43%]
+tests/data_modules/dataset/operator_test.py ......................       [ 46%]
+tests/data_modules/utils_test.py ......................................  [ 50%]
+tests/data_modules/weights_test.py .....                                 [ 50%]
+tests/generic/aggregator_test.py .......................                 [ 53%]
+tests/generic/distributed_test.py .........                              [ 54%]
+tests/generic/logger_test.py ..                                          [ 54%]
+tests/generic/monitoring_test.py ....................................... [ 58%]
+........................................................................ [ 66%]
+....................................................                     [ 71%]
+tests/inference/dataloader_test.py ..................                    [ 73%]
+tests/inference/dataset_test.py ..........                               [ 74%]
+tests/inference/inference_configs_test.py .....................          [ 76%]
+tests/inference/predictors/cvae_test.py .................                [ 78%]
+tests/inference/predictors/deterministic_test.py .......                 [ 79%]
+tests/inference/predictors/predictor_abc_test.py ..............          [ 80%]
+tests/loss/kld_test.py .....                                             [ 81%]
+tests/loss/loss_test.py ...................                              [ 83%]
+tests/loss/registry_test.py ....                                         [ 83%]
+tests/loss/utils_loss_test.py ........................                   [ 86%]
+tests/preprocessing/preprocessing_ABC_test.py ........                   [ 87%]
+tests/preprocessing/preprocessing_test.py .....................          [ 89%]
+tests/preprocessing/registry_test.py ...                                 [ 89%]
+tests/preprocessing/utils_preprocessing_test.py ........................ [ 92%]
+............                                                             [ 93%]
+tests/train/dataloader_test.py .............                             [ 94%]
+tests/train/dataset_test.py .......................                      [ 97%]
+tests/train/train_configs_test.py ......................                 [ 99%]
+tests/train/train_test.py ....                                           [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+    import pynvml  # type: ignore[import]
+
+tests/core/optimization_test.py::test_scheduler_does_not_increment_after_final_step_when_holding_minimum
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/optimization.py:420: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+    self.scheduler.step()
+
+tests/core/trainer_test.py: 15 warnings
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/trainer.py:251: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+    self.scaler = GradScaler(enabled=self.config.mixed_precision)
+
+tests/core/trainer_test.py::test_train_on_batch_with_beta
+tests/core/trainer_test.py::test_train_loop_distributed_stop_broadcast
+tests/core/trainer_test.py::test_train_loop_final_leftover_optimizer_step_no_validation
+tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
+tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
+tests/core/trainer_test.py::test_train_loop_no_validation_no_plot_when_non_root
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/trainer.py:485: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+    with torch.cuda.amp.autocast(
+
+tests/core/trainer_test.py::test_train_loop_distributed_stop_broadcast
+tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
+tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/core/trainer.py:548: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+    with torch.cuda.amp.autocast(
+
+tests/core/writer_test.py::test_aggregate_predictions_postprocessor_branch
+  <frozen importlib._bootstrap>:488: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
+
+tests/generic/aggregator_test.py::test_state_dict_roundtrip
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/generic/aggregator.py:260: UserWarning: 
+   you are resetting batch losses before submitting any epochs. 
+  
+    warnings.warn(
+
+tests/generic/aggregator_test.py::test_plot_skips_empty_epoch_times
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/generic/aggregator.py:447: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+    ax.legend()
+
+tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_requires_variables
+tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_pads_variables
+tests/inference/predictors/cvae_test.py::test_infer_on_batch_save_latent_requires_target
+tests/inference/predictors/cvae_test.py::test_infer_on_batch_training_stats_takes_precedence_over_save_latent
+tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_padding_uses_negative_infinity
+  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/inference/predictors/cvae.py:65: UserWarning: 
+  ===================================================
+  save_latent is True. No predictions will be saved! 
+  ===================================================
+  
+    warnings.warn(
+
+tests/train/train_test.py::test_train_module_main_guard
+  <frozen runpy>:128: RuntimeWarning: 'cccma_ppp.train.train' found in sys.modules after import of package 'cccma_ppp.train', but prior to execution of 'cccma_ppp.train.train'; this may result in unpredictable behaviour
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.13-final-0 _______________
+
+Name                                              Stmts   Miss Branch BrPart  Cover   Missing
+---------------------------------------------------------------------------------------------
+cccma_ppp/__init__.py                                 0      0      0      0   100%
+cccma_ppp/architectures/__init__.py                   0      0      0      0   100%
+cccma_ppp/architectures/layers/__init__.py            0      0      0      0   100%
+cccma_ppp/architectures/layers/conv.py              278     14     66      6    94%   271, 445->448, 451-452, 936-937, 999, 1002-1003, 1029, 1110-1117
+cccma_ppp/architectures/layers/generic.py            57      2     20      2    95%   60, 107
+cccma_ppp/architectures/layers/mlp.py                14      0      8      0   100%
+cccma_ppp/architectures/layers/partialconv2d.py      40      0     12      1    98%   84->120
+cccma_ppp/architectures/layers/unet.py              131      5     58      5    95%   114, 261, 561, 563, 565
+cccma_ppp/architectures/layers/utils.py              77     12     38      3    87%   27, 67, 75, 106-113, 393-403
+cccma_ppp/architectures/mlp/__init__.py               0      0      0      0   100%
+cccma_ppp/architectures/mlp/cvae.py                 157     14     46      4    91%   113, 138, 206, 219->222, 285, 369-382, 476-477
+cccma_ppp/architectures/mlp/deterministic.py         90      2     28      2    97%   90, 233, 275->283
+cccma_ppp/architectures/models_abc.py               234     18     54      5    92%   98, 112, 152, 165, 178, 191, 199, 223, 278, 292->exit, 306, 466, 632, 647, 654, 661, 668, 750->757, 811, 828
+cccma_ppp/architectures/normalized_flows.py         171      4     56      4    96%   315, 364, 480, 528
+cccma_ppp/architectures/unet/__init__.py              0      0      0      0   100%
+cccma_ppp/architectures/unet/cvae.py                291     23     86      6    92%   202, 215->exit, 253, 280, 350, 373, 535, 709, 752-762, 787-798, 876-885, 907-914, 1223
+cccma_ppp/architectures/unet/deterministic.py       155      6     46      4    95%   133, 160, 246, 255, 351, 506->512, 579
+cccma_ppp/architectures/unet/utils.py                42      4     40      4    90%   64, 67, 92, 102
+cccma_ppp/configs/__init__.py                        20      1      2      1    91%   19
+cccma_ppp/core/__init__.py                            0      0      0      0   100%
+cccma_ppp/core/core_abc.py                           63      7     10      1    89%   51, 58, 84, 91, 98, 105, 125
+cccma_ppp/core/models/__init__.py                     0      0      0      0   100%
+cccma_ppp/core/models/cvae.py                       140      7     50      5    94%   253, 283, 288, 297-309, 450
+cccma_ppp/core/models/deterministic.py               81      9     24      2    90%   101, 122-134, 257, 294, 323
+cccma_ppp/core/optimization.py                      117      9     52      5    92%   173, 264, 285, 384-396, 468, 475-476
+cccma_ppp/core/registery.py                          22      0      6      0   100%
+cccma_ppp/core/selectors.py                         103     11     12      1    90%   36, 65, 77, 89, 101, 113, 138, 195, 298, 327, 338
+cccma_ppp/core/trainer.py                           285     11    114      9    94%   277-278, 330->350, 354->364, 391-396, 401->408, 411->416, 545-546, 759, 804-805
+cccma_ppp/core/writer.py                            236     10    112     11    94%   62, 324, 451, 454, 509->512, 534, 595, 618, 643, 660, 673
+cccma_ppp/data_modules/__init__.py                    0      0      0      0   100%
+cccma_ppp/data_modules/data/__init__.py               0      0      0      0   100%
+cccma_ppp/data_modules/data/data_abc.py             169     21     46      2    88%   137, 145, 153, 180-205, 258-271, 294-298, 324, 337, 363-364, 376-377, 417->420, 494
+cccma_ppp/data_modules/data/data_configs.py         104     10     10      1    90%   65-67, 84, 97, 110, 162, 191, 204, 280, 293
+cccma_ppp/data_modules/dataloader.py                103     10     14      1    91%   57, 105, 113, 156, 247, 259, 271, 283, 323, 359
+cccma_ppp/data_modules/dataset/__init__.py            0      0      0      0   100%
+cccma_ppp/data_modules/dataset/dataset_abc.py       384     24    170     17    93%   191, 199, 229, 235->exit, 246->235, 294, 326, 336, 358->364, 382, 390, 410, 424, 544, 689->696, 789, 804->810, 821, 923, 934, 988, 996, 1004, 1155, 1229, 1258, 1311-1312, 1324
+cccma_ppp/data_modules/dataset/operator.py          121      4     66      6    95%   86->89, 97, 125, 200->204, 247, 285
+cccma_ppp/data_modules/utils.py                     197     24    100      8    89%   121, 125, 134-148, 157, 243-244, 432-441, 486, 623-637, 676, 731
+cccma_ppp/data_modules/weights.py                    49      2     24      2    95%   92, 132
+cccma_ppp/generic/__init__.py                         0      0      0      0   100%
+cccma_ppp/generic/aggregator.py                     226     17     96      9    92%   62->68, 114, 121, 177, 212, 292, 319, 408, 544-546, 577-584
+cccma_ppp/generic/distributed.py                     38      2     14      1    94%   67, 86
+cccma_ppp/generic/logger.py                          24      0      6      0   100%
+cccma_ppp/generic/monitoring.py                     545      1    206      4    99%   406->414, 660->663, 1268, 1414->1417
+cccma_ppp/generic/registry_imports.py                 8      8      0      0     0%   1-8
+cccma_ppp/generic/runtime.py                         12      0      0      0   100%
+cccma_ppp/inference/__init__.py                       0      0      0      0   100%
+cccma_ppp/inference/__main__.py                       5      5      2      0     0%   1-6
+cccma_ppp/inference/dataloader.py                   123      7     44      4    93%   201, 285, 324-331, 351-352, 374
+cccma_ppp/inference/dataset.py                       95      9     22      2    91%   54, 81, 118, 131, 163, 212, 224, 283, 346
+cccma_ppp/inference/inference_configs.py            116      8     24      2    93%   68-69, 176->exit, 188, 199, 288-290, 360
+cccma_ppp/inference/predict.py                       25     25      4      0     0%   1-72
+cccma_ppp/inference/predictors/__init__.py            0      0      0      0   100%
+cccma_ppp/inference/predictors/cvae.py              154      7     54      5    94%   97, 261-262, 320, 380, 397, 499
+cccma_ppp/inference/predictors/deterministic.py      75      8     18      1    90%   52, 224-231, 251
+cccma_ppp/inference/predictors/predictor_abc.py     114      6     28      2    94%   51, 78, 92, 106, 358, 397
+cccma_ppp/loss/__init__.py                            0      0      0      0   100%
+cccma_ppp/loss/kld.py                                79      4     24      2    94%   202-205, 228, 265
+cccma_ppp/loss/loss.py                              127      3     56      5    96%   83->89, 99->exit, 178, 375, 382
+cccma_ppp/loss/loss_abc.py                           18      3      0      0    83%   46, 58, 70
+cccma_ppp/loss/registery.py                          21      0      6      0   100%
+cccma_ppp/loss/utils_loss.py                        228      7     94      9    95%   199, 210->216, 212, 217->219, 244, 273, 373, 379, 476->479, 517, 677->684
+cccma_ppp/preprocessing/__init__.py                   0      0      0      0   100%
+cccma_ppp/preprocessing/preprocessing.py            136      5     48      2    95%   199->198, 277-280, 312
+cccma_ppp/preprocessing/preprocessing_ABC.py         76      8     28      2    90%   49, 63, 77, 108, 235-249
+cccma_ppp/preprocessing/registery.py                 17      0      4      0   100%
+cccma_ppp/preprocessing/selector.py                  17      2      0      0    88%   34, 63
+cccma_ppp/preprocessing/utils_preprocessing.py      283     20     82      8    92%   157-171, 308-322, 437-445, 529, 532, 598, 649, 664, 848-849, 952, 1054, 1134->1137
+cccma_ppp/train/__init__.py                           0      0      0      0   100%
+cccma_ppp/train/__main__.py                           5      5      2      0     0%   1-6
+cccma_ppp/train/dataloader.py                       123     10     38      3    92%   217->220, 328-340, 357, 373-376, 388, 400
+cccma_ppp/train/dataset.py                          141     13     42      4    91%   61-63, 92, 132, 144, 215, 231, 244, 279, 328, 356, 446, 551
+cccma_ppp/train/train.py                             35      1      6      0    98%   105
+cccma_ppp/train/train_configs.py                    165     10     54      5    93%   125, 143, 171->exit, 343-348, 367-369, 497->exit
+---------------------------------------------------------------------------------------------
+TOTAL                                              6962    458   2372    188    93%
+Coverage XML written to file coverage.xml
+Required test coverage of 90% reached. Total coverage: 92.89%
+====================== 947 passed, 35 warnings in 21.10s =======================
+Branch coverage: 91.32%
+Coverage checks passed
+Unit test coverage check passed.
+
+Running integration test subset...
+python3: can't open file '/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/../scripts/run_integration_tests.py': [Errno 2] No such file or directory
+Integration test subset failed.

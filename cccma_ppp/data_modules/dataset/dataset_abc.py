@@ -100,13 +100,12 @@ class lead_time_config:
 
 
 class DatasetConfigABC(abc.ABC):
-
     """
     Abstract base class for configuring pipeline datasets.
 
     Defines the shared interface for selecting model and conditioning data,
     resolving conditioning methods, validating compatibility between data
-    sources, and selecting forecast lead times. Train and Inference datasets 
+    sources, and selecting forecast lead times. Train and Inference datasets
     inherit from this class to implement specific data-loading.
 
     Supports ensemble-mean, cross-ensemble, same-member, and static
@@ -120,7 +119,7 @@ class DatasetConfigABC(abc.ABC):
     Attributes
     ----------
     model : ModelDataConfig | None
-        Configuration for the model prediction data. Could only be 
+        Configuration for the model prediction data. Could only be
         None for Inference pipeline where the
         conditioning dataset must provide the required input.
     condition : ConditionDataConfig | None
@@ -160,7 +159,7 @@ class DatasetConfigABC(abc.ABC):
 
         Verifies that at least one input source is available, validates the
         conditioning method, and resolves the effective conditioning dataset.
-        At least one of the model or conditioning datasets must be provided. 
+        At least one of the model or conditioning datasets must be provided.
         If both are provided, the conditioning method must be compatible.
 
         Checks compatibility between model and conditioning data, including
@@ -183,12 +182,12 @@ class DatasetConfigABC(abc.ABC):
 
         self._check_required_input_source()
         self._check_condition_method()
-       
+
         self._resolve_condition()
         self._check_model_vs_condition()
 
         self._resolve_lead_times()
-        
+
         self._check_model()
         self._check_condition()
 
@@ -231,10 +230,10 @@ class DatasetConfigABC(abc.ABC):
 
         When separate model and conditioning datasets are provided,
         verifies that non-static conditioning data contain all required
-        model initialization-time and lead-time dimensions and coordinates and 
+        model initialization-time and lead-time dimensions and coordinates and
         use the same datetime or cftime representation.
 
-        For non ensemble-mean conditioning, ensures that the effective conditioning 
+        For non ensemble-mean conditioning, ensures that the effective conditioning
         dataset contains realization dimension and coordinates.
 
         For same-member conditioning, verifies that both datasets have
@@ -377,7 +376,6 @@ class DatasetConfigABC(abc.ABC):
         """
 
         if self.model is not None:
-            
             if self.effective_condition_method == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
@@ -484,16 +482,15 @@ class DatasetConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def available_times(self):
-
         """
         Return the time span available for dataset construction.
-        This is different than input time because it should be the 
+        This is different than input time because it should be the
         common time range resolved by the forecast and if available,
-        the observation data. Forecasts range is based on initialization 
+        the observation data. Forecasts range is based on initialization
         time and lead time, while observation data has one time resolution.
 
-        For instance, for decadal predictions, the initial times are the 
-        start of the years, but the available times are the span of coverage 
+        For instance, for decadal predictions, the initial times are the
+        start of the years, but the available times are the span of coverage
         based on initial_time / lead_time span which has a monthly resolution.
 
         Subclasses must implement this property to determine which
@@ -511,15 +508,14 @@ class DatasetConfigABC(abc.ABC):
 
         Subclasses must implement this property to provide the operator
         used for their dataset construction and data access.
-        
-        Recommended implementaion is 
+
+        Recommended implementaion is
         from cccma_ppp.data_modules.dataset.operator import DatasetOperator.
         """
         pass
 
     @property
     def input_lead_times(self) -> np.ndarray:
-
         """
         Return the forecast lead times available in the effective input.
 
@@ -537,7 +533,7 @@ class DatasetConfigABC(abc.ABC):
 
         """
         Return the input data that effectively goes into the dataset.
-        For Inference and Train this shall differ based on what is 
+        For Inference and Train this shall differ based on what is
         provided in the config.
 
         Subclasses must implement this property to identify the data
@@ -560,10 +556,10 @@ class DatasetConfigABC(abc.ABC):
 
         When no separate conditioning dataset is provided, model data
         are reused for ensemble-mean, cross-ensemble, or same-member
-        conditioning. 
+        conditioning.
 
         When both configurations are provided, compares their paths,
-        variable names, and realization selections. If those point to 
+        variable names, and realization selections. If those point to
         the same data, the model data are considered to be used as the conditioning source.
 
         Returns
@@ -574,7 +570,6 @@ class DatasetConfigABC(abc.ABC):
         """
 
         if self.condition is None:
-            
             return self.effective_condition_method in {
                 "ensemble_mean",
                 "cross_ensemble",
@@ -595,8 +590,8 @@ class DatasetConfigABC(abc.ABC):
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
 
         """
-        Return the resolved conditioning data. 
-        Resolved at __init__ time based on the provided 
+        Return the resolved conditioning data.
+        Resolved at __init__ time based on the provided
         model and condition configs.
 
         Returns
@@ -611,7 +606,6 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition_method(self) -> str:
-
         """
         Return the normalized conditioning method.
 
@@ -622,9 +616,7 @@ class DatasetConfigABC(abc.ABC):
             is specified.
         """
 
-        return (None 
-                if self.condition_method is None 
-                else self.condition_method.lower())
+        return None if self.condition_method is None else self.condition_method.lower()
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
@@ -675,7 +667,7 @@ class DatasetConfigABC(abc.ABC):
 
         The intention for this code is the dataset available temporal coverage
         is based on the model/condition/observation common time span. But, the
-        exact initial times to be iterated over is not necessarily the same as the available times. 
+        exact initial times to be iterated over is not necessarily the same as the available times.
         See documentation for `available_times` for more details.
 
         Parameters
@@ -906,7 +898,6 @@ class AddedTimeFeatures:
             )
 
         if self.init_time_dim in requested:
-
             if self.time_span_ref == 0:
                 raise ValueError(
                     "Cannot normalize time with zero-length reference span. "
@@ -931,7 +922,7 @@ class AddedTimeFeatures:
                     "Cannot normalize lead time when maximum is zero. "
                     "Ensure at least one lead time > 0."
                 )
-            
+
             normalized_lead_times = lead_times.astype(np.float32) / max_lead_time
 
             calculated_features[self.lead_time_dim] = normalized_lead_times
@@ -1120,9 +1111,10 @@ class DatasetABC(Dataset, abc.ABC):
 
         if self.config.effective_condition is not None:
             self.config.effective_condition.open_xarray_data(
-                load=self.load, add_time_auxiliary_coords= (
-                    self.config.effective_condition_method != 'static'
-                )
+                load=self.load,
+                add_time_auxiliary_coords=(
+                    self.config.effective_condition_method != "static"
+                ),
             )
 
         self.sample_coords = self.get_sampling_coords()
@@ -1423,10 +1415,10 @@ class DatasetABC(Dataset, abc.ABC):
             len_names += len(self.config.effective_condition.names)
 
         if self.config.effective_input.preprocessing_pipeline.has_flattener:
-            flattener = self.config.effective_input.preprocessing_pipeline.get_flattener()
-            in_shape = (
-                flattener.final_locations.shape
+            flattener = (
+                self.config.effective_input.preprocessing_pipeline.get_flattener()
             )
+            in_shape = flattener.final_locations.shape
 
         else:
             in_shape = tuple(

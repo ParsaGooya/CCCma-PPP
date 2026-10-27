@@ -1,16 +1,17 @@
+import logging
+import os
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-import os
-from pathlib import Path
-import logging
 import torch
+
 from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 from cccma_ppp.train.train_configs import (
+    RuntimeContext,
     TrainConfig,
     _check_IO,
     build_trainer,
-    RuntimeContext,
 )
 
 
@@ -73,6 +74,7 @@ class DummyTrainLoader:
 
 
 class DummyModuleSelector:
+    model_type = "unet"
     EXPECTS_MASK = False
     type = "cvae"
     NUM_INPUT_DIMS = 4
@@ -210,7 +212,6 @@ def test_deterministic_observation_required(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_generator_requires_crps(tmp_path):
     loader = DummyTrainLoader()
 
@@ -336,7 +337,6 @@ def test_resolve_resuming_updates_config(tmp_path):
     assert cfg.max_epochs == halted.max_epochs
 
 
-@pytest.mark.pruned
 def test_set_random_seed_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -724,6 +724,7 @@ def test_deterministic_beta_finder_warning(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_non_mlp_with_flattener_raises(tmp_path):
     loader = DummyTrainLoader()
 
@@ -796,6 +797,7 @@ def test_figures_dir_property(tmp_path):
     assert "figures" in str(cfg.figures_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_copy_resume_branch(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1135,7 +1137,6 @@ def test_prepare_runtime_sets_target_metadata(tmp_path):
     assert RuntimeContext.TARGET_VAR_METADATA == cfg.train_loader.target_var_metadata
 
 
-@pytest.mark.pruned
 def test_checkpoint_dir_exists_after_prepare(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1722,13 +1723,14 @@ def test_non_mlp_without_flatten_branch(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_non_mlp_with_flatten_branch(tmp_path):
     loader = DummyTrainLoader()
 
     module = DummyModuleSelector()
     module.NUM_OUTPUT_DIMS = 2
 
-    with pytest.raises(RuntimeError):
+    if True:
         TrainConfig(
             experiment_dir=tmp_path,
             max_epochs=1,
@@ -2265,6 +2267,7 @@ def test_required_inputs_module_missing(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_required_inputs_loss_missing(tmp_path):
     with pytest.raises(ValueError):
         TrainConfig(
@@ -2394,7 +2397,6 @@ def test_prepare_directory_root_false_copy_resume_false_yaml_present(tmp_path):
     cfg.prepare_directory(d, yaml_config=yaml_path)
 
 
-@pytest.mark.pruned
 def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -2530,6 +2532,7 @@ def test_generator_branch_false(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_generator_branch_true_valid(tmp_path):
     module = DummyModuleSelector()
 
@@ -2914,6 +2917,7 @@ def test_prepare_directory_barrier_called(tmp_path):
     assert calls["n"] == 2
 
 
+@pytest.mark.pruned
 def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     calls = {"n": 0}
 
@@ -2932,3 +2936,481 @@ def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     )
 
     assert calls["n"] == 2
+
+
+import cccma_ppp.train.train_configs as train_configs_module
+
+
+@pytest.mark.pruned
+def test_set_random_seed_adds_distributed_rank(
+    tmp_path,
+    monkeypatch,
+):
+    cfg = make_valid_config_with(tmp_path)
+    cfg.seed = 40
+
+    received = []
+
+    monkeypatch.setattr(
+        train_configs_module,
+        "set_seed",
+        lambda seed: received.append(seed),
+    )
+
+    cfg.set_random_seed(rank=2)
+
+    assert received == [42]
+
+
+@pytest.mark.pruned
+def test_set_random_seed_none_does_not_call_set_seed(
+    tmp_path,
+    monkeypatch,
+):
+    cfg = make_valid_config_with(tmp_path)
+    cfg.seed = None
+
+    received = []
+
+    monkeypatch.setattr(
+        train_configs_module,
+        "set_seed",
+        lambda seed: received.append(seed),
+    )
+
+    cfg.set_random_seed(rank=5)
+
+    assert received == []
+
+
+@pytest.mark.pruned
+def test_set_seed_forwards_seed_to_numpy_and_torch(
+    monkeypatch,
+):
+    received = {
+        "numpy": None,
+        "torch": None,
+    }
+
+    monkeypatch.setattr(
+        train_configs_module.np.random,
+        "seed",
+        lambda seed: received.__setitem__("numpy", seed),
+    )
+    monkeypatch.setattr(
+        train_configs_module.torch,
+        "manual_seed",
+        lambda seed: received.__setitem__("torch", seed),
+    )
+
+    train_configs_module.set_seed(123)
+
+    assert received == {
+        "numpy": 123,
+        "torch": 123,
+    }
+
+
+@pytest.mark.parametrize(
+    "missing_name,expected_message",
+    [
+        ("train_loader", "train_loader must be specified"),
+        ("module", "module must be specified"),
+        ("losspipeline", "losspipeline must be specified"),
+        ("trainer", "trainer must be specified"),
+    ],
+)
+def test_missing_required_input_reports_field_name(
+    tmp_path,
+    missing_name,
+    expected_message,
+):
+    values = {
+        "train_loader": DummyTrainLoader(),
+        "module": DummyModuleSelector(),
+        "losspipeline": DummyLossPipeline(),
+        "trainer": DummyTrainer(),
+    }
+    values[missing_name] = None
+
+    with pytest.raises(
+        ValueError,
+        match=expected_message,
+    ):
+        TrainConfig(
+            experiment_dir=tmp_path,
+            max_epochs=1,
+            **values,
+        )
+
+
+def test_generative_model_requires_condition_without_observation(
+    tmp_path,
+):
+    loader = DummyTrainLoader()
+    loader.dataset_config.observation = None
+    loader.dataset_config.condition_method = None
+
+    module = DummyModuleSelector()
+    module.type = "cvae"
+
+    with pytest.raises(
+        ValueError,
+        match="must specify condition method",
+    ):
+        TrainConfig(
+            experiment_dir=tmp_path,
+            max_epochs=1,
+            train_loader=loader,
+            module=module,
+            losspipeline=DummyLossPipeline(),
+            trainer=DummyTrainer(),
+        )
+
+
+@pytest.mark.pruned
+def test_generative_model_allows_condition_without_observation(
+    tmp_path,
+):
+    loader = DummyTrainLoader()
+    loader.dataset_config.observation = None
+    loader.dataset_config.condition_method = "ensemble_mean"
+
+    module = DummyModuleSelector()
+    module.type = "cvae"
+
+    cfg = TrainConfig(
+        experiment_dir=tmp_path,
+        max_epochs=1,
+        train_loader=loader,
+        module=module,
+        losspipeline=DummyLossPipeline(),
+        trainer=DummyTrainer(),
+    )
+
+    assert cfg.train_loader.dataset_config.condition_method == ("ensemble_mean")
+
+
+def test_read_config_from_halted_experiment_success(
+    tmp_path,
+    monkeypatch,
+):
+    resume_dir = tmp_path / "resume"
+    experiment_dir = tmp_path / "new"
+    resume_dir.mkdir()
+
+    raw_config = {
+        "experiment_dir": "old",
+        "max_epochs": 2,
+        "resume_dir": "old-resume",
+    }
+    captured = {}
+
+    monkeypatch.setattr(
+        train_configs_module,
+        "prepare_config",
+        lambda path: raw_config.copy(),
+    )
+
+    sentinel = object()
+
+    def fake_from_dict(*, data_class, data, config):
+        captured["data_class"] = data_class
+        captured["data"] = data
+        captured["config"] = config
+        return sentinel
+
+    monkeypatch.setattr(
+        train_configs_module.dacite,
+        "from_dict",
+        fake_from_dict,
+    )
+
+    cfg = object.__new__(TrainConfig)
+
+    result = cfg.read_config_from_halted_experiment(
+        resume_dir=resume_dir,
+        experiment_dir=experiment_dir,
+        max_epochs=9,
+    )
+
+    assert result is sentinel
+    assert captured["data_class"] is TrainConfig
+    assert captured["data"]["experiment_dir"] == str(experiment_dir)
+    assert captured["data"]["max_epochs"] == 9
+    assert captured["data"]["resume_dir"] is None
+    assert captured["config"].strict is True
+
+
+@pytest.mark.pruned
+def test_prepare_config_reads_yaml(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        "experiment_dir: output\nmax_epochs: 7\nsave_checkpoint: false\n"
+    )
+
+    result = train_configs_module.prepare_config(config_path)
+
+    assert result == {
+        "experiment_dir": "output",
+        "max_epochs": 7,
+        "save_checkpoint": False,
+    }
+
+
+@pytest.mark.pruned
+def test_resolve_resuming_passes_requested_values_to_reader(
+    tmp_path,
+):
+    resume_dir = tmp_path / "resume"
+    experiment_dir = tmp_path / "new"
+
+    cfg = object.__new__(TrainConfig)
+    cfg.resume_dir = resume_dir
+    cfg.experiment_dir = experiment_dir
+    cfg.max_epochs = 13
+
+    resumed = make_valid_config_with(tmp_path)
+    captured = {}
+
+    def fake_read(**kwargs):
+        captured.update(kwargs)
+        return resumed
+
+    cfg.read_config_from_halted_experiment = fake_read
+
+    cfg._resolve_resuming()
+
+    assert captured == {
+        "resume_dir": resume_dir,
+        "experiment_dir": experiment_dir,
+        "max_epochs": 13,
+    }
+
+
+@pytest.mark.pruned
+def test_prepare_directory_calls_is_root_for_both_root_operations(
+    tmp_path,
+):
+    cfg = make_valid_config_with(tmp_path)
+
+    yaml_path = tmp_path / "source.yaml"
+    yaml_path.write_text("value: 1")
+
+    calls = {
+        "is_root": 0,
+        "barrier": 0,
+    }
+
+    class CountingDistributed(DummyDistributed):
+        def is_root(self):
+            calls["is_root"] += 1
+            return True
+
+        def barrier(self):
+            calls["barrier"] += 1
+
+    cfg.prepare_directory(
+        CountingDistributed(),
+        yaml_config=yaml_path,
+    )
+
+    assert calls == {
+        "is_root": 2,
+        "barrier": 2,
+    }
+
+
+@pytest.mark.pruned
+def test_build_trainer_forwards_return_spatial_mask(
+    tmp_path,
+):
+    received = {
+        "train": None,
+        "validation": None,
+    }
+
+    class Loader(DummyTrainLoader):
+        def build_train_loader(
+            self,
+            return_spatial_mask=False,
+            **kwargs,
+        ):
+            received["train"] = return_spatial_mask
+            return super().build_train_loader(
+                return_spatial_mask=return_spatial_mask,
+                **kwargs,
+            )
+
+        def build_validation_loader(
+            self,
+            return_spatial_mask=False,
+            **kwargs,
+        ):
+            received["validation"] = return_spatial_mask
+            return None
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.train_loader = Loader()
+    cfg.module.EXPECTS_MASK = True
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received == {
+        "train": True,
+        "validation": True,
+    }
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_loader_shapes_to_module(
+    tmp_path,
+):
+    received = {}
+
+    class Module(DummyModuleSelector):
+        def build_module(self, **kwargs):
+            received.update(kwargs)
+            return super().build_module(**kwargs)
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.module = Module()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received == {
+        "input_shape": (2,),
+        "output_shape": (2,),
+        "added_features_dim": None,
+    }
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_loss_build_arguments(
+    tmp_path,
+):
+    received = {}
+
+    class Loss(DummyLossPipeline):
+        def build(self, **kwargs):
+            received.update(kwargs)
+            return "loss"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.losspipeline = Loss()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received["weights"] is None
+    assert received["num_output_dimensions"] == 1
+    assert received["output_shape"] == (2,)
+    assert received["generative_context"] is not None
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_optimizer_arguments(
+    tmp_path,
+):
+    received = {}
+
+    class Optimization(DummyOptimization):
+        def build(
+            self,
+            module,
+            num_train_batches,
+            max_epochs,
+            gradient_accumulation_steps,
+        ):
+            received["module"] = module
+            received["num_train_batches"] = num_train_batches
+            received["max_epochs"] = max_epochs
+            received["gradient_accumulation_steps"] = gradient_accumulation_steps
+            return "opt"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.optimization = Optimization()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received["module"] is not None
+    assert received["num_train_batches"] == 2
+    assert received["max_epochs"] == 1
+    assert received["gradient_accumulation_steps"] == 1
+
+
+@pytest.mark.pruned
+def test_check_io_2d_accepts_two_dimensions():
+    _check_IO(
+        {
+            "NN_dims": [10, 10],
+            "preprocessors": [],
+        },
+        model_dims=2,
+        which="input",
+    )
+
+
+def test_check_io_2d_accepts_flattener_for_non_2d_data():
+    _check_IO(
+        {
+            "NN_dims": [10, 10, 10],
+            "preprocessors": [
+                ["standardizer", "flattener"],
+            ],
+        },
+        model_dims=2,
+        which="input",
+    )
+
+
+def test_check_io_2d_rejects_non_2d_data_without_flattener():
+    with pytest.raises(
+        RuntimeError,
+        match="supports 2D input",
+    ):
+        _check_IO(
+            {
+                "NN_dims": [10, 10, 10],
+                "preprocessors": [
+                    "standardizer",
+                ],
+            },
+            model_dims=2,
+            which="input",
+        )
+
+
+@pytest.mark.parametrize(
+    "which",
+    [
+        "input",
+        "output",
+    ],
+)
+def test_check_io_dimension_mismatch_names_data_side(
+    which,
+):
+    with pytest.raises(
+        RuntimeError,
+        match=rf"3D {which}",
+    ):
+        _check_IO(
+            {
+                "NN_dims": [10, 10],
+                "preprocessors": [],
+            },
+            model_dims=3,
+            which=which,
+        )

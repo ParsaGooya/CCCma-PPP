@@ -1,17 +1,29 @@
 cccma\_ppp.data\_modules.dataset package
 ========================================
 
-.. automodule:: cccma_ppp.data_modules.dataset
-   :no-index:
+Submodules
+----------
+
+cccma\_ppp.data\_modules.dataset.dataset\_abc module
+----------------------------------------------------
+
+.. automodule:: cccma_ppp.data_modules.dataset.dataset_abc
    :members:
    :show-inheritance:
    :undoc-members:
 
-Submodules
-----------
+cccma\_ppp.data\_modules.dataset.operator module
+------------------------------------------------
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: cccma_ppp.data_modules.dataset.operator
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-   cccma_ppp.data_modules.dataset.config_abc
-   cccma_ppp.data_modules.dataset.operator
+Module contents
+---------------
+
+.. automodule:: cccma_ppp.data_modules.dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:

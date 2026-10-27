@@ -13,14 +13,17 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-
+# Default directory to scan for undocumented code
 DEFAULT_ROOT = Path(".")
 
+# Where to save the report of what was inserted
 DEFAULT_REPORT = Path("../output/documentation_audit_results/docstring_insertions.json")
 
+# Configuration file for specifying which files/symbols to skip
 DEFAULT_CONFIG = Path("docstring_config.json")
 
 
+# Directories that usually don't contain package code (safe to skip)
 IGNORED_DIRECTORIES = {
     ".git",
     ".github",
@@ -39,15 +42,18 @@ IGNORED_DIRECTORIES = {
 }
 
 
+# Built-in files to ignore (if any added by users to config)
 BUILTIN_IGNORED_FILES: set[str] = set()
 
 
+# These special methods are often documented manually, so we skip them by default
 OPTIONAL_UNDOCUMENTED_METHODS = {
     "__repr__",
     "__str__",
 }
 
 
+# Class attributes that are auto-generated (safe to skip)
 IGNORED_CLASS_ATTRIBUTES = {
     "__annotations__",
     "__dataclass_fields__",
@@ -56,73 +62,110 @@ IGNORED_CLASS_ATTRIBUTES = {
 }
 
 
+# Placeholder text for template docstrings
 FUNCTION_SUMMARY = "Document this function."
 CLASS_SUMMARY = "Document this class."
 PLACEHOLDER_DESCRIPTION = "Description not yet provided."
 
+# Number of spaces for indentation
 INDENT_WIDTH = 4
 
 
+# Type alias: a function is either sync (FunctionDef) or async (AsyncFunctionDef)
 FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
+# Type alias: anything we might want to document (class or function)
 DocumentableNode = ast.ClassDef | FunctionNode
 
 
 @dataclass(frozen=True)
 class SourceEdit:
-    start: int
-    end: int
-    text: str
-    qualified_name: str
-    line: int
-    symbol_type: str
+    """Represents a single text replacement in the source code"""
+
+    start: int  # Character offset where edit starts
+    end: int  # Character offset where edit ends
+    text: str  # Text to insert (replacement)
+    qualified_name: (
+        str  # Full name of the symbol being edited (e.g., "MyClass.my_method")
+    )
+    line: int  # Line number where symbol is defined
+    symbol_type: str  # "class", "function", or "async function"
 
 
 @dataclass(frozen=True)
 class PlannedInsertion:
-    file: str
-    qualified_name: str
-    line: int
-    symbol_type: str
-    parameters: list[str]
-    attributes: list[str]
-    has_returns: bool
-    has_yields: bool
-    raises: list[str]
-    warnings: list[str]
+    """Records a docstring that we're planning to insert"""
+
+    file: str  # Path to the file
+    qualified_name: str  # Full name of the symbol (e.g., "MyClass.my_method")
+    line: int  # Line number where symbol is defined
+    symbol_type: str  # "class", "function", or "async function"
+    parameters: list[str]  # Parameter names we documented
+    attributes: list[str]  # Attribute names we documented
+    has_returns: bool  # Whether this function/method returns something
+    has_yields: bool  # Whether this function/method is a generator
+    raises: list[str]  # Exception types that might be raised
+    warnings: list[str]  # Warning types that might be raised
 
 
 @dataclass(frozen=True)
 class SkippedSymbol:
-    file: str
-    qualified_name: str
-    line: int
-    symbol_type: str
-    reason: str
+    """Records a symbol we skipped and why"""
+
+    file: str  # Path to the file
+    qualified_name: str  # Full name of the symbol
+    line: int  # Line number where symbol is defined
+    symbol_type: str  # "class", "function", or "async function"
+    reason: str  # Why we skipped it
 
 
 @dataclass
 class RunReport:
-    root: str
-    mode: str
-    configuration: str
-    files_scanned: int = 0
-    files_changed: int = 0
-    inserted: list[PlannedInsertion] = field(default_factory=list)
-    skipped: list[SkippedSymbol] = field(default_factory=list)
-    errors: list[dict[str, Any]] = field(default_factory=list)
+    """Summary of a full run of the docstring inserter"""
+
+    root: str  # Root directory/file we scanned
+    mode: str  # "apply" or "dry-run"
+    configuration: str  # Path to config file used
+    files_scanned: int = 0  # How many Python files we looked at
+    files_changed: int = 0  # How many we actually modified
+    inserted: list[PlannedInsertion] = field(
+        default_factory=list
+    )  # All insertions made
+    skipped: list[SkippedSymbol] = field(default_factory=list)  # All skipped symbols
+    errors: list[dict[str, Any]] = field(
+        default_factory=list
+    )  # Any errors that occurred
 
 
 @dataclass
 class DocstringConfig:
-    ignored_files: set[str] = field(default_factory=set)
-    ignored_file_patterns: list[str] = field(default_factory=list)
-    ignored_symbols: dict[str, set[str]] = field(default_factory=dict)
-    ignored_symbol_patterns: dict[str, list[str]] = field(default_factory=dict)
+    """Configuration for controlling which symbols to skip"""
+
+    ignored_files: set[str] = field(default_factory=set)  # Exact filenames to skip
+    ignored_file_patterns: list[str] = field(
+        default_factory=list
+    )  # Glob patterns for files (e.g., "*.pb2.py")
+    ignored_symbols: dict[str, set[str]] = field(
+        default_factory=dict
+    )  # Exact symbol names to skip per file
+    ignored_symbol_patterns: dict[str, list[str]] = field(
+        default_factory=dict
+    )  # Glob patterns for symbols per file
 
 
 class ScopedFlowVisitor(ast.NodeVisitor):
+    """
+    Walks through a function's AST to find:
+    - Return statements (for detecting "has_returns")
+    - Yield statements (for detecting generators)
+    - Raise statements (for detecting exceptions)
+    - Assert statements (exceptions from assertions)
+    - Warning calls (for detecting warnings)
+
+    Only looks at the function body, not nested functions or classes.
+    """
+
     def __init__(self, root: FunctionNode) -> None:
-        self.root = root
+        self.root = root  # The function we're analyzing
         self.returns: list[ast.Return] = []
         self.yields: list[ast.Yield | ast.YieldFrom] = []
         self.raises: list[ast.Raise] = []
@@ -130,6 +173,7 @@ class ScopedFlowVisitor(ast.NodeVisitor):
         self.warning_calls: list[ast.Call] = []
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Only descend into the root function, skip nested functions"""
         if node is self.root:
             self.generic_visit(node)
 
@@ -137,13 +181,16 @@ class ScopedFlowVisitor(ast.NodeVisitor):
         self,
         node: ast.AsyncFunctionDef,
     ) -> None:
+        """Only descend into the root function, skip nested async functions"""
         if node is self.root:
             self.generic_visit(node)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Skip nested classes"""
         return
 
     def visit_Lambda(self, node: ast.Lambda) -> None:
+        """Skip lambda expressions"""
         return
 
     def visit_Return(self, node: ast.Return) -> None:
@@ -167,6 +214,7 @@ class ScopedFlowVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
+        """Collect calls to warnings.warn"""
         if dotted_name(node.func) in {
             "warnings.warn",
             "warn",
@@ -177,7 +225,7 @@ class ScopedFlowVisitor(ast.NodeVisitor):
 
 
 def normalize_path(path: str | Path) -> str:
-
+    """Convert paths to forward slashes (for consistent config file matching)"""
     return Path(path).as_posix()
 
 
@@ -186,7 +234,10 @@ def read_string_list(
     key: str,
     config_path: Path,
 ) -> list:
-
+    """
+    Extract a list of strings from JSON config.
+    Validates that the key exists and contains only strings.
+    """
     values = payload.get(key, [])
 
     if not isinstance(values, list):
@@ -203,7 +254,10 @@ def read_symbol_mapping(
     key: str,
     config_path: Path,
 ) -> dict[str, list[str]]:
-
+    """
+    Extract a mapping of filename -> list of symbols from JSON config.
+    Example: {"ignored_symbols": {"myfile.py": ["MyClass", "my_function"]}}
+    """
     mapping = payload.get(key, {})
 
     if not isinstance(mapping, dict):
@@ -221,6 +275,7 @@ def read_symbol_mapping(
         if not all(isinstance(symbol, str) for symbol in symbols):
             raise ValueError(f"Every value in {key!r}[{file_name!r}] must be a string.")
 
+        # Normalize paths for consistent matching
         normalized_file = "*" if file_name == "*" else normalize_path(file_name)
 
         result[normalized_file] = symbols
@@ -229,7 +284,10 @@ def read_symbol_mapping(
 
 
 def load_docstring_config(path: Path) -> DocstringConfig:
-
+    """
+    Load configuration from a JSON file.
+    Returns default config if file doesn't exist.
+    """
     if not path.exists():
         return DocstringConfig()
 
@@ -282,12 +340,17 @@ def ignored_file_reason(
     path: Path,
     config: DocstringConfig,
 ) -> str | None:
-
+    """
+    Check if a file should be skipped based on config.
+    Returns the reason string if ignored, None if we should process it.
+    """
     normalized = normalize_path(path)
 
+    # Exact match against ignored_files list
     if normalized in config.ignored_files:
         return "listed in ignored_files"
 
+    # Pattern match against ignored_file_patterns
     for pattern in config.ignored_file_patterns:
         if fnmatch.fnmatchcase(normalized, pattern):
             return f"matches ignored file pattern {pattern!r}"
@@ -300,9 +363,13 @@ def ignored_symbol_reason(
     qualified_symbol_name: str,
     config: DocstringConfig,
 ) -> str | None:
-
+    """
+    Check if a symbol should be skipped based on config.
+    Returns the reason string if ignored, None if we should document it.
+    """
     normalized_file = normalize_path(path)
 
+    # Get all explicitly ignored symbols for this file and global ("*")
     explicitly_ignored = {
         *config.ignored_symbols.get("*", set()),
         *config.ignored_symbols.get(
@@ -311,9 +378,11 @@ def ignored_symbol_reason(
         ),
     }
 
+    # Check if this symbol is explicitly listed
     if qualified_symbol_name in explicitly_ignored:
         return "listed in ignored_symbols"
 
+    # Get all patterns for this file and global ("*")
     patterns = [
         *config.ignored_symbol_patterns.get(
             "*",
@@ -325,6 +394,7 @@ def ignored_symbol_reason(
         ),
     ]
 
+    # Check if this symbol matches any pattern
     for pattern in patterns:
         if fnmatch.fnmatchcase(
             qualified_symbol_name,
@@ -336,15 +406,20 @@ def ignored_symbol_reason(
 
 
 def is_builtin_ignored(path: Path) -> bool:
-
+    """Check if a path should be ignored based on built-in rules"""
+    # Exact filename match
     if path.name in BUILTIN_IGNORED_FILES:
         return True
 
+    # Check if any path component is in ignored directories
     return any(part in IGNORED_DIRECTORIES for part in path.parts)
 
 
 def python_files(root: Path) -> list:
-
+    """
+    Find all Python files under a root directory or return the file if it's a .py file.
+    Filters out files in ignored directories.
+    """
     if root.is_file():
         if root.suffix == ".py" and not is_builtin_ignored(root):
             return [root]
@@ -362,7 +437,10 @@ def qualified_name(
     stack: Sequence[str],
     name: str,
 ) -> str:
-
+    """
+    Build a qualified name from a stack of class/function names.
+    Example: stack=["MyClass"], name="my_method" -> "MyClass.my_method"
+    """
     if stack:
         return ".".join([*stack, name])
 
@@ -370,7 +448,10 @@ def qualified_name(
 
 
 def dotted_name(node: ast.AST) -> str:
-
+    """
+    Extract the dotted name from an AST node.
+    Example: ast.Attribute(value=Name("warnings"), attr="warn") -> "warnings.warn"
+    """
     if isinstance(node, ast.Name):
         return node.id
 
@@ -395,7 +476,11 @@ def annotation_text(
     node: ast.expr | None,
     fallback: str = "Any",
 ) -> str:
-
+    """
+    Convert a type annotation AST node to readable text.
+    Example: ast.Name("int") -> "int"
+    If annotation is missing, use fallback ("Any" by default).
+    """
     if node is None:
         return fallback
 
@@ -408,14 +493,14 @@ def annotation_text(
 def has_overload_decorator(
     node: FunctionNode,
 ) -> bool:
-
+    """Check if a function has @overload decorator (type stub)"""
     return any(
         dotted_name(decorator).endswith("overload") for decorator in node.decorator_list
     )
 
 
 def is_dataclass(node: ast.ClassDef) -> bool:
-
+    """Check if a class is decorated with @dataclass"""
     return any(
         dotted_name(decorator).split(".")[-1] == "dataclass"
         for decorator in node.decorator_list
@@ -425,7 +510,10 @@ def is_dataclass(node: ast.ClassDef) -> bool:
 def exception_name(
     expression: ast.expr | None,
 ) -> str | None:
-
+    """
+    Extract the exception class name from an expression.
+    Example: ast.Call(func=Name("ValueError"), args=[...]) -> "ValueError"
+    """
     if expression is None:
         return None
 
@@ -442,13 +530,19 @@ def exception_name(
 
 
 def warning_name(call: ast.Call) -> str:
-
+    """
+    Extract the warning category from a warnings.warn() call.
+    Example: warnings.warn("msg", DeprecationWarning) -> "DeprecationWarning"
+    Defaults to "UserWarning" if not specified.
+    """
+    # warnings.warn(msg, category) - positional argument
     if len(call.args) >= 2:
         category = exception_name(call.args[1])
 
         if category:
             return category
 
+    # warnings.warn(msg, category=SomeWarning) - keyword argument
     for keyword in call.keywords:
         if keyword.arg != "category":
             continue
@@ -464,9 +558,14 @@ def warning_name(call: ast.Call) -> str:
 def function_parameters(
     node: FunctionNode,
 ) -> list[tuple[str, ast.arg]]:
-
+    """
+    Extract all parameters from a function, excluding 'self' and 'cls'.
+    Returns list of (param_name, ast.arg) tuples.
+    Includes *args, keyword-only args, and **kwargs.
+    """
     parameters: list[tuple[str, ast.arg]] = []
 
+    # Positional-only and regular positional arguments
     for argument in [
         *node.args.posonlyargs,
         *node.args.args,
@@ -477,6 +576,7 @@ def function_parameters(
         }:
             parameters.append((argument.arg, argument))
 
+    # *args (vararg)
     if node.args.vararg is not None:
         parameters.append(
             (
@@ -485,9 +585,11 @@ def function_parameters(
             )
         )
 
+    # Keyword-only arguments (after * in signature)
     for argument in node.args.kwonlyargs:
         parameters.append((argument.arg, argument))
 
+    # **kwargs (kwarg)
     if node.args.kwarg is not None:
         parameters.append(
             (
@@ -502,7 +604,7 @@ def function_parameters(
 def class_initializer(
     node: ast.ClassDef,
 ) -> FunctionNode | None:
-
+    """Find the __init__ method of a class, if it exists"""
     for statement in node.body:
         if (
             isinstance(
@@ -522,7 +624,7 @@ def class_initializer(
 def is_classvar(
     annotation: ast.expr | None,
 ) -> bool:
-
+    """Check if a type annotation is typing.ClassVar (class variable, not instance attribute)"""
     if annotation is None:
         return False
 
@@ -535,7 +637,10 @@ def is_classvar(
 def dataclass_parameters(
     node: ast.ClassDef,
 ) -> list[tuple[str, str]]:
-
+    """
+    Extract parameter names and types from a dataclass.
+    For dataclasses, parameters are the annotated fields (not in __init__).
+    """
     parameters: list[tuple[str, str]] = []
 
     for statement in node.body:
@@ -551,11 +656,13 @@ def dataclass_parameters(
         ):
             continue
 
+        # Skip class variables
         if is_classvar(statement.annotation):
             continue
 
         name = statement.target.id
 
+        # Skip private attributes
         if name.startswith("_"):
             continue
 
@@ -572,7 +679,9 @@ def dataclass_parameters(
 def initializer_parameters(
     node: ast.ClassDef,
 ) -> list[tuple[str, str]]:
-
+    """
+    Extract parameter names and types from a class's __init__ method.
+    """
     initializer = class_initializer(node)
 
     if initializer is None:
@@ -590,7 +699,11 @@ def initializer_parameters(
 def class_parameters(
     node: ast.ClassDef,
 ) -> list[tuple[str, str]]:
-
+    """
+    Get the parameters that should be documented for a class.
+    For dataclasses, use field annotations.
+    For regular classes, use __init__ parameters.
+    """
     if is_dataclass(node):
         return dataclass_parameters(node)
 
@@ -600,7 +713,10 @@ def class_parameters(
 def class_attributes(
     node: ast.ClassDef,
 ) -> list[tuple[str, str]]:
-
+    """
+    Extract instance attributes (annotated fields) from a class.
+    Only for non-dataclasses (dataclass fields are documented as parameters).
+    """
     if is_dataclass(node):
         return []
 
@@ -619,11 +735,13 @@ def class_attributes(
         ):
             continue
 
+        # Skip class variables
         if is_classvar(statement.annotation):
             continue
 
         name = statement.target.id
 
+        # Skip special/internal attributes
         if name in IGNORED_CLASS_ATTRIBUTES:
             continue
 
@@ -640,15 +758,20 @@ def class_attributes(
 def meaningful_returns(
     visitor: ScopedFlowVisitor,
 ) -> list[ast.Return]:
-
+    """
+    Filter return statements to meaningful ones (not "return None").
+    We only document a function as having a return if it returns something useful.
+    """
     result: list[ast.Return] = []
 
     for statement in visitor.returns:
         value = statement.value
 
+        # "return" with no value is just "return None" - skip it
         if value is None:
             continue
 
+        # "return None" explicitly - skip it
         if isinstance(value, ast.Constant) and value.value is None:
             continue
 
@@ -660,13 +783,19 @@ def meaningful_returns(
 def yielded_type(
     annotation: ast.expr | None,
 ) -> str:
-
+    """
+    Extract the yielded type from a generator's return annotation.
+    Example: Generator[int, None, None] -> "int"
+    Example: Iterator[str] -> "str"
+    """
     if annotation is None:
         return "Any"
 
+    # Check if it's a subscripted type like Iterator[int]
     if isinstance(annotation, ast.Subscript):
         container = dotted_name(annotation.value).split(".")[-1]
 
+        # For Iterator/Iterable, the yielded type is the subscript
         if container in {
             "Iterator",
             "Iterable",
@@ -675,6 +804,7 @@ def yielded_type(
         }:
             return annotation_text(annotation.slice)
 
+        # For Generator[YieldType, SendType, ReturnType], take first element
         if container == "Generator":
             slice_node = annotation.slice
 
@@ -693,7 +823,9 @@ def yielded_type(
 def analyze_flow(
     node: FunctionNode,
 ) -> ScopedFlowVisitor:
-
+    """
+    Analyze a function's control flow to find returns, yields, raises, warnings, etc.
+    """
     visitor = ScopedFlowVisitor(node)
     visitor.visit(node)
 
@@ -703,25 +835,32 @@ def analyze_flow(
 def build_function_docstring(
     node: FunctionNode,
 ) -> tuple[str, dict[str, Any]]:
-
+    """
+    Generate a NumPy-style docstring template for a function.
+    Analyzes the function to determine what sections are needed.
+    """
     flow = analyze_flow(node)
     parameters = function_parameters(node)
     returns = meaningful_returns(flow)
     yields = flow.yields
 
+    # Collect exception types that might be raised
     raised = {
         name
         for statement in flow.raises
         if (name := exception_name(statement.exc)) is not None
     }
 
+    # Asserts raise AssertionError
     if flow.asserts:
         raised.add("AssertionError")
 
+    # Collect warning types that might be issued
     warnings = {warning_name(call) for call in flow.warning_calls}
 
     lines = [FUNCTION_SUMMARY]
 
+    # Add Parameters section if function has parameters
     if parameters:
         lines.extend(
             [
@@ -737,6 +876,7 @@ def build_function_docstring(
 
     has_yields = bool(yields)
 
+    # Determine if this function has meaningful return values
     has_returns = (
         bool(returns)
         and not has_yields
@@ -747,6 +887,7 @@ def build_function_docstring(
         }
     )
 
+    # Add Yields section if it's a generator
     if has_yields:
         lines.extend(
             [
@@ -758,6 +899,7 @@ def build_function_docstring(
             ]
         )
 
+    # Add Returns section if it returns something
     elif has_returns:
         lines.extend(
             [
@@ -769,6 +911,7 @@ def build_function_docstring(
             ]
         )
 
+    # Add Raises section if it might raise exceptions
     if raised:
         lines.extend(
             [
@@ -782,6 +925,7 @@ def build_function_docstring(
             lines.append(name)
             lines.append(f"    {PLACEHOLDER_DESCRIPTION}")
 
+    # Add Warns section if it might issue warnings
     if warnings:
         lines.extend(
             [
@@ -795,6 +939,7 @@ def build_function_docstring(
             lines.append(name)
             lines.append(f"    {PLACEHOLDER_DESCRIPTION}")
 
+    # Collect metadata about what we documented
     metadata = {
         "parameters": [name for name, _ in parameters],
         "attributes": [],
@@ -810,12 +955,16 @@ def build_function_docstring(
 def build_class_docstring(
     node: ast.ClassDef,
 ) -> tuple[str, dict[str, Any]]:
-
+    """
+    Generate a NumPy-style docstring template for a class.
+    Documents parameters (__init__ args or dataclass fields) and attributes.
+    """
     parameters = class_parameters(node)
     attributes = class_attributes(node)
 
     lines = [CLASS_SUMMARY]
 
+    # Add Parameters section
     if parameters:
         lines.extend(
             [
@@ -829,6 +978,7 @@ def build_class_docstring(
             lines.append(f"{name} : {data_type}")
             lines.append(f"    {PLACEHOLDER_DESCRIPTION}")
 
+    # Add Attributes section
     if attributes:
         lines.extend(
             [
@@ -842,6 +992,7 @@ def build_class_docstring(
             lines.append(f"{name} : {data_type}")
             lines.append(f"    {PLACEHOLDER_DESCRIPTION}")
 
+    # Collect metadata about what we documented
     metadata = {
         "parameters": [name for name, _ in parameters],
         "attributes": [name for name, _ in attributes],
@@ -857,7 +1008,7 @@ def build_class_docstring(
 def build_docstring(
     node: DocumentableNode,
 ) -> tuple[str, dict[str, Any]]:
-
+    """Generate a docstring template for either a class or function"""
     if isinstance(node, ast.ClassDef):
         return build_class_docstring(node)
 
@@ -867,7 +1018,7 @@ def build_docstring(
 def symbol_type(
     node: DocumentableNode,
 ) -> str:
-
+    """Determine what kind of symbol this is (class, function, or async function)"""
     if isinstance(node, ast.ClassDef):
         return "class"
 
@@ -881,14 +1032,17 @@ def symbol_type(
 
 
 def leading_whitespace(line: str) -> str:
-
+    """Extract the leading whitespace from a line"""
     return line[: len(line) - len(line.lstrip())]
 
 
 def node_start_lineno(
     node: ast.stmt,
 ) -> int:
-
+    """
+    Get the actual start line number of a node, accounting for decorators.
+    (Decorators come before the definition, so we need the decorator's line)
+    """
     decorators = getattr(
         node,
         "decorator_list",
@@ -908,7 +1062,10 @@ def body_indent(
     node: DocumentableNode,
     source_lines: Sequence[str],
 ) -> str:
-
+    """
+    Determine the correct indentation for a docstring inside this symbol.
+    Looks at the indentation of the first statement in the body.
+    """
     if node.body:
         first_statement = node.body[0]
         first_line_number = node_start_lineno(first_statement)
@@ -917,9 +1074,11 @@ def body_indent(
 
         detected = leading_whitespace(line)
 
+        # If detected indent is deeper than the definition, use it
         if len(detected.expandtabs()) > node.col_offset:
             return detected
 
+    # Fall back to definition line indent + one indentation level
     definition_line = source_lines[node.lineno - 1]
 
     return leading_whitespace(definition_line) + " " * INDENT_WIDTH
@@ -930,7 +1089,10 @@ def render_docstring(
     indent: str,
     newline: str,
 ) -> str:
-
+    """
+    Format a docstring with proper indentation and triple quotes.
+    Returns the complete docstring including the surrounding quotes and newlines.
+    """
     if not doc:
         raise ValueError("Cannot render an empty docstring.")
 
@@ -947,6 +1109,7 @@ def render_docstring(
         if line:
             rendered.append(f"{indent}{line}")
         else:
+            # Blank lines in docstring (with just indentation)
             rendered.append(indent)
 
     rendered.append(f'{indent}"""')
@@ -957,7 +1120,10 @@ def render_docstring(
 def line_start_offsets(
     source: str,
 ) -> list:
-
+    """
+    Calculate byte offsets for the start of each line.
+    Useful for converting line numbers to character offsets for edits.
+    """
     offsets = [0]
 
     for line in source.splitlines(keepends=True):
@@ -971,7 +1137,11 @@ def docstring_insertion_range(
     source_lines: Sequence[str],
     offsets: Sequence[int],
 ) -> tuple[int, int]:
-
+    """
+    Find the byte range where we should insert a docstring.
+    Returns (start_offset, end_offset) for the insertion point.
+    The range is from after the function/class definition to before the first statement.
+    """
     if not node.body:
         raise ValueError(f"Symbol {node.name!r} has no body.")
 
@@ -981,6 +1151,7 @@ def docstring_insertion_range(
 
     first_statement_index = first_statement_line - 1
 
+    # Find where to insert (skip blank lines after the definition)
     insertion_index = first_statement_index
 
     while (
@@ -988,6 +1159,7 @@ def docstring_insertion_range(
     ):
         insertion_index -= 1
 
+    # Get byte offsets
     start = offsets[insertion_index]
     end = offsets[first_statement_index]
 
@@ -998,7 +1170,10 @@ def iter_symbols(
     body: Sequence[ast.stmt],
     stack: Sequence[str] = (),
 ) -> Iterable[tuple[DocumentableNode, str]]:
-
+    """
+    Walk through all classes and functions in a body, yielding them with their qualified names.
+    Also recurses into nested classes and functions.
+    """
     for node in body:
         if isinstance(node, ast.ClassDef):
             qname = qualified_name(
@@ -1008,6 +1183,7 @@ def iter_symbols(
 
             yield node, qname
 
+            # Recurse into class body
             yield from iter_symbols(
                 node.body,
                 [*stack, node.name],
@@ -1027,6 +1203,7 @@ def iter_symbols(
 
             yield node, qname
 
+            # Recurse into function body (for nested functions)
             yield from iter_symbols(
                 node.body,
                 [*stack, node.name],
@@ -1037,10 +1214,14 @@ def apply_edits(
     source: str,
     edits: Sequence[SourceEdit],
 ) -> str:
-
+    """
+    Apply multiple edits to source code.
+    Processes edits in reverse order to avoid messing up offsets.
+    """
     updated = source
     previous_start = len(source) + 1
 
+    # Process edits in reverse order (from end of file backwards)
     for edit in sorted(
         edits,
         key=lambda item: (
@@ -1049,11 +1230,13 @@ def apply_edits(
         ),
         reverse=True,
     ):
+        # Check for overlapping edits (would corrupt the source)
         if edit.end > previous_start:
             raise ValueError(
                 f"Overlapping source edits detected for {edit.qualified_name!r}."
             )
 
+        # Apply this edit
         updated = updated[: edit.start] + edit.text + updated[edit.end :]
 
         previous_start = edit.start
@@ -1064,7 +1247,10 @@ def apply_edits(
 def existing_docstring_digest(
     tree: ast.Module,
 ) -> dict[str, str]:
-
+    """
+    Create a hash of every existing docstring in the module.
+    Used later to verify we didn't accidentally modify existing docstrings.
+    """
     result: dict[str, str] = {}
 
     for node, qname in iter_symbols(tree.body):
@@ -1078,6 +1264,7 @@ def existing_docstring_digest(
 
         key = f"{symbol_type(node)}::{qname}"
 
+        # Hash the docstring so we can detect changes
         result[key] = hashlib.sha256(doc.encode("utf-8")).hexdigest()
 
     return result
@@ -1087,7 +1274,10 @@ def verify_existing_docstrings(
     before: dict[str, str],
     after_tree: ast.Module,
 ) -> None:
-
+    """
+    Verify that existing docstrings weren't modified by our edits.
+    Raises RuntimeError if any docstring changed or disappeared.
+    """
     after = existing_docstring_digest(after_tree)
 
     for key, expected_digest in before.items():
@@ -1100,7 +1290,10 @@ def verify_existing_docstrings(
 
 
 def detect_newline(source: str) -> str:
-
+    """
+    Detect whether the file uses CRLF (Windows) or LF (Unix) line endings.
+    Returns either "\r\n" or "\n".
+    """
     if "\r\n" in source:
         return "\r\n"
 
@@ -1112,7 +1305,10 @@ def make_diff(
     before: str,
     after: str,
 ) -> str:
-
+    """
+    Generate a unified diff showing the changes.
+    Useful for reviewing what will be inserted.
+    """
     return "".join(
         difflib.unified_diff(
             before.splitlines(keepends=True),
@@ -1128,19 +1324,24 @@ def atomic_write(
     text: str,
     encoding: str,
 ) -> None:
-
+    """
+    Write text to a file atomically (write to temp file, then rename).
+    Prevents data corruption if the script crashes mid-write.
+    """
     temporary = path.with_name(f".{path.name}.docstrings.tmp")
 
     try:
         temporary.write_text(
             text,
             encoding=encoding,
-            newline="",
+            newline="",  # Preserve original line endings
         )
 
+        # Atomic rename
         temporary.replace(path)
 
     finally:
+        # Clean up temp file if anything went wrong
         if temporary.exists():
             temporary.unlink()
 
@@ -1148,7 +1349,11 @@ def atomic_write(
 def parse_source(
     path: Path,
 ) -> tuple[str, str, ast.Module]:
-
+    """
+    Read and parse a Python source file.
+    Returns (source_text, encoding, ast_tree).
+    Uses tokenize.open to detect encoding from the file.
+    """
     with tokenize.open(path) as stream:
         encoding = stream.encoding
         source = stream.read()
@@ -1167,7 +1372,10 @@ def should_skip(
     *,
     include_optional_methods: bool,
 ) -> str | None:
-
+    """
+    Determine if a symbol should be skipped based on its properties.
+    Returns a reason string if it should be skipped, None otherwise.
+    """
     if isinstance(
         node,
         (
@@ -1175,9 +1383,11 @@ def should_skip(
             ast.AsyncFunctionDef,
         ),
     ):
+        # Skip @overload declarations (just type stubs)
         if has_overload_decorator(node):
             return "overload declaration"
 
+        # Skip special methods like __repr__ unless requested
         if not include_optional_methods and node.name in OPTIONAL_UNDOCUMENTED_METHODS:
             return "optional special method"
 
@@ -1196,26 +1406,33 @@ def plan_file(
     list[PlannedInsertion],
     list[SkippedSymbol],
 ]:
-
+    """
+    Plan all docstring insertions for a file (don't actually modify yet).
+    Returns (modified_source, list_of_insertions, list_of_skipped_symbols).
+    """
     source_lines = source.splitlines()
     offsets = line_start_offsets(source)
     newline = detect_newline(source)
 
+    # Capture hashes of existing docstrings to verify we don't modify them
     existing_digests = existing_docstring_digest(tree)
 
     edits: list[SourceEdit] = []
     insertions: list[PlannedInsertion] = []
     skipped: list[SkippedSymbol] = []
 
+    # Process each symbol in the module
     for node, qname in iter_symbols(tree.body):
         existing_docstring = ast.get_docstring(
             node,
             clean=False,
         )
 
+        # Skip symbols that already have docstrings
         if existing_docstring is not None:
             continue
 
+        # Check if symbol is explicitly ignored by config
         ignore_reason = ignored_symbol_reason(
             path,
             qname,
@@ -1234,6 +1451,7 @@ def plan_file(
             )
             continue
 
+        # Check if symbol should be skipped for other reasons
         skip_reason = should_skip(
             node,
             include_optional_methods=(include_optional_methods),
@@ -1251,19 +1469,23 @@ def plan_file(
             )
             continue
 
+        # Generate the docstring template
         doc, metadata = build_docstring(node)
 
+        # Determine correct indentation
         indent = body_indent(
             node,
             source_lines,
         )
 
+        # Find where to insert the docstring
         edit_start, edit_end = docstring_insertion_range(
             node,
             source_lines,
             offsets,
         )
 
+        # Create the edit
         edits.append(
             SourceEdit(
                 start=edit_start,
@@ -1279,6 +1501,7 @@ def plan_file(
             )
         )
 
+        # Record what we're inserting
         insertions.append(
             PlannedInsertion(
                 file=str(path),
@@ -1294,14 +1517,17 @@ def plan_file(
             )
         )
 
+    # Apply all edits to get the modified source
     updated = apply_edits(
         source,
         edits,
     )
 
+    # If no changes, return early
     if not edits:
         return updated, insertions, skipped
 
+    # Verify the modified source is still valid Python
     updated_tree = ast.parse(
         updated,
         filename=str(path),
@@ -1315,11 +1541,13 @@ def plan_file(
         dont_inherit=True,
     )
 
+    # Verify we didn't accidentally modify existing docstrings
     verify_existing_docstrings(
         existing_digests,
         updated_tree,
     )
 
+    # Verify that our generated docstrings are actually present
     updated_symbols = {
         (
             symbol_type(node),
@@ -1367,7 +1595,10 @@ def process_file(
     list[SkippedSymbol],
     bool,
 ]:
-
+    """
+    Process a single file: parse it, plan changes, optionally apply them.
+    Returns (insertions, skipped_symbols, was_changed).
+    """
     source, encoding, tree = parse_source(path)
 
     updated, inserted, skipped = plan_file(
@@ -1380,9 +1611,11 @@ def process_file(
 
     changed = updated != source
 
+    # If no changes needed, we're done
     if not changed:
         return inserted, skipped, False
 
+    # Show diff if requested
     if show_diff:
         print(
             make_diff(
@@ -1393,6 +1626,7 @@ def process_file(
             end="",
         )
 
+    # Apply changes if requested
     if apply:
         if backup:
             backup_path = path.with_suffix(path.suffix + ".bak")
@@ -1400,11 +1634,13 @@ def process_file(
             if backup_path.exists():
                 print(f"USING EXISTING BACKUP: {backup_path}")
             else:
+                # Create backup before modifying
                 shutil.copy2(
                     path,
                     backup_path,
                 )
 
+        # Write the modified file atomically
         atomic_write(
             path,
             updated,
@@ -1418,7 +1654,7 @@ def write_report(
     report: RunReport,
     path: Path,
 ) -> None:
-
+    """Save the run report as a JSON file"""
     path.parent.mkdir(
         parents=True,
         exist_ok=True,
@@ -1437,7 +1673,7 @@ def write_report(
 
 
 def build_parser() -> argparse.ArgumentParser:
-
+    """Create the command-line argument parser"""
     parser = argparse.ArgumentParser(
         description=(
             "Insert NumPy-style docstrings into "
@@ -1499,10 +1735,13 @@ def build_parser() -> argparse.ArgumentParser:
 def main(
     argv: Sequence[str] | None = None,
 ) -> int:
-
+    """
+    Main entry point. Orchestrates the entire docstring insertion process.
+    """
     args = build_parser().parse_args(argv)
     root: Path = args.root
 
+    # Validate the root path exists
     if not root.exists():
         print(
             f"ERROR: Path does not exist: {root}",
@@ -1510,6 +1749,7 @@ def main(
         )
         return 2
 
+    # Load configuration
     try:
         config = load_docstring_config(args.config)
     except (
@@ -1524,6 +1764,7 @@ def main(
         )
         return 2
 
+    # Find all Python files to process
     files = python_files(root)
 
     if not files:
@@ -1533,6 +1774,7 @@ def main(
         )
         return 2
 
+    # Initialize the report
     report = RunReport(
         root=str(root),
         mode=("apply" if args.apply else "dry-run"),
@@ -1540,12 +1782,14 @@ def main(
         files_scanned=len(files),
     )
 
+    # Process each file
     for path in files:
         file_ignore_reason = ignored_file_reason(
             path,
             config,
         )
 
+        # Skip ignored files
         if file_ignore_reason is not None:
             report.skipped.append(
                 SkippedSymbol(
@@ -1583,6 +1827,7 @@ def main(
             ValueError,
             RuntimeError,
         ) as exc:
+            # Record error in report
             report.errors.append(
                 {
                     "file": str(path),
@@ -1596,11 +1841,13 @@ def main(
                 file=sys.stderr,
             )
 
+    # Save the report
     write_report(
         report,
         args.report,
     )
 
+    # Calculate summary statistics
     class_count = sum(item.symbol_type == "class" for item in report.inserted)
 
     function_count = sum(
@@ -1614,6 +1861,7 @@ def main(
 
     action = "Inserted" if args.apply else "Would insert"
 
+    # Print summary
     print()
     print("=" * 72)
     print("MISSING DOCSTRING INSERTION SUMMARY")
@@ -1630,6 +1878,7 @@ def main(
     print(f"Errors:               {len(report.errors)}")
     print(f"JSON report:          {args.report}")
 
+    # Remind user to use --apply if this was a dry run
     if not args.apply and report.inserted:
         print()
         print("Dry run only. Review the diff, then re-run with --apply.")

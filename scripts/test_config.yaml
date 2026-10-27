@@ -1,0 +1,77 @@
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/cccma_PPP_tests/test4
+max_epochs: 4
+train_loader:
+  dataset_config:
+    model:
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/SI/forecast/Full/NOAA/datetime
+      names: [SICN]
+
+      ensemble_mean: True
+      concat_dim: time
+      rename_dict:
+        x: lon
+        y: lat
+
+    observation:
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/SI/observation/NOAA/datetime
+      names: [SICN]
+      concat_dim: time
+      rename_dict:
+        x: lon
+        y: lat
+
+    condition_method: ensemble_mean
+  batch_size: 10
+  time_features:
+    - lead_time
+    - month_sin
+    - month_cos
+
+  train_years_slice: [1980, 2019]
+  num_validation_years: 3
+  prefetch_factor: 4
+  num_data_workers: 4
+  reduce_spatial_mask: True
+  load: True
+
+module:
+  type: deterministic
+  config:
+    ModelConfig:
+      type: UNetSIC
+      config:
+        channels: [16, 32, 64, 128, 256]
+        block_config:
+          name: convnext
+          num_blocks: 2
+          kernel_size: 3
+        upsampling_method: pixelshuffle
+
+        GENERATOR:
+          noise_level: full
+          num_training_noise_samples: 10
+losspipeline:
+  loss_pipeline:
+    - name: crps
+
+  reduction: mean
+
+trainer:
+  earlystoppingbuffer: 10
+
+  mixed_precision: True
+
+optimization:
+  lr: 0.0001
+  optimizer_type: adam
+  lr_scheduler_config:
+    min_lr: 0.00001
+    total_epochs: 10
+    hold_min_lr: false
+
+weights:
+  spatial_method: uniform
+
+log_every_n_epochs: 2
+save_checkpoint: True
+seed: 10

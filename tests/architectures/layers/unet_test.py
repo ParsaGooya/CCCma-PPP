@@ -6,8 +6,6 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.architectures.layers.unet import UNetOutputSIC
-from cccma_ppp.architectures.layers.generic import LayerNorm2d
 import cccma_ppp.architectures.layers.unet as module
 from cccma_ppp.architectures.layers.conv import (
     ConvBlock,
@@ -19,10 +17,12 @@ from cccma_ppp.architectures.layers.conv import (
     PartialConvBlockConfig,
     TensorMask,
 )
+from cccma_ppp.architectures.layers.generic import LayerNorm2d
 from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
 from cccma_ppp.architectures.layers.unet import (
     DownBlock,
     UNetOutput,
+    UNetOutputSIC,
     UpBlock,
     build_conv_block,
 )
@@ -344,7 +344,6 @@ def test_build_conv_block_requires_latent_output_shape():
         )
 
 
-@pytest.mark.pruned
 def test_build_conv_block_rejects_latent_channel_mismatch():
     with pytest.raises(
         ValueError,
@@ -424,8 +423,8 @@ def make_up_block(
     block_config=None,
     skip_channels=3,
     upsampling_method="bilinear",
-    skip_alignment_method="strict",
-    transpose_kernel_size=2,
+    upsampling_kernel_size=None,
+    skip_alignment_method="padd",
     inject_noise=False,
     inject_noise_in_block=False,
 ):
@@ -438,8 +437,14 @@ def make_up_block(
         out_channels=2,
         block_config=block_config,
         upsampling_method=upsampling_method,
+        upsampling_kernel_size=(
+            2
+            if upsampling_kernel_size is None and upsampling_method == "transpose_conv"
+            else 3
+            if upsampling_kernel_size is None
+            else upsampling_kernel_size
+        ),
         skip_alignment_method=(skip_alignment_method),
-        transpose_kernel_size=(transpose_kernel_size),
         inject_noise=inject_noise,
         inject_noise_in_block=(inject_noise_in_block),
     )
@@ -479,6 +484,7 @@ def test_up_block_transpose_noise_adds_input_channel():
 def test_up_block_bilinear_standard_projection():
     block = make_up_block(
         upsampling_method="bilinear",
+        upsampling_kernel_size=3,
     )
 
     assert isinstance(
@@ -501,6 +507,7 @@ def test_up_block_bilinear_standard_projection():
 def test_up_block_bilinear_noise_adds_projection_channel():
     block = make_up_block(
         upsampling_method="bilinear",
+        upsampling_kernel_size=3,
         inject_noise=True,
     )
 
@@ -603,21 +610,6 @@ def test_up_block_merged_block_input_channels_without_skip():
 
 
 @pytest.mark.pruned
-def test_up_block_does_not_mutate_partial_config():
-    config = make_partial_config()
-
-    block = make_up_block(
-        block_config=config,
-    )
-
-    assert config.multi_channel is True
-    assert config.return_mask is True
-
-    assert block._block.stages[0].multi_channel is False
-    assert block._block.stages[0].return_mask is False
-
-
-@pytest.mark.pruned
 def test_up_block_enables_noise_inside_block_when_both_flags_true():
     block = make_up_block(
         inject_noise=True,
@@ -711,6 +703,7 @@ def test_up_block_transpose_forward():
 def test_up_block_bilinear_forward():
     block = make_up_block(
         upsampling_method="bilinear",
+        upsampling_kernel_size=3,
     )
 
     result = block(
@@ -765,8 +758,8 @@ def test_up_block_concatenates_skip_before_upsampled_tensor():
         out_channels=1,
         block_config=make_conv_config(),
         upsampling_method="bilinear",
+        upsampling_kernel_size=3,
         skip_alignment_method="strict",
-        transpose_kernel_size=2,
     )
 
     capture = CaptureTensorMaskModule()
@@ -995,6 +988,7 @@ def test_up_block_bilinear_noise_after_upsampling(
 ):
     block = make_up_block(
         upsampling_method="bilinear",
+        upsampling_kernel_size=3,
         inject_noise=True,
     )
 
@@ -1149,7 +1143,6 @@ def test_unet_output_tanh_direct_projection():
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_rejects_unsupported_activation():
     with pytest.raises(
         ValueError,
@@ -1244,7 +1237,6 @@ def test_unet_output_hidden_activation_structure(
     )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "hidden_channels",
@@ -1485,84 +1477,6 @@ def test_unet_output_preserves_float64():
 
 
 @pytest.mark.pruned
-@pytest.mark.parametrize(
-    "config",
-    [
-        make_partial_config(),
-        make_convnext_config(
-            use_partial_conv=True,
-        ),
-    ],
-)
-def test_down_block_uses_partial_convolution_downsampling(
-    config,
-):
-    block = DownBlock(
-        in_channels=3,
-        out_channels=5,
-        block_config=config,
-        mask_pooling="any",
-        mask_fraction_threshold=0.5,
-    )
-
-    assert block.use_partial_conv_downsample is True
-    assert isinstance(
-        block.tensor_downsample,
-        PartialConv2d,
-    )
-    assert block.tensor_downsample.in_channels == 3
-    assert block.tensor_downsample.out_channels == 5
-    assert block.tensor_downsample.kernel_size == (
-        3,
-        3,
-    )
-    assert block.tensor_downsample.stride == (
-        2,
-        2,
-    )
-    assert block.tensor_downsample.padding == (
-        1,
-        1,
-    )
-    assert block.tensor_downsample.multi_channel is True
-    assert block.tensor_downsample.return_mask is True
-
-
-@pytest.mark.pruned
-@pytest.mark.parametrize(
-    "config",
-    [
-        make_conv_config(),
-        make_convnext_config(
-            use_partial_conv=False,
-        ),
-    ],
-)
-def test_down_block_uses_standard_convolution_downsampling(
-    config,
-):
-    block = DownBlock(
-        in_channels=3,
-        out_channels=5,
-        block_config=config,
-        mask_pooling="any",
-        mask_fraction_threshold=0.5,
-    )
-
-    assert block.use_partial_conv_downsample is False
-    assert isinstance(
-        block.tensor_downsample,
-        nn.Conv2d,
-    )
-    assert not isinstance(
-        block.tensor_downsample,
-        PartialConv2d,
-    )
-    assert block.tensor_downsample.in_channels == 3
-    assert block.tensor_downsample.out_channels == 5
-
-
-@pytest.mark.pruned
 def test_down_block_standard_forward_returns_downsampled_and_skip():
     block = DownBlock(
         in_channels=3,
@@ -1776,67 +1690,6 @@ def test_build_conv_block_forwards_latent_arguments(
 
 
 @pytest.mark.pruned
-def test_up_block_partial_effective_config_disables_mask_output():
-    config = make_partial_config()
-
-    block = UpBlock(
-        input_channels=4,
-        skip_channels=3,
-        out_channels=2,
-        block_config=config,
-        upsampling_method="bilinear",
-        skip_alignment_method="strict",
-        transpose_kernel_size=2,
-    )
-
-    assert config.multi_channel is True
-    assert config.return_mask is True
-    assert block._block.config.multi_channel is False
-    assert block._block.config.return_mask is False
-
-
-@pytest.mark.pruned
-def test_up_block_convnext_partial_effective_config_disables_mask_output():
-    config = make_convnext_config(
-        use_partial_conv=True,
-    )
-
-    block = UpBlock(
-        input_channels=4,
-        skip_channels=3,
-        out_channels=2,
-        block_config=config,
-        upsampling_method="bilinear",
-        skip_alignment_method="strict",
-        transpose_kernel_size=2,
-    )
-
-    assert config.multi_channel is True
-    assert config.return_mask is True
-    assert block._block.config.multi_channel is False
-    assert block._block.config.return_mask is False
-
-
-def test_up_block_without_skip_or_resize_shape_currently_raises():
-    block = make_up_block(
-        skip_channels=None,
-    )
-
-    with pytest.raises(
-        UnboundLocalError,
-    ):
-        block(
-            make_tensor_mask(
-                channels=4,
-                height=4,
-                width=4,
-            ),
-            skip=None,
-            resize_shape=None,
-        )
-
-
-@pytest.mark.pruned
 def test_up_block_ignores_resize_shape_when_skip_is_configured(
     monkeypatch,
 ):
@@ -1880,6 +1733,7 @@ def test_up_block_bilinear_projects_after_upsampling(
 ):
     block = make_up_block(
         upsampling_method="bilinear",
+        upsampling_kernel_size=3,
     )
 
     events = []
@@ -2147,7 +2001,6 @@ def test_down_block_does_not_create_skip_processor_by_default():
     assert block.skip_processor is None
 
 
-@pytest.mark.pruned
 def test_down_block_processes_skip_after_main_block():
     block = DownBlock(
         in_channels=3,
@@ -2685,7 +2538,6 @@ def test_unet_output_sic_hidden_structure():
     )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "hidden_channels",
@@ -2733,6 +2585,7 @@ def test_unet_output_sic_activation_structure(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "hidden_channels",
     [

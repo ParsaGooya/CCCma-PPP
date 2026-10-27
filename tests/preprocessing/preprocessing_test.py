@@ -6,8 +6,8 @@ import pytest
 import xarray as xr
 
 import cccma_ppp.preprocessing.preprocessing as module
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 
 
 class AddPreprocessor:
@@ -210,18 +210,7 @@ def make_base_data():
     )
 
 
-@pytest.fixture(autouse=True)
-def reset_pipeline_counter():
-    original = PreprocessingPipeline.num_instances
-    PreprocessingPipeline.num_instances = 0
-
-    yield
-
-    PreprocessingPipeline.num_instances = original
-
-
-class TestInitialization:
-    @pytest.mark.pruned
+class LegacyInitialization:
     def test_default_values(self):
         pipeline = PreprocessingPipeline()
 
@@ -233,7 +222,6 @@ class TestInitialization:
         assert pipeline.name == "instance_1"
         assert pipeline.pipeline == []
 
-    @pytest.mark.pruned
     def test_assigns_unique_default_names(self):
         first = PreprocessingPipeline()
         second = PreprocessingPipeline()
@@ -243,7 +231,6 @@ class TestInitialization:
         assert second.name == "instance_1"
         assert third.name == "instance_1"
 
-    @pytest.mark.pruned
     def test_constructs_preprocessors(self):
         first_preprocessor = AddPreprocessor()
         second_preprocessor = MultiplyPreprocessor()
@@ -277,7 +264,6 @@ class TestInitialization:
         assert first_selector.calls == 1
         assert second_selector.calls == 1
 
-    @pytest.mark.pruned
     def test_load_directory_does_not_construct_pipeline(self):
         selector = DummySelector(
             "normalizer",
@@ -301,7 +287,6 @@ class TestInitialization:
             "name",
         )
 
-    @pytest.mark.pruned
     def test_configuration_dimension_names(self):
         pipeline = PreprocessingPipeline()
 
@@ -318,7 +303,6 @@ class TestInitialization:
             tuple,
         )
 
-    @pytest.mark.pruned
     def test_set_name(self):
         pipeline = PreprocessingPipeline()
 
@@ -328,8 +312,7 @@ class TestInitialization:
         assert pipeline.name == "tas_pipeline"
 
 
-class TestFit:
-    @pytest.mark.pruned
+class LegacyFit:
     def test_empty_pipeline_returns_self(
         self,
         monkeypatch,
@@ -353,7 +336,6 @@ class TestFit:
         assert pipeline.steps == []
         assert pipeline.fitted_preprocessors == []
 
-    @pytest.mark.pruned
     def test_records_fitted_times(
         self,
         monkeypatch,
@@ -431,7 +413,6 @@ class TestFit:
             second,
         ]
 
-    @pytest.mark.pruned
     def test_passes_mask_to_each_preprocessor(
         self,
         monkeypatch,
@@ -481,7 +462,6 @@ class TestFit:
         assert first.fit_calls[0]["mask"] is mask
         assert second.fit_calls[0]["mask"] is mask
 
-    @pytest.mark.pruned
     def test_extracts_reference_metadata(
         self,
         monkeypatch,
@@ -503,7 +483,6 @@ class TestFit:
 
         extraction.assert_called_once_with(data)
 
-    @pytest.mark.pruned
     def test_saves_with_default_path(
         self,
         tmp_path,
@@ -615,7 +594,6 @@ class TestFit:
 
         assert marker.read_text() == "keep"
 
-    @pytest.mark.pruned
     def test_does_not_save_when_disabled(
         self,
         monkeypatch,
@@ -668,7 +646,7 @@ class TestFit:
         assert result is pipeline
 
 
-class TestTransform:
+class LegacyTransform:
     def make_fitted_pipeline(self):
         first = AddPreprocessor(
             value=1.0,
@@ -692,7 +670,6 @@ class TestTransform:
 
         return pipeline, first, second
 
-    @pytest.mark.pruned
     def test_empty_pipeline_returns_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -772,7 +749,6 @@ class TestTransform:
             "value": 4.0,
         }
 
-    @pytest.mark.pruned
     def test_unspecified_step_receives_empty_arguments(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -818,7 +794,7 @@ class TestTransform:
             )
 
 
-class TestInverseTransform:
+class LegacyInverseTransform:
     def make_fitted_pipeline(self):
         first = AddPreprocessor(
             value=1.0,
@@ -842,7 +818,6 @@ class TestInverseTransform:
 
         return pipeline, first, second
 
-    @pytest.mark.pruned
     def test_empty_pipeline_returns_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -889,7 +864,6 @@ class TestInverseTransform:
             transformed / 2.0,
         )
 
-    @pytest.mark.pruned
     def test_passes_step_arguments(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -945,7 +919,7 @@ class TestInverseTransform:
             )
 
 
-class TestGetPreprocessors:
+class LegacyGetPreprocessors:
     def make_pipeline(self):
         first = AddPreprocessor(fitted=True)
         second = MultiplyPreprocessor(fitted=True)
@@ -982,7 +956,6 @@ class TestGetPreprocessors:
             second,
         ]
 
-    @pytest.mark.pruned
     def test_returns_requested_preprocessor(self):
         pipeline, first, _ = self.make_pipeline()
 
@@ -990,7 +963,6 @@ class TestGetPreprocessors:
 
         assert result is first
 
-    @pytest.mark.pruned
     def test_rejects_missing_name(self):
         pipeline, _, _ = self.make_pipeline()
 
@@ -1018,7 +990,7 @@ class TestGetPreprocessors:
             pipeline.get_preprocessors("same")
 
 
-class TestAddFittedPreprocessor:
+class LegacyAddFittedPreprocessor:
     def make_pipeline(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1026,7 +998,6 @@ class TestAddFittedPreprocessor:
         pipeline.fitted_preprocessors = []
         return pipeline
 
-    @pytest.mark.pruned
     def test_rejects_unfitted_preprocessor(self):
         pipeline = self.make_pipeline()
         preprocessor = AddPreprocessor(fitted=False)
@@ -1086,7 +1057,7 @@ class TestAddFittedPreprocessor:
         ]
 
 
-class TestExtractOutputCoordinates:
+class LegacyExtractOutputCoordinates:
     def test_requires_fitted_pipeline(self):
         pipeline = PreprocessingPipeline()
 
@@ -1096,7 +1067,6 @@ class TestExtractOutputCoordinates:
         ):
             pipeline.extract_output_coords_vars(make_base_data())
 
-    @pytest.mark.pruned
     def test_extracts_supported_dimensions(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1123,7 +1093,6 @@ class TestExtractOutputCoordinates:
             data["lon"],
         )
 
-    @pytest.mark.pruned
     def test_extracts_dataset_variable_names(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1169,7 +1138,7 @@ class TestExtractOutputCoordinates:
             pipeline.extract_output_coords_vars(data)
 
 
-class TestLoadFromMemory:
+class LegacyLoadFromMemory:
     def make_loaded_pipeline(self):
         loaded = PreprocessingPipeline()
         loaded.preprocessors_list = [
@@ -1230,7 +1199,6 @@ class TestLoadFromMemory:
         ):
             pipeline.load_from_memory(tmp_path / "pipeline.joblib")
 
-    @pytest.mark.pruned
     def test_copies_loaded_state(
         self,
         tmp_path,
@@ -1291,7 +1259,7 @@ class TestLoadFromMemory:
         load.assert_called_once_with(Path("/tmp/pipeline.joblib"))
 
 
-class TestToDataset:
+class LegacyToDataset:
     def make_pipeline(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1468,3 +1436,1266 @@ class TestToDataset:
                 30,
             ],
         )
+
+
+def make_fitted_pipeline():
+    first = AddPreprocessor(
+        value=1.0,
+        fitted=True,
+    )
+    second = MultiplyPreprocessor(
+        value=2.0,
+        fitted=True,
+    )
+
+    pipeline = PreprocessingPipeline()
+    pipeline.fitted = True
+    pipeline.steps = [
+        "add",
+        "multiply",
+    ]
+    pipeline.fitted_preprocessors = [
+        first,
+        second,
+    ]
+
+    return pipeline, first, second
+
+
+class TestAdditionalInitialization:
+    @pytest.mark.pruned
+    def test_default_state(self):
+        pipeline = PreprocessingPipeline()
+
+        assert pipeline.fitted is False
+        assert pipeline.mask is None
+        assert pipeline.fitted_based_time is None
+        assert pipeline.reference_coords is None
+        assert pipeline.reference_var is None
+        assert pipeline.steps == []
+        assert pipeline.fitted_preprocessors == []
+        assert pipeline.pipeline == []
+        assert pipeline.rename_dict is None
+
+    @pytest.mark.pruned
+    def test_default_name_uses_uuid_prefix(self):
+        pipeline = PreprocessingPipeline()
+
+        assert pipeline.name.startswith("pipeline_")
+        assert len(pipeline.name.removeprefix("pipeline_")) == 8
+
+    @pytest.mark.pruned
+    def test_default_names_are_unique(self):
+        first = PreprocessingPipeline()
+        second = PreprocessingPipeline()
+
+        assert first.name != second.name
+
+    @pytest.mark.pruned
+    def test_selector_names_are_lowercased(self):
+        selector = DummySelector(
+            "MiXeD_Name",
+            AddPreprocessor(),
+        )
+
+        pipeline = PreprocessingPipeline(
+            preprocessors_list=[
+                selector,
+            ],
+        )
+
+        assert pipeline.pipeline[0][0] == "mixed_name"
+        assert selector.calls == 1
+
+    @pytest.mark.pruned
+    def test_set_name_stores_rename_dictionary(self):
+        pipeline = PreprocessingPipeline()
+        rename_dict = {
+            "old_tas": "tas",
+        }
+
+        result = pipeline.set_name(
+            "tas_pipeline",
+            rename_dict,
+        )
+
+        assert result is None
+        assert pipeline.name == "tas_pipeline"
+        assert pipeline.rename_dict is rename_dict
+
+    def test_load_directory_calls_private_loader(
+        self,
+        monkeypatch,
+    ):
+        loaded = Mock()
+        loader = Mock(
+            return_value=loaded,
+        )
+
+        monkeypatch.setattr(
+            PreprocessingPipeline,
+            "_load_from_memory",
+            loader,
+            raising=False,
+        )
+
+        load_path = Path("/tmp/pipeline.joblib")
+
+        PreprocessingPipeline(
+            load_dir=load_path,
+        )
+
+        loader.assert_called_once_with(
+            load_path,
+        )
+
+
+class TestAdditionalFit:
+    @pytest.mark.pruned
+    def test_fit_returns_self(self):
+        pipeline = PreprocessingPipeline()
+        data = make_base_data()
+
+        result = pipeline.fit(
+            base_data=data,
+            save=False,
+        )
+
+        assert result is pipeline
+        assert pipeline.fitted is True
+
+    @pytest.mark.pruned
+    def test_fit_records_mask(self):
+        pipeline = PreprocessingPipeline()
+        data = make_base_data()
+        mask = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    2,
+                ),
+                dtype=bool,
+            ),
+            dims=(
+                "lat",
+                "lon",
+            ),
+        )
+
+        pipeline.fit(
+            base_data=data,
+            mask=mask,
+            save=False,
+        )
+
+        assert pipeline.mask is mask
+
+    @pytest.mark.pruned
+    def test_fit_records_initialization_times(self):
+        pipeline = PreprocessingPipeline()
+        data = make_base_data()
+
+        pipeline.fit(
+            base_data=data,
+            save=False,
+        )
+
+        np.testing.assert_array_equal(
+            pipeline.fitted_based_time,
+            data[pipeline.init_time_time].values,
+        )
+
+    def test_fit_applies_each_step_before_fitting_next(self):
+        first = AddPreprocessor(
+            value=2.0,
+        )
+        second = MultiplyPreprocessor(
+            value=3.0,
+        )
+
+        pipeline = PreprocessingPipeline(
+            preprocessors_list=[
+                DummySelector(
+                    "add",
+                    first,
+                ),
+                DummySelector(
+                    "multiply",
+                    second,
+                ),
+            ],
+        )
+        data = make_base_data()
+
+        pipeline.fit(
+            base_data=data,
+            save=False,
+        )
+
+        xr.testing.assert_identical(
+            first.fit_calls[0]["data"],
+            data,
+        )
+        xr.testing.assert_identical(
+            second.fit_calls[0]["data"],
+            data + 2.0,
+        )
+        assert pipeline.steps == [
+            "add",
+            "multiply",
+        ]
+        assert pipeline.fitted_preprocessors == [
+            first,
+            second,
+        ]
+
+    @pytest.mark.pruned
+    def test_fit_passes_same_mask_to_all_steps(self):
+        first = AddPreprocessor()
+        second = MultiplyPreprocessor()
+        pipeline = PreprocessingPipeline(
+            preprocessors_list=[
+                DummySelector(
+                    "add",
+                    first,
+                ),
+                DummySelector(
+                    "multiply",
+                    second,
+                ),
+            ],
+        )
+        data = make_base_data()
+        mask = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                "lat",
+                "lon",
+            ),
+        )
+
+        pipeline.fit(
+            base_data=data,
+            mask=mask,
+            save=False,
+        )
+
+        assert first.fit_calls[0]["mask"] is mask
+        assert second.fit_calls[0]["mask"] is mask
+
+    @pytest.mark.pruned
+    def test_fit_extracts_reference_coordinates_and_variables(self):
+        pipeline = PreprocessingPipeline()
+        data = make_base_data()
+
+        pipeline.fit(
+            base_data=data,
+            save=False,
+        )
+
+        assert set(pipeline.reference_coords) == {
+            "lat",
+            "lon",
+        }
+        assert pipeline.reference_var == [
+            "tas",
+            "pr",
+        ]
+
+    @pytest.mark.pruned
+    def test_fit_does_not_save_when_disabled(
+        self,
+        monkeypatch,
+    ):
+        pipeline = PreprocessingPipeline()
+
+        dump = Mock()
+        monkeypatch.setattr(
+            module.joblib,
+            "dump",
+            dump,
+        )
+
+        pipeline.fit(
+            base_data=make_base_data(),
+            save=False,
+        )
+
+        dump.assert_not_called()
+
+    @pytest.mark.pruned
+    def test_fit_uses_uuid_name_for_default_save_name(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        pipeline = PreprocessingPipeline()
+        pipeline.name = "custom_pipeline"
+
+        dump = Mock()
+        monkeypatch.setattr(
+            module.joblib,
+            "dump",
+            dump,
+        )
+
+        pipeline.fit(
+            base_data=make_base_data(),
+            save=True,
+            save_path=tmp_path,
+        )
+
+        dump.assert_called_once_with(
+            pipeline,
+            tmp_path / "custom_pipeline_preprocessing_pipeline.joblib",
+        )
+
+    def test_fit_creates_missing_save_directory(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        save_path = tmp_path / "new" / "nested"
+        pipeline = PreprocessingPipeline()
+
+        monkeypatch.setattr(
+            module.joblib,
+            "dump",
+            Mock(),
+        )
+
+        pipeline.fit(
+            base_data=make_base_data(),
+            save=True,
+            save_path=save_path,
+        )
+
+        assert save_path.is_dir()
+
+    def test_fit_preserves_existing_save_directory(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        save_path = tmp_path / "existing"
+        save_path.mkdir()
+        marker = save_path / "marker.txt"
+        marker.write_text("keep")
+
+        pipeline = PreprocessingPipeline()
+
+        monkeypatch.setattr(
+            module.joblib,
+            "dump",
+            Mock(),
+        )
+
+        pipeline.fit(
+            base_data=make_base_data(),
+            save=True,
+            save_path=save_path,
+        )
+
+        assert marker.read_text() == "keep"
+
+
+class TestAdditionalTransform:
+    @pytest.mark.pruned
+    def test_requires_fitted_pipeline(self):
+        pipeline = PreprocessingPipeline()
+
+        with pytest.raises(
+            RuntimeError,
+            match="Pipeline must be fitted",
+        ):
+            pipeline.transform(
+                xr.DataArray(
+                    [
+                        1.0,
+                    ],
+                    dims=("samples",),
+                )
+            )
+
+    def test_empty_pipeline_returns_original_input(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted = True
+        data = xr.DataArray(
+            [
+                1.0,
+                2.0,
+            ],
+            dims=("samples",),
+        )
+
+        result = pipeline.transform(
+            data,
+        )
+
+        assert result is data
+
+    @pytest.mark.pruned
+    def test_steps_are_applied_in_forward_order(self):
+        pipeline, first, second = make_fitted_pipeline()
+        data = xr.DataArray(
+            [
+                1.0,
+                2.0,
+            ],
+            dims=("samples",),
+        )
+
+        result = pipeline.transform(
+            data,
+        )
+
+        xr.testing.assert_identical(
+            result,
+            (data + 1.0) * 2.0,
+        )
+        xr.testing.assert_identical(
+            first.transform_calls[0]["data"],
+            data,
+        )
+        xr.testing.assert_identical(
+            second.transform_calls[0]["data"],
+            data + 1.0,
+        )
+
+    @pytest.mark.pruned
+    def test_none_step_arguments_becomes_empty_mapping(self):
+        pipeline, first, second = make_fitted_pipeline()
+        data = xr.DataArray(
+            [
+                1.0,
+            ],
+            dims=("samples",),
+        )
+
+        pipeline.transform(
+            data,
+            step_arguments=None,
+        )
+
+        assert first.transform_calls[0]["kwargs"] == {}
+        assert second.transform_calls[0]["kwargs"] == {}
+
+    def test_step_arguments_are_copied_before_forwarding(self):
+        pipeline, first, _ = make_fitted_pipeline()
+        arguments = {
+            "value": 5.0,
+        }
+
+        pipeline.transform(
+            xr.DataArray(
+                [
+                    1.0,
+                ],
+                dims=("samples",),
+            ),
+            step_arguments={
+                "add": arguments,
+            },
+        )
+
+        assert first.transform_calls[0]["kwargs"] == {
+            "value": 5.0,
+        }
+        assert first.transform_calls[0]["kwargs"] is not arguments
+
+    def test_unknown_step_argument_raises_before_transformation(self):
+        pipeline, first, second = make_fitted_pipeline()
+
+        with pytest.raises(
+            ValueError,
+            match="missing not in preprocessing steps",
+        ):
+            pipeline.transform(
+                xr.DataArray(
+                    [
+                        1.0,
+                    ],
+                    dims=("samples",),
+                ),
+                step_arguments={
+                    "missing": {},
+                },
+            )
+
+        assert first.transform_calls == []
+        assert second.transform_calls == []
+
+
+class TestAdditionalInverseTransform:
+    @pytest.mark.pruned
+    def test_requires_fitted_pipeline(self):
+        pipeline = PreprocessingPipeline()
+
+        with pytest.raises(
+            RuntimeError,
+            match="Pipeline must be fitted",
+        ):
+            pipeline.inverse_transform(
+                xr.DataArray(
+                    [
+                        1.0,
+                    ],
+                    dims=("samples",),
+                )
+            )
+
+    def test_steps_are_applied_in_reverse_order(self):
+        pipeline, first, second = make_fitted_pipeline()
+        original = xr.DataArray(
+            [
+                1.0,
+                2.0,
+            ],
+            dims=("samples",),
+        )
+        transformed = (original + 1.0) * 2.0
+
+        result = pipeline.inverse_transform(
+            transformed,
+        )
+
+        xr.testing.assert_identical(
+            result,
+            original,
+        )
+        xr.testing.assert_identical(
+            second.inverse_calls[0]["data"],
+            transformed,
+        )
+        xr.testing.assert_identical(
+            first.inverse_calls[0]["data"],
+            transformed / 2.0,
+        )
+
+    def test_unknown_step_argument_raises_before_inverse_transform(self):
+        pipeline, first, second = make_fitted_pipeline()
+
+        with pytest.raises(
+            ValueError,
+            match="missing not in preprocessing steps",
+        ):
+            pipeline.inverse_transform(
+                xr.DataArray(
+                    [
+                        1.0,
+                    ],
+                    dims=("samples",),
+                ),
+                step_arguments={
+                    "missing": {},
+                },
+            )
+
+        assert first.inverse_calls == []
+        assert second.inverse_calls == []
+
+
+class TestAdditionalFlattenerAccess:
+    @pytest.mark.pruned
+    def test_has_flattener_false_for_empty_pipeline(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted_preprocessors = []
+
+        assert pipeline.has_flattener is False
+
+    @pytest.mark.pruned
+    def test_has_flattener_ignores_similarly_named_objects(self):
+        class Flattennanremove:
+            pass
+
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted_preprocessors = [
+            Flattennanremove(),
+        ]
+
+        assert pipeline.has_flattener is False
+
+    def test_get_flattener_raises_when_missing(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted_preprocessors = [
+            AddPreprocessor(
+                fitted=True,
+            ),
+        ]
+
+        with pytest.raises(
+            ValueError,
+            match="does not contain a Flattennanremove",
+        ):
+            pipeline.get_flattener()
+
+    @pytest.mark.pruned
+    def test_get_flattener_returns_first_matching_instance(
+        self,
+        monkeypatch,
+    ):
+        class FakeFlattennanremove:
+            pass
+
+        first = FakeFlattennanremove()
+        second = FakeFlattennanremove()
+
+        monkeypatch.setattr(
+            module,
+            "Flattennanremove",
+            FakeFlattennanremove,
+        )
+
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted_preprocessors = [
+            AddPreprocessor(
+                fitted=True,
+            ),
+            first,
+            second,
+        ]
+
+        assert pipeline.has_flattener is True
+        assert pipeline.get_flattener() is first
+
+
+class TestAdditionalToDataset:
+    def make_pipeline(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted = True
+        pipeline.reference_var = [
+            "tas",
+            "pr",
+        ]
+        pipeline.reference_coords = {
+            "lat": xr.DataArray(
+                [
+                    45.0,
+                    46.0,
+                ],
+                dims=("lat",),
+            ),
+            "lon": xr.DataArray(
+                [
+                    -124.0,
+                    -123.0,
+                ],
+                dims=("lon",),
+            ),
+        }
+        pipeline.fitted_preprocessors = []
+        pipeline.steps = []
+        return pipeline
+
+    def test_requires_fitted_pipeline(self):
+        pipeline = PreprocessingPipeline()
+
+        data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                "channels",
+                "output_dim_0",
+                "output_dim_1",
+            ),
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match="must be fitted",
+        ):
+            pipeline.to_dataset(data)
+
+    def test_requires_channel_dimension(self):
+        pipeline = self.make_pipeline()
+
+        data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                "output_dim_0",
+                "output_dim_1",
+            ),
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="'channels' dimension",
+        ):
+            pipeline.to_dataset(data)
+
+    def test_channel_count_must_match_reference_variables(self):
+        pipeline = self.make_pipeline()
+
+        data = xr.DataArray(
+            np.ones(
+                (
+                    1,
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                "channels",
+                "output_dim_0",
+                "output_dim_1",
+            ),
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="does not match",
+        ):
+            pipeline.to_dataset(data)
+
+    @pytest.mark.pruned
+    def test_without_flattener_renames_all_output_dimensions(self):
+        pipeline = self.make_pipeline()
+
+        data = xr.DataArray(
+            np.arange(
+                8,
+                dtype=float,
+            ).reshape(
+                2,
+                2,
+                2,
+            ),
+            dims=(
+                "channels",
+                "output_dim_0",
+                "output_dim_1",
+            ),
+            coords={
+                "channels": [
+                    0,
+                    1,
+                ],
+            },
+        )
+
+        result = pipeline.to_dataset(data)
+
+        assert result["tas"].dims == (
+            "lat",
+            "lon",
+        )
+        assert result["pr"].dims == (
+            "lat",
+            "lon",
+        )
+        np.testing.assert_array_equal(
+            result["lat"].values,
+            pipeline.reference_coords["lat"].values,
+        )
+        np.testing.assert_array_equal(
+            result["lon"].values,
+            pipeline.reference_coords["lon"].values,
+        )
+
+    def test_channel_coordinates_are_replaced_by_reference_variables(
+        self,
+    ):
+        pipeline = self.make_pipeline()
+
+        data = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                "channels",
+                "output_dim_0",
+                "output_dim_1",
+            ),
+            coords={
+                "channels": [
+                    "wrong_one",
+                    "wrong_two",
+                ],
+            },
+        )
+
+        result = pipeline.to_dataset(data)
+
+        assert set(result.data_vars) == {
+            "tas",
+            "pr",
+        }
+
+    def test_flattener_branch_uses_final_locations(
+        self,
+        monkeypatch,
+    ):
+        class FakeFlattennanremove:
+            def __init__(self):
+                self.final_locations = np.asarray(
+                    [
+                        10,
+                        20,
+                        30,
+                    ]
+                )
+
+        flattener = FakeFlattennanremove()
+
+        monkeypatch.setattr(
+            module,
+            "Flattennanremove",
+            FakeFlattennanremove,
+        )
+
+        pipeline = self.make_pipeline()
+        pipeline.fitted_preprocessors = [
+            flattener,
+        ]
+
+        data = xr.DataArray(
+            np.arange(
+                6,
+                dtype=float,
+            ).reshape(
+                2,
+                3,
+            ),
+            dims=(
+                "channels",
+                "output_dim_0",
+            ),
+            coords={
+                "channels": [
+                    0,
+                    1,
+                ],
+            },
+        )
+
+        result = pipeline.to_dataset(data)
+
+        assert result["tas"].dims == ("ref",)
+        np.testing.assert_array_equal(
+            result["ref"].values,
+            flattener.final_locations,
+        )
+
+
+class TestInverseRename:
+    def test_none_rename_dictionary_returns_original_dataset(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.rename_dict = None
+
+        data = xr.Dataset(
+            {
+                "tas": (
+                    "samples",
+                    [
+                        1.0,
+                    ],
+                )
+            }
+        )
+
+        result = pipeline.inverse_rename(data)
+
+        assert result is data
+
+    @pytest.mark.pruned
+    def test_inverse_rename_reverses_mapping(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.rename_dict = {
+            "old_tas": "tas",
+            "old_pr": "pr",
+        }
+
+        data = xr.Dataset(
+            {
+                "tas": (
+                    "samples",
+                    [
+                        1.0,
+                    ],
+                ),
+                "pr": (
+                    "samples",
+                    [
+                        2.0,
+                    ],
+                ),
+            }
+        )
+
+        result = pipeline.inverse_rename(data)
+
+        assert set(result.data_vars) == {
+            "old_tas",
+            "old_pr",
+        }
+
+    def test_inverse_rename_does_not_modify_original_dataset(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.rename_dict = {
+            "old_tas": "tas",
+        }
+
+        data = xr.Dataset(
+            {
+                "tas": (
+                    "samples",
+                    [
+                        1.0,
+                    ],
+                )
+            }
+        )
+
+        result = pipeline.inverse_rename(data)
+
+        assert "tas" in data
+        assert "old_tas" not in data
+        assert "old_tas" in result
+
+
+class TestAdditionalGetPreprocessors:
+    def test_returns_underlying_list_when_name_is_none(self):
+        pipeline, first, second = make_fitted_pipeline()
+
+        result = pipeline.get_preprocessors()
+
+        assert result is pipeline.fitted_preprocessors
+        assert result == [
+            first,
+            second,
+        ]
+
+    def test_named_lookup_returns_matching_position(self):
+        pipeline, _, second = make_fitted_pipeline()
+
+        result = pipeline.get_preprocessors("multiply")
+
+        assert result is second
+
+    @pytest.mark.pruned
+    def test_named_lookup_is_case_sensitive(self):
+        pipeline, _, _ = make_fitted_pipeline()
+
+        with pytest.raises(
+            ValueError,
+            match="not in preprocessing steps",
+        ):
+            pipeline.get_preprocessors("ADD")
+
+    def test_duplicate_error_reports_indexes(self):
+        pipeline, first, second = make_fitted_pipeline()
+        pipeline.steps = [
+            "same",
+            "same",
+        ]
+        pipeline.fitted_preprocessors = [
+            first,
+            second,
+        ]
+
+        with pytest.raises(
+            ValueError,
+            match=r"indexes \[0, 1\]",
+        ):
+            pipeline.get_preprocessors("same")
+
+
+class TestAdditionalAddFittedPreprocessor:
+    def test_append_keeps_steps_and_preprocessors_aligned(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted = True
+        preprocessor = AddPreprocessor(
+            fitted=True,
+        )
+
+        pipeline.add_fitted_preprocessor(
+            preprocessor,
+            "add",
+        )
+
+        assert pipeline.steps == [
+            "add",
+        ]
+        assert pipeline.fitted_preprocessors == [
+            preprocessor,
+        ]
+
+    def test_insert_at_middle_keeps_lists_aligned(self):
+        pipeline, first, second = make_fitted_pipeline()
+        inserted = AddPreprocessor(
+            value=5.0,
+            fitted=True,
+        )
+
+        pipeline.add_fitted_preprocessor(
+            inserted,
+            "inserted",
+            index=1,
+        )
+
+        assert pipeline.steps == [
+            "add",
+            "inserted",
+            "multiply",
+        ]
+        assert pipeline.fitted_preprocessors == [
+            first,
+            inserted,
+            second,
+        ]
+
+    @pytest.mark.pruned
+    def test_negative_index_uses_python_list_semantics(self):
+        pipeline, first, second = make_fitted_pipeline()
+        inserted = AddPreprocessor(
+            value=5.0,
+            fitted=True,
+        )
+
+        pipeline.add_fitted_preprocessor(
+            inserted,
+            "inserted",
+            index=-1,
+        )
+
+        assert pipeline.steps == [
+            "add",
+            "inserted",
+            "multiply",
+        ]
+        assert pipeline.fitted_preprocessors == [
+            first,
+            inserted,
+            second,
+        ]
+
+    @pytest.mark.pruned
+    def test_unfitted_preprocessor_does_not_modify_pipeline(self):
+        pipeline, first, second = make_fitted_pipeline()
+        original_steps = list(pipeline.steps)
+        original_preprocessors = list(pipeline.fitted_preprocessors)
+
+        with pytest.raises(
+            AssertionError,
+            match="must be fitted",
+        ):
+            pipeline.add_fitted_preprocessor(
+                AddPreprocessor(
+                    fitted=False,
+                ),
+                "invalid",
+            )
+
+        assert pipeline.steps == original_steps
+        assert pipeline.fitted_preprocessors == original_preprocessors
+
+
+class TestAdditionalExtractOutputCoordinates:
+    def test_rejects_data_without_supported_dimensions(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted = True
+
+        data = xr.Dataset(
+            {
+                "tas": (
+                    "unsupported",
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            }
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="No supported NN dimensions",
+        ):
+            pipeline.extract_output_coords_vars(data)
+
+    @pytest.mark.pruned
+    def test_reference_coordinates_follow_supported_order(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted = True
+        pipeline.supported_NN_dimensions = (
+            "lon",
+            "lat",
+        )
+        data = make_base_data()
+
+        pipeline.extract_output_coords_vars(data)
+
+        assert list(pipeline.reference_coords) == [
+            "lon",
+            "lat",
+        ]
+
+    def test_rejects_dataset_without_data_variables(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted = True
+        pipeline.supported_NN_dimensions = ("lat",)
+        data = xr.Dataset(
+            coords={
+                "lat": [
+                    45.0,
+                    46.0,
+                ]
+            }
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="No data variables",
+        ):
+            pipeline.extract_output_coords_vars(data)
+
+
+class TestAdditionalLoadFromMemory:
+    def make_loaded_pipeline(self):
+        loaded = PreprocessingPipeline()
+        loaded.preprocessors_list = [
+            "selector",
+        ]
+        loaded.pipeline = [
+            (
+                "add",
+                "configured",
+            )
+        ]
+        loaded.steps = [
+            "add",
+        ]
+        loaded.fitted_preprocessors = [
+            "fitted",
+        ]
+        loaded.fitted = True
+        loaded.fitted_based_time = np.asarray(
+            [
+                "2000-01-01",
+            ],
+            dtype="datetime64[ns]",
+        )
+        loaded.mask = "MASK"
+        loaded.reference_coords = {
+            "lat": xr.DataArray(
+                [
+                    45.0,
+                ],
+                dims=("lat",),
+            )
+        }
+        loaded.reference_var = [
+            "tas",
+        ]
+        loaded.name = "loaded_pipeline"
+        return loaded
+
+    def test_joblib_receives_path_object(
+        self,
+        monkeypatch,
+    ):
+        loaded = self.make_loaded_pipeline()
+        load = Mock(
+            return_value=loaded,
+        )
+        monkeypatch.setattr(
+            module.joblib,
+            "load",
+            load,
+        )
+
+        pipeline = PreprocessingPipeline()
+        pipeline.load_from_memory("/tmp/pipeline.joblib")
+
+        load.assert_called_once_with(Path("/tmp/pipeline.joblib"))
+
+    @pytest.mark.pruned
+    def test_loaded_mask_and_reference_coordinates_are_copied(
+        self,
+        monkeypatch,
+    ):
+        loaded = self.make_loaded_pipeline()
+        monkeypatch.setattr(
+            module.joblib,
+            "load",
+            Mock(
+                return_value=loaded,
+            ),
+        )
+
+        pipeline = PreprocessingPipeline()
+        result = pipeline.load_from_memory("/tmp/pipeline.joblib")
+
+        assert result is pipeline
+        assert pipeline.mask == "MASK"
+        assert pipeline.reference_coords is loaded.reference_coords
+        assert pipeline.reference_var == [
+            "tas",
+        ]
+        assert pipeline.name == "loaded_pipeline"
+
+    def test_unfitted_loaded_pipeline_does_not_modify_state(
+        self,
+        monkeypatch,
+    ):
+        loaded = self.make_loaded_pipeline()
+        loaded.fitted = False
+
+        monkeypatch.setattr(
+            module.joblib,
+            "load",
+            Mock(
+                return_value=loaded,
+            ),
+        )
+
+        pipeline = PreprocessingPipeline()
+        original_name = pipeline.name
+        original_steps = list(pipeline.steps)
+
+        with pytest.raises(
+            ValueError,
+            match="has to be fitted",
+        ):
+            pipeline.load_from_memory("/tmp/pipeline.joblib")
+
+        assert pipeline.name == original_name
+        assert pipeline.steps == original_steps
+        assert pipeline.fitted is False
+
+
+class TestAdditionalCheckFitted:
+    def test_unfitted_pipeline_raises(self):
+        pipeline = PreprocessingPipeline()
+
+        with pytest.raises(
+            RuntimeError,
+            match="Call fit",
+        ):
+            pipeline._check_fitted()
+
+    @pytest.mark.pruned
+    def test_fitted_pipeline_is_accepted(self):
+        pipeline = PreprocessingPipeline()
+        pipeline.fitted = True
+
+        assert pipeline._check_fitted() is None

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,7 +10,6 @@ from cccma_ppp.inference.inference_configs import (
     InferenceConfig,
     build_writer,
 )
-from copy import deepcopy
 
 
 class DummyDistributed:
@@ -403,7 +403,6 @@ def test_prepare_directory_existing_output(tmp_path):
     assert distributed.barrier_calls == 1
 
 
-@pytest.mark.pruned
 def test_set_random_seed_none_does_not_call_set_seed(
     monkeypatch,
     tmp_path,
@@ -669,6 +668,7 @@ def test_load_module_dacite_receives_module_config(
     assert captured["data_class"].__name__ == "ModuleSelector"
 
 
+@pytest.mark.pruned
 def test_load_module_calls_gc_collect(
     monkeypatch,
     tmp_path,

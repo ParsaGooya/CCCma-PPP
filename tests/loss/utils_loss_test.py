@@ -12,7 +12,6 @@ from cccma_ppp.loss.utils_loss import (
     _check_generator_structure,
 )
 
-
 torch.manual_seed(0)
 
 
@@ -758,7 +757,6 @@ def test_crps_lowres_invalid_kernel():
         )
 
 
-@pytest.mark.pruned
 def test_crps_lowres_invalid_output_dimensions():
     with pytest.raises(NotImplementedError):
         WeightedCRPS(
@@ -1471,6 +1469,7 @@ def test_frobenius_generator_and_generative():
     )
 
 
+@pytest.mark.pruned
 def test_frobenius_print(capsys):
     Frobenius_norm(
         w2d(),

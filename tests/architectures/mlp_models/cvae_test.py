@@ -121,6 +121,7 @@ class TestCVaEMLPConfig:
 
         assert config.decoder_hidden_dims == [8, 16]
 
+    @pytest.mark.pruned
     def test_empty_encoder_creates_empty_decoder(self):
         config = make_config(
             encoder_hidden_dims=[],
@@ -138,6 +139,7 @@ class TestCVaEMLPConfig:
 
         assert config.decoder_hidden_dims == [7, 9]
 
+    @pytest.mark.pruned
     def test_condition_embedding_dims_default_to_encoder_dims(self):
         config = make_config(
             encoder_hidden_dims=[12, 6],
@@ -173,6 +175,7 @@ class TestCVaEMLPConfig:
 
         assert config.condemb_to_decoder is False
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dropout_rate",
         [
@@ -203,7 +206,6 @@ class TestCVaEMLPConfig:
 
         assert config.dropout_rate == dropout_rate
 
-    @pytest.mark.pruned
     def test_build_returns_model(self):
         config = make_config()
 
@@ -227,7 +229,6 @@ class TestCVaEMLPInitialization:
         assert model.input_shape == 6
         assert model.output_shape == 6
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "output_shape",
         [

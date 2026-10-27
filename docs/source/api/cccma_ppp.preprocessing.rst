@@ -1,19 +1,53 @@
 cccma\_ppp.preprocessing package
 ================================
 
-.. automodule:: cccma_ppp.preprocessing
-   :no-index:
+Submodules
+----------
+
+cccma\_ppp.preprocessing.preprocessing module
+---------------------------------------------
+
+.. automodule:: cccma_ppp.preprocessing.preprocessing
    :members:
    :show-inheritance:
    :undoc-members:
 
-Submodules
-----------
+cccma\_ppp.preprocessing.preprocessing\_ABC module
+--------------------------------------------------
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: cccma_ppp.preprocessing.preprocessing_ABC
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-   cccma_ppp.preprocessing.preprocessing
-   cccma_ppp.preprocessing.preprocessing_ABC
-   cccma_ppp.preprocessing.registery
-   cccma_ppp.preprocessing.utils_preprocessing
+cccma\_ppp.preprocessing.registery module
+-----------------------------------------
+
+.. automodule:: cccma_ppp.preprocessing.registery
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+cccma\_ppp.preprocessing.selector module
+----------------------------------------
+
+.. automodule:: cccma_ppp.preprocessing.selector
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+cccma\_ppp.preprocessing.utils\_preprocessing module
+----------------------------------------------------
+
+.. automodule:: cccma_ppp.preprocessing.utils_preprocessing
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: cccma_ppp.preprocessing
+   :members:
+   :show-inheritance:
+   :undoc-members:

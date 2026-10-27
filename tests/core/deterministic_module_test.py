@@ -1,11 +1,11 @@
+import numpy as np
 import pytest
 import torch
-import numpy as np
 
 from cccma_ppp.core.models.deterministic import (
-    deterministicOutput,
     deterministic,
     deterministicConfig,
+    deterministicOutput,
 )
 
 
@@ -276,6 +276,7 @@ def test_load_dir_input_shape_mismatch(monkeypatch):
         ConcreteDeterministic(cfg, input_shape=np.array([2]))
 
 
+@pytest.mark.pruned
 def test_load_dir_output_shape_mismatch(monkeypatch):
     import cccma_ppp.core.models.deterministic as mod
 
@@ -297,6 +298,7 @@ def test_load_dir_output_shape_mismatch(monkeypatch):
         )
 
 
+@pytest.mark.pruned
 def test_load_dir_success_calls_load_state_dict(monkeypatch):
     import cccma_ppp.core.models.deterministic as mod
 
@@ -329,7 +331,6 @@ def test_load_dir_success_calls_load_state_dict(monkeypatch):
     assert called["load"] is True
 
 
-@pytest.mark.pruned
 def test_load_dir_success_with_explicit_output_shape(monkeypatch):
     import cccma_ppp.core.models.deterministic as mod
 
@@ -413,7 +414,6 @@ def test_predict_alias_calls_predict():
     assert isinstance(out, deterministicOutput)
 
 
-@pytest.mark.pruned
 def test_compute_loss_requires_criterion():
     module = make_module(input_shape=np.array([1]))
 

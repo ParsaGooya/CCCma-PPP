@@ -46,7 +46,7 @@ class WriterConfig:
     num_output_sampling: int = 1
     get_trained_model_stats_from_validation: bool = False
     aggregate_only: bool = False
-    predict_only: bool  = False
+    predict_only: bool = False
 
     def __post_init__(self):
         """
@@ -59,7 +59,6 @@ class WriterConfig:
         """
         if self.num_output_sampling <= 0:
             raise ValueError("num_output_sampling cannot be zero or negative.")
-
 
     def build(
         self,
@@ -97,9 +96,9 @@ class WriterConfig:
         """
         if self.aggregate_only and self.predict_only:
             raise RuntimeError(
-                "You can run the writer in aggregate_only OR predict_only mode OR neither. " \
-                "In case of the former, temporary batch predictions must have been saved " \
-                "on the disc previously. In case of the later, batch predictions will be saved temporarily " \
+                "You can run the writer in aggregate_only OR predict_only mode OR neither. "
+                "In case of the former, temporary batch predictions must have been saved "
+                "on the disc previously. In case of the later, batch predictions will be saved temporarily "
                 "but will not be aggregated year by year."
             )
         if not self.aggregate_only:
@@ -226,9 +225,11 @@ class Writer:
         self.temp_save_dir = Path(self.output_dir) / "_temp"
 
         if self.config.aggregate_only:
-            if not (self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))):
+            if not (
+                self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))
+            ):
                 raise RuntimeError(
-                    "With aggregate_only writer mode, a _temp folder with at least " \
+                    "With aggregate_only writer mode, a _temp folder with at least "
                     "one ''.nc'' file must exist!"
                 )
 
@@ -239,7 +240,6 @@ class Writer:
             self.distributed.barrier()
 
         if not self.config.aggregate_only:
-
             self.predictor = self.config.predictor.build(
                 self.module,
                 self.distributed,
@@ -302,9 +302,9 @@ class Writer:
         loader = self.InferenceLoader
         do_post_process = True
 
-        if (not self.config.aggregate_only and 
-        getattr(self.predictor, "save_latent", False)):
-
+        if not self.config.aggregate_only and getattr(
+            self.predictor, "save_latent", False
+        ):
             loader = self.build_train_loader(return_metadata=True, shuffle=False)
             do_post_process = False
 
@@ -523,7 +523,7 @@ def aggregate_predictions(
     output_dir = Path(output_dir)
     temp_save_dir = output_dir / "_temp"
 
-    temp_files = sorted(temp_save_dir.glob(f"rank*_*.nc"))
+    temp_files = sorted(temp_save_dir.glob("rank*_*.nc"))
 
     if not temp_files:
         raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}")
@@ -545,7 +545,7 @@ def aggregate_predictions(
 
             if source is None:
                 source = data.attrs["source"]
-                
+
             if nstds == "NA":
                 nstds = data.attrs.get("nstds", None)
 
@@ -700,7 +700,7 @@ def aggregate_predictions(
         if nstds is not None:
             save_name_ += f"_nstds{nstds}"
         if output_ensemble:
-            save_name_ += f"_output_ensemble"
+            save_name_ += "_output_ensemble"
 
         save_name = save_name_ + ".nc"
 

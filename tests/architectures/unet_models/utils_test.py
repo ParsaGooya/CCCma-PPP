@@ -51,7 +51,7 @@ def test_unet_config_checks_accepts_multiple_channel_levels():
         condition_embedding_channels=[2, 4, 8],
         transpose_kernel_sizes=[
             3,
-            (2, 4),
+            (3, 5),
             5,
         ],
     )
@@ -85,9 +85,9 @@ def test_unet_config_checks_accepts_positive_integer_kernel(
     "kernel",
     [
         (1, 1),
-        (1, 2),
-        (2, 1),
-        (2, 4),
+        (1, 3),
+        (3, 1),
+        (3, 5),
         (5, 7),
     ],
 )
@@ -108,7 +108,7 @@ def test_unet_config_checks_accepts_mixed_kernel_list():
         condition_embedding_channels=[4, 8, 16, 32],
         transpose_kernel_sizes=[
             3,
-            (2, 4),
+            (3, 5),
             5,
         ],
     )
@@ -245,7 +245,7 @@ def test_unet_config_checks_does_not_mutate_config():
         condition_embedding_channels=[2, 4],
         transpose_kernel_sizes=[
             3,
-            (2, 4),
+            (3, 5),
         ],
     )
 
@@ -604,7 +604,6 @@ def test_unet_config_checks_rejects_independent_latent_without_decoder_condition
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_condition_rule_precedes_mask_threshold_validation():
     config = make_config(
         condition_dependant_latent=False,
@@ -645,6 +644,7 @@ def test_unet_config_checks_rejects_invalid_mask_threshold(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_mask_threshold_checked_before_output_hidden_channels():
     config = make_config(
         mask_fraction_threshold=-1.0,

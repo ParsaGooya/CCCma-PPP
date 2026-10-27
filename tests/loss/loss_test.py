@@ -1,12 +1,12 @@
+from unittest.mock import Mock
+
+import numpy as np
 import pytest
 import torch
 import xarray as xr
-import numpy as np
-
-from cccma_ppp.loss.loss import LossStepConfig, LosspipelineConfig, Losspipeline
-from unittest.mock import Mock
 
 from cccma_ppp.core.core_abc import GenerativeContext
+from cccma_ppp.loss.loss import Losspipeline, LosspipelineConfig, LossStepConfig
 
 
 class DummyLoss(torch.nn.Module):
@@ -653,6 +653,7 @@ def test_pt_mask_must_contain_tensor(
         )
 
 
+@pytest.mark.pruned
 def test_loads_mask_from_netcdf(
     tmp_path,
 ):
@@ -831,6 +832,7 @@ def test_resolve_output_mask_rejects_spatial_mismatch():
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_channels",
     [
@@ -1274,7 +1276,6 @@ def test_output_mask_is_used_when_target_mask_is_none(
     assert received is pipeline.output_mask
 
 
-@pytest.mark.pruned
 def test_output_mask_is_multiplied_with_target_mask(
     monkeypatch,
 ):
@@ -1340,7 +1341,6 @@ def test_output_mask_is_multiplied_with_target_mask(
     )
 
 
-@pytest.mark.pruned
 def test_masked_loss_disabled_clears_target_mask(
     monkeypatch,
 ):
@@ -1627,7 +1627,6 @@ def test_dimension_check_runs_only_once(
     )
 
 
-@pytest.mark.pruned
 def test_generative_context_requires_extra_target_dimension():
     context = GenerativeContext()
     context.generative_modeling = True
@@ -1660,6 +1659,7 @@ def test_generative_context_requires_extra_target_dimension():
     assert "a" in individual
 
 
+@pytest.mark.pruned
 def test_generative_context_rejects_nongenerative_target_shape():
     context = GenerativeContext()
     context.generative_modeling = True

@@ -360,7 +360,6 @@ class TestCheckpointCompatibility:
             is None
         )
 
-    @pytest.mark.pruned
     def test_matching_checkpoint_is_accepted(
         self,
         tmp_path,
@@ -426,7 +425,6 @@ class TestCheckpointCompatibility:
                 ),
             )
 
-    @pytest.mark.pruned
     def test_output_shape_mismatch(
         self,
         tmp_path,
@@ -1209,6 +1207,7 @@ class TestSamplePrior:
         )
         assert torch.all(passed_condition == 2)
 
+    @pytest.mark.pruned
     def test_user_latent_samples_are_preserved(
         self,
     ):

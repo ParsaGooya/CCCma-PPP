@@ -22,7 +22,11 @@ from cccma_ppp.configs import (
 TimeTypes = Literal["datetime", "cftime"]
 TimeFrequency = Literal["day", "month", "year"]
 spatialmethod = Literal["uniform", "cosine_lat"]
-TEMPORAL_ORDER = {"day": 0,"month": 1,"year": 2,}
+TEMPORAL_ORDER = {
+    "day": 0,
+    "month": 1,
+    "year": 2,
+}
 init_time_dim, lead_time_dim = required_sample_dimensions
 
 
@@ -185,8 +189,6 @@ def _load_xarray_data(
     return ds
 
 
-
-
 def _standardize_time(
     ds: xr.Dataset | xr.DataArray,
     frequency: TimeFrequency,
@@ -226,24 +228,17 @@ def _standardize_time(
     TypeError
         If the coordinate does not contain supported datetimes.
     """
-    if frequency not in (
-        "day", "month", "year"
-    ):
-        raise ValueError(
-            f"Unsupported temporal frequency: {frequency}"
-        )
+    if frequency not in ("day", "month", "year"):
+        raise ValueError(f"Unsupported temporal frequency: {frequency}")
 
     if time_dim not in ds.coords:
-        raise ValueError(
-            f"Coordinate {time_dim!r} not found."
-        )
+        raise ValueError(f"Coordinate {time_dim!r} not found.")
 
     times = ds[time_dim]
 
     if times.ndim != 1 or times.dims != (time_dim,):
         raise ValueError(
-            f"{time_dim!r} must be a one-dimensional "
-            "dimension coordinate."
+            f"{time_dim!r} must be a one-dimensional dimension coordinate."
         )
 
     index = ds.indexes[time_dim]
@@ -264,26 +259,19 @@ def _standardize_time(
         return type(t)(year, month, day, hour)
 
     if isinstance(index, pd.DatetimeIndex):
-        standardized = pd.DatetimeIndex(
-            [standardize(t) for t in index]
-        )
+        standardized = pd.DatetimeIndex([standardize(t) for t in index])
     elif isinstance(index, xr.CFTimeIndex):
-        standardized = xr.CFTimeIndex(
-            [standardize(t) for t in index]
-        )
+        standardized = xr.CFTimeIndex([standardize(t) for t in index])
     else:
-        raise TypeError(
-            f"Unsupported time index type: {type(index)}"
-        )
+        raise TypeError(f"Unsupported time index type: {type(index)}")
 
     if standardized.has_duplicates:
         raise ValueError(
             "Time standardization produced duplicate "
             "timestamps. Check the input frequency."
         )
-    
-    return ds.assign_coords({time_dim: standardized})
 
+    return ds.assign_coords({time_dim: standardized})
 
 
 def _create_train_mask(
@@ -371,15 +359,9 @@ def _create_train_mask(
     elif time_resolution == "month" and lead_time_resolution == "day":
         latest_init_time = init_times.max()
 
-        cutoff_month = (
-            latest_init_time.dt.year * 12
-            + latest_init_time.dt.month
-        )
+        cutoff_month = latest_init_time.dt.year * 12 + latest_init_time.dt.month
 
-        target_month = (
-            target_times.dt.year * 12
-            + target_times.dt.month
-        )
+        target_month = target_times.dt.year * 12 + target_times.dt.month
 
         mask = target_month > cutoff_month
 
@@ -516,9 +498,7 @@ def _validate_time_sequence(
     )
 
     if values.ndim > 1:
-        raise ValueError(
-            "'times_sequence' must be scalar or one-dimensional."
-        )
+        raise ValueError("'times_sequence' must be scalar or one-dimensional.")
 
     values = np.atleast_1d(values)
 
@@ -540,8 +520,7 @@ def _validate_time_sequence(
     if is_cftime:
         if not all(isinstance(value, cftime.datetime) for value in values):
             raise TypeError(
-                "'times_sequence' cannot mix cftime objects "
-                "with other datetime types."
+                "'times_sequence' cannot mix cftime objects with other datetime types."
             )
 
         calendars = {value.calendar for value in values}
@@ -559,9 +538,7 @@ def _validate_time_sequence(
             )
 
         if np.isnat(values).any():
-            raise ValueError(
-                "'times_sequence' cannot contain NaT values."
-            )
+            raise ValueError("'times_sequence' cannot contain NaT values.")
 
     else:
         if not all(isinstance(value, datetime.datetime) for value in values):
@@ -573,10 +550,9 @@ def _validate_time_sequence(
         offsets = {value.utcoffset() for value in values}
 
         if any(offset not in {None, datetime.timedelta(0)} for offset in offsets):
-            raise ValueError(
-                "'times_sequence' contains non-UTC datetime values."
-            )
-        
+            raise ValueError("'times_sequence' contains non-UTC datetime values.")
+
+
 @contextlib.contextmanager
 def suppress_stderr() -> Iterator[None]:
     """

@@ -176,7 +176,9 @@ class DataloaderConfigABC(abc.ABC):
                 f"the final available time {available_stop}."
             )
 
-        selected = times.sel({self.init_time_dim: slice(f'{requested_start}', f'{requested_stop}')})
+        selected = times.sel(
+            {self.init_time_dim: slice(f"{requested_start}", f"{requested_stop}")}
+        )
 
         if selected.size == 0:
             raise ValueError(
@@ -196,7 +198,9 @@ class DataloaderConfigABC(abc.ABC):
             try:
                 return int(bound)
             except ValueError:
-                raise ValueError(f"Invalid year bound: {bound}. Must be integer or string of integer.")
+                raise ValueError(
+                    f"Invalid year bound: {bound}. Must be integer or string of integer."
+                )
         raise TypeError(f"Year bound must be int or str, got {type(bound)}")
 
 
@@ -323,7 +327,6 @@ class Dataloader:
             Description not yet provided.
         """
         if self.world_size > 1:
-
             if not 0 <= self.rank < self.world_size:
                 raise ValueError(
                     f"'rank' must satisfy 0 <= rank < world_size, "

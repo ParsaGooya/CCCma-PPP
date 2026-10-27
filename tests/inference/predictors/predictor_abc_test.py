@@ -736,7 +736,6 @@ def test_save_batch_to_netcdf_with_extra_dimensions(
         )
 
 
-@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_coordinates(
     tmp_path,
 ):
@@ -770,6 +769,7 @@ def test_save_batch_to_netcdf_assigns_coordinates(
         ]
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_attributes(
     tmp_path,
 ):

@@ -1,16 +1,16 @@
 import unittest
 
+import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-import numpy as np
 
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.optimization import (
+    CosineAnnealingLRScheduler,
     LRSchedulerConfig,
     OptimizerConfig,
     OptimizerWrapper,
-    CosineAnnealingLRScheduler,
 )
 
 
@@ -92,7 +92,6 @@ def test_cosine_scheduler_without_warmup():
     assert isinstance(state, dict)
 
 
-@pytest.mark.pruned
 def test_cosine_scheduler_with_warmup():
     module = make_module()
     opt = make_optimizer(module)
@@ -243,6 +242,7 @@ def test_optimizer_build_scheduler_requires_num_batches_and_epochs_config_level(
         cfg.build(module)
 
 
+@pytest.mark.pruned
 def test_optimizer_build_scheduler_requires_num_batches_wrapper_level():
     module = make_module()
     cfg = OptimizerConfig(lr_scheduler_config=LRSchedulerConfig(total_epochs=2))
@@ -546,6 +546,7 @@ def test_lr_scheduler_build_rejects_nonpositive_num_batches(
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "gradient_accumulation_steps",
     [
@@ -808,6 +809,7 @@ def test_scheduler_holds_minimum_lr_after_final_step():
         assert param_group["lr"] == pytest.approx(0.002)
 
 
+@pytest.mark.pruned
 def test_scheduler_does_not_increment_after_final_step_when_holding_minimum():
     module = make_module()
     optimizer = make_optimizer(module)
@@ -861,7 +863,6 @@ def test_scheduler_continues_stepping_when_minimum_is_not_held(
     assert scheduler.num_steps == config.total_steps + 1
 
 
-@pytest.mark.pruned
 def test_scheduler_hold_minimum_updates_every_parameter_group():
     first = nn.Parameter(torch.tensor([1.0]))
     second = nn.Parameter(torch.tensor([2.0]))
@@ -903,7 +904,6 @@ def test_scheduler_hold_minimum_updates_every_parameter_group():
     )
 
 
-@pytest.mark.pruned
 def test_optimizer_scheduler_step_delegates_to_scheduler(
     monkeypatch,
 ):
@@ -982,6 +982,7 @@ def test_optimizer_state_dict_without_scheduler_uses_none():
     assert state["lr_scheduler"] is None
 
 
+@pytest.mark.pruned
 def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     monkeypatch,
 ):
@@ -1011,7 +1012,6 @@ def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     scheduler_load_mock.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_optimizer_without_scheduler_ignores_scheduler_state(
     monkeypatch,
 ):

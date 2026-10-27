@@ -1023,7 +1023,6 @@ def test_convnext_block_standard_projection_forward():
     assert result.mask is mask
 
 
-@pytest.mark.pruned
 def test_convnext_block_without_projection_forward():
     block = ConvNeXtBlock(
         in_channels=4,
@@ -1303,7 +1302,6 @@ def test_mask_pool_fraction_preserves_channels():
     assert result.shape == (2, 5, 4, 4)
 
 
-@pytest.mark.pruned
 def test_mask_pool_rejects_unsupported_method():
     pooling = MaskPool2d(method="unsupported")
 
@@ -1759,6 +1757,7 @@ def test_convnext_single_layer_scale_is_applied():
     )
 
 
+@pytest.mark.pruned
 def test_convnext_block_passes_output_through_every_block():
     config = make_convnext_config(
         use_partial_conv=False,
@@ -2027,6 +2026,7 @@ def test_mask_pool_output_shape_for_odd_dimensions(
     )
 
 
+@pytest.mark.pruned
 def test_mask_pool_fraction_boundary_is_inclusive():
     pooling = MaskPool2d(
         method="fraction",

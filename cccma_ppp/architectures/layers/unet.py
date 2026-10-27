@@ -13,7 +13,11 @@ from cccma_ppp.architectures.layers.generic import (
 )
 
 
-from cccma_ppp.architectures.layers.utils import align_to_skip, _noise_injection, _same_padding
+from cccma_ppp.architectures.layers.utils import (
+    align_to_skip,
+    _noise_injection,
+    _same_padding,
+)
 
 from cccma_ppp.architectures.layers.conv import (
     ConvBlockConfig,
@@ -408,20 +412,20 @@ class UpBlock(nn.Module):
                 block_config, "use_partial_conv", False
             ):
                 self.upsample = PartialConv2d(
-                        input_channels  + added_upsampling_channels ,
-                        out_channels * 4,
-                        kernel_size=upsampling_kernel_size,
-                        multi_channel=False,
-                        return_mask=False,
-                        padding=_same_padding(upsampling_kernel_size),
-                    ) 
+                    input_channels + added_upsampling_channels,
+                    out_channels * 4,
+                    kernel_size=upsampling_kernel_size,
+                    multi_channel=False,
+                    return_mask=False,
+                    padding=_same_padding(upsampling_kernel_size),
+                )
             else:
-                self.upsample =  nn.Conv2d(
-                        input_channels  + added_upsampling_channels ,
-                        out_channels * 4,
-                        kernel_size=upsampling_kernel_size,
-                        padding=_same_padding(upsampling_kernel_size),
-                    )                      
+                self.upsample = nn.Conv2d(
+                    input_channels + added_upsampling_channels,
+                    out_channels * 4,
+                    kernel_size=upsampling_kernel_size,
+                    padding=_same_padding(upsampling_kernel_size),
+                )
 
             self.channel_projection = nn.PixelShuffle(upscale_factor=2)
         else:
