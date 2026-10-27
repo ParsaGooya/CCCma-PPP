@@ -340,6 +340,7 @@ def build_writer(
     module = config.load_module()
     module = module.to(distributed.device)
 
+
     log("creating data loader ...")
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)

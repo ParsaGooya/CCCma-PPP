@@ -111,6 +111,7 @@ class WriterConfig:
                     f" selector but the module is {module.config._type.lower()}"
                 )
 
+
         return Writer(
             config=self,
             inference_data_loader=inference_data_loader,

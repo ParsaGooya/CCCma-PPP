@@ -158,13 +158,19 @@ class DataloaderConfigABC(abc.ABC):
         requested_start = self._parse_year_bound(requested_slice.start)
         requested_stop = self._parse_year_bound(requested_slice.stop)
 
-        if requested_start is not None and requested_start < available_start:
+        if (
+            requested_start is not None
+            and requested_start < available_start
+        ):
             raise ValueError(
                 f"Requested start time {requested_start} is before "
                 f"the first available time {available_start}."
             )
 
-        if requested_stop is not None and requested_stop > available_stop:
+        if (
+            requested_stop is not None
+            and requested_stop > available_stop
+        ):
             raise ValueError(
                 f"Requested stop time {requested_stop} is after "
                 f"the final available time {available_stop}."

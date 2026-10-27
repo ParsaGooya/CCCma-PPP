@@ -126,13 +126,15 @@ def _load_xarray_data(
     if drop_vars_list is not None:
         ds = ds.drop_vars(drop_vars_list, errors="ignore")
 
-    if resolution_to_standardize_time is not None and init_time_dim in ds.coords:
+    if (resolution_to_standardize_time is not None 
+        and init_time_dim in ds.coords):
+
         time_freq = infer_time_resolution(ds.coords[init_time_dim].to_index())
-        time_frequency_to_resolve = min(
-            time_freq,
+        time_frequency_to_resolve =  min(
+            time_freq, 
             resolution_to_standardize_time,
             key=TEMPORAL_ORDER.get,
-        )
+        ) 
         ds = _standardize_time(
             ds,
             frequency=time_frequency_to_resolve,
@@ -350,6 +352,7 @@ def _create_train_mask(
     time_resolution = infer_time_resolution(init_times.coords[init_time_dim].to_index())
 
     if time_resolution == "year":
+
         cutoff_year = int(init_times.dt.year.max().item())
         mask = target_times.dt.year > cutoff_year
 

@@ -41,6 +41,7 @@ class ModelDataConfig(DataConfigABC):
         validation, loading, and preprocessing functionality.
     """
 
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -54,6 +55,7 @@ class ModelDataConfig(DataConfigABC):
     drop_vars_list: list[str] = None
 
     def __post_init__(self) -> None:
+
         """
         Initialize the model configuration and construct its forecast time range.
 
@@ -155,7 +157,7 @@ class ObsDataConfig(DataConfigABC):
                 "Observation data must have same temporal frequency as the "
                 f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
-
+        
         self.time_range = build_time_range(
             init_time=self.coords[init_time_dim],
             lead_time_resolution=self.init_time_frequency,
@@ -212,6 +214,7 @@ class ConditionDataConfig(DataConfigABC):
     DataConfigABC : Base class defining shared dataset configuration,
         validation, loading, and preprocessing functionality.
     """
+
 
     paths: str
     names: list[str]

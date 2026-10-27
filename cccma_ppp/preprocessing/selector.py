@@ -30,7 +30,9 @@ class PreprocessingStepSelector:
             )
 
         if not isinstance(self.name, str):
-            raise TypeError(f"Step name must be string, got {type(self.name)}.")
+            raise TypeError(
+                f"Step name must be string, got {type(self.name)}."
+            )
 
         if not self.name:
             raise ValueError("Step name cannot be empty.")

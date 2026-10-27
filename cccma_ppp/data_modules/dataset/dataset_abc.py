@@ -34,6 +34,7 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 @dataclasses.dataclass
 class lead_time_config:
+
     """
     Configuration for selecting forecast lead times.
 
@@ -58,6 +59,7 @@ class lead_time_config:
     end: int = None
 
     def __post_init__(self):
+
         """
         Validate the lead-time selection configuration.
 
@@ -78,6 +80,7 @@ class lead_time_config:
                 )
 
     def build_lead_times(self):
+
         """
         Construct the selected forecast lead times.
 
@@ -133,6 +136,7 @@ class DatasetConfigABC(abc.ABC):
         are selected.
     """
 
+
     _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset(
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
     )
@@ -149,6 +153,7 @@ class DatasetConfigABC(abc.ABC):
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self):
+
         """
         Initialize the dataset configuration and validate its input sources.
 
@@ -195,6 +200,7 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_required_input_source(self):
+
         """
         Verify that at least one input data source is configured.
 
@@ -218,6 +224,7 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_model_vs_condition(self):
+
         """
         Validate compatibility between model and conditioning datasets.
 
@@ -317,6 +324,7 @@ class DatasetConfigABC(abc.ABC):
                     if not self.condition.coords.get(dim).equals(
                         self.model.coords.get(dim)
                     ):
+
                         raise ValueError(
                             f"model and condition data do not have the same {dim} cooridnates. "
                             f"when bias correcting to observations. Got {self.condition.coords.get(dim)} "
@@ -325,6 +333,7 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_condition_method(self):
+
         """
         Validate the selected conditioning method.
 
@@ -350,6 +359,7 @@ class DatasetConfigABC(abc.ABC):
         return self
 
     def _check_model(self):
+
         """
         Validate model configuration requirements for the conditioning method.
 
@@ -375,6 +385,7 @@ class DatasetConfigABC(abc.ABC):
         return self
 
     def _check_condition(self):
+
         """
         Validate the effective conditioning data and its conditioning method.
 
@@ -454,6 +465,7 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_lead_times(self):
+
         """
         Resolve the requested lead-time configuration.
 
@@ -490,6 +502,7 @@ class DatasetConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def ds_operator(self):
+
         """
         Return the dataset-specific operator.
 
@@ -517,6 +530,7 @@ class DatasetConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def effective_input(self) -> ConditionDataConfig | ModelDataConfig | None:
+
         """
         Return the input data that effectively goes into the dataset.
         For Inference and Train this shall differ based on what is
@@ -536,6 +550,7 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def _using_model_data_as_condition(self) -> bool:
+
         """
         Determine whether the same model data are used as the conditioning source.
 
@@ -573,6 +588,7 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
+
         """
         Return the resolved conditioning data.
         Resolved at __init__ time based on the provided
@@ -604,6 +620,7 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
+
         """
         Create a data object from the model dataset to be used as condition.
 
@@ -640,6 +657,7 @@ class DatasetConfigABC(abc.ABC):
             | xr.DataArray
         ),
     ):
+
         """
         Resolve requested initialization times against the effective input.
 
@@ -677,6 +695,13 @@ class DatasetConfigABC(abc.ABC):
                 dims=(self.init_time_dim,),
                 coords={self.init_time_dim: requested_times},
             )
+            
+        missing = [t for t in requested_times.values if t not in self.available_times]
+
+        if missing:
+            raise ValueError(
+                f"The following requested_times are unavailable: {missing}"
+            )
 
         missing = [t for t in requested_times.values if t not in self.available_times]
 
@@ -692,6 +717,7 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_condition(self):
+
         """
         Resolve the effective conditioning data source.
 
@@ -718,6 +744,7 @@ class DatasetConfigABC(abc.ABC):
 
     @abc.abstractmethod
     def build_dataset(self):
+
         """
         Construct the dataset from this validated configuration.
 
@@ -1295,7 +1322,7 @@ class DatasetABC(Dataset, abc.ABC):
         """
         if not self._load_model:
             return None
-
+        
         indexes = {
             dim: self.config.model.indexes[dim].get_indexer(values)
             for dim, values in sample_coords.items()

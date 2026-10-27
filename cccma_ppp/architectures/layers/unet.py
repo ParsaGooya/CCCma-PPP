@@ -343,7 +343,7 @@ class UpBlock(nn.Module):
             Description not yet provided.
         skip_alignment_method : AlignmentMethod
             Description not yet provided.
-        upsampling_kernel_size : int
+        transpose_kernel_size : int
             Description not yet provided.
         inject_noise : bool
             Description not yet provided.
