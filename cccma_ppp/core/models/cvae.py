@@ -60,7 +60,7 @@ class cVAEConfig(moduleConfigABC):
 
     Parameters
     ----------
-    ArchitectureConfig : cVAEModelSelector | None
+    Architecture : cVAEModelSelector | None
         Description not yet provided.
     posterior_variance_limits : list[float | None, float | None] | tuple[float | None, float | None] | None
         Description not yet provided.
@@ -72,7 +72,7 @@ class cVAEConfig(moduleConfigABC):
         Description not yet provided.
     """
 
-    ArchitectureConfig: cVAEModelSelector | None = None
+    Architecture: cVAEModelSelector | None = None
     posterior_variance_limits: (
         list[float | None, float | None] | tuple[float | None, float | None] | None
     ) = None
@@ -99,7 +99,7 @@ class cVAEConfig(moduleConfigABC):
         self.condition_dependant_flow = False
 
         if self.load_dir is None:
-            if self.ArchitectureConfig is None:
+            if self.Architecture is None:
                 raise ValueError("provide loading dir or architecture configurations")
 
         else:
@@ -111,7 +111,7 @@ class cVAEConfig(moduleConfigABC):
         if self.combined_CGCN_weight is None:
             self.combined_CGCN_weight = 0
 
-        self.architecture_config = self.ArchitectureConfig.get_architecture_config()
+        self.architecture_config = self.Architecture.get_architecture_config()
 
         self.latent_size = self.architecture_config.latent_size
 
@@ -172,9 +172,9 @@ class cVAEConfig(moduleConfigABC):
             Path(load_path)
         )
         self.checkpoint_config = checkpoint_config
-        self.ArchitectureConfig = dacite.from_dict(
+        self.Architecture = dacite.from_dict(
             data_class=cVAEModelSelector,
-            data=checkpoint_module.get("ArchitectureConfig"),
+            data=checkpoint_module.get("Architecture"),
             config=dacite.Config(strict=True),
         )
 

@@ -127,7 +127,7 @@ class ModuleSelector:
         bool
             Description not yet provided.
         """
-        return self._module_config.ArchitectureConfig.type
+        return self._module_config.Architecture.type
 
     @property
     def architecture_config(self) -> modelConfigABC:
@@ -231,7 +231,7 @@ class ModelSelector:
             checkpoint_module, self.checkpoint_config = _load_config_from_checkpoint(
                 self.load_dir, self._freeze_weights
             )
-            checkpoint_model = checkpoint_module.get("ArchitectureConfig")
+            checkpoint_model = checkpoint_module.get("Architecture")
             assert self.type.lower() == checkpoint_model.get("type").lower(), (
                 f"The checkpoint {checkpoint_model.get('type')} model does not have the correct type {self.type}"
             )

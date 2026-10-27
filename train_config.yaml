@@ -59,7 +59,7 @@ train_loader:
 module:
   type: cvae
   config:
-    ArchitectureConfig:   
+    Architecture:   
       type: MLP
       config:
         encoder_hidden_dims: [3000,3000, 3000, 3000, 3000]

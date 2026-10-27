@@ -41,13 +41,13 @@ class deterministicConfig(moduleConfigABC):
 
     Parameters
     ----------
-    ArchitectureConfig : deterministicModelSelector | None
+    Architecture : deterministicModelSelector | None
         Description not yet provided.
     load_dir : str | None
         Description not yet provided.
     """
 
-    ArchitectureConfig: deterministicModelSelector | None = None
+    Architecture: deterministicModelSelector | None = None
     load_dir: str | None = None
 
     def __post_init__(self):
@@ -65,7 +65,7 @@ class deterministicConfig(moduleConfigABC):
             Description not yet provided.
         """
         if self.load_dir is None:
-            if self.ArchitectureConfig is None:
+            if self.Architecture is None:
                 raise ValueError("provide loading dir or architecture configurations")
         else:
             self._load_from_checkpoint(self.load_dir)
@@ -73,7 +73,7 @@ class deterministicConfig(moduleConfigABC):
                 f"all module config overwritten by the saved module: \n {self.load_dir}"
             )
 
-        self.architecture_config = self.ArchitectureConfig.get_architecture_config()
+        self.architecture_config = self.Architecture.get_architecture_config()
 
     def build(
         self,
@@ -123,9 +123,9 @@ class deterministicConfig(moduleConfigABC):
             Path(load_path)
         )
 
-        self.ArchitectureConfig = dacite.from_dict(
+        self.Architecture = dacite.from_dict(
             data_class=deterministicModelSelector,
-            data=checkpoint_module.get("ArchitectureConfig"),
+            data=checkpoint_module.get("Architecture"),
             config=dacite.Config(strict=True),
         )
 
