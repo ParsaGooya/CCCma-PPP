@@ -345,7 +345,7 @@ def build_writer(
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)
 
-    return_spatial_mask = module.model_config.EXPECTS_MASK
+    return_spatial_mask = module.architecture_config.EXPECTS_MASK
     inference_loader = config.inference_loader.build_inference_loader(
         return_spatial_mask=return_spatial_mask
     )

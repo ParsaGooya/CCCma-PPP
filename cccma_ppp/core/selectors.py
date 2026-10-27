@@ -9,7 +9,7 @@ import warnings
 
 from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.architectures.models_abc import (
+from cccma_ppp.architectures.architecture_abc import (
     modelABC,
     flowABC,
     CheckpointConfig,
@@ -79,7 +79,7 @@ class ModuleSelector:
         int
             Description not yet provided.
         """
-        return self.model_config.NUM_INPUT_DIMS
+        return self.architecture_config.NUM_INPUT_DIMS
 
     @property
     def NUM_OUTPUT_DIMS(self) -> int:
@@ -91,7 +91,7 @@ class ModuleSelector:
         int
             Description not yet provided.
         """
-        return self.model_config.NUM_OUTPUT_DIMS
+        return self.architecture_config.NUM_OUTPUT_DIMS
 
     @property
     def GENERATOR(self) -> bool:
@@ -103,7 +103,7 @@ class ModuleSelector:
         bool
             Description not yet provided.
         """
-        return self.model_config.GENERATOR
+        return self.architecture_config.GENERATOR
 
     @property
     def EXPECTS_MASK(self) -> bool:
@@ -115,7 +115,7 @@ class ModuleSelector:
         bool
             Description not yet provided.
         """
-        return self.model_config.EXPECTS_MASK
+        return self.architecture_config.EXPECTS_MASK
 
     @property
     def model_type(self) -> str:
@@ -127,10 +127,10 @@ class ModuleSelector:
         bool
             Description not yet provided.
         """
-        return self._module_config.ModelConfig.type
+        return self._module_config.ArchitectureConfig.type
 
     @property
-    def model_config(self) -> modelConfigABC:
+    def architecture_config(self) -> modelConfigABC:
         """
         Document this function.
 
@@ -139,7 +139,7 @@ class ModuleSelector:
         bool
             Description not yet provided.
         """
-        return self._module_config.model_config
+        return self._module_config.architecture_config
 
     def build_module(
         self,
@@ -231,7 +231,7 @@ class ModelSelector:
             checkpoint_module, self.checkpoint_config = _load_config_from_checkpoint(
                 self.load_dir, self._freeze_weights
             )
-            checkpoint_model = checkpoint_module.get("ModelConfig")
+            checkpoint_model = checkpoint_module.get("ArchitectureConfig")
             assert self.type.lower() == checkpoint_model.get("type").lower(), (
                 f"The checkpoint {checkpoint_model.get('type')} model does not have the correct type {self.type}"
             )
@@ -271,7 +271,7 @@ class ModelSelector:
         """
         return cls.registery.available()
 
-    def get_model_config(self):
+    def get_architecture_config(self):
         """
         Document this function.
 
@@ -280,11 +280,11 @@ class ModelSelector:
         Any
             Description not yet provided.
         """
-        model_config = self.registery.get(self.type.lower(), self.config)
+        architecture_config = self.registery.get(self.type.lower(), self.config)
         if self.checkpoint_config is not None:
-            model_config._add_checkpoint_config(self.checkpoint_config)
+            architecture_config._add_checkpoint_config(self.checkpoint_config)
 
-        return model_config
+        return architecture_config
 
 
 class cVAEModelSelector(ModelSelector):

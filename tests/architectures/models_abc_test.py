@@ -6,8 +6,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.architectures.models_abc as module
-from cccma_ppp.architectures.models_abc import (
+import cccma_ppp.architectures.architecture_abc as module
+from cccma_ppp.architectures.architecture_abc import (
     CheckpointConfig,
     GENERATORConfig,
     cVAEmodelConfigABC,

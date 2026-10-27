@@ -10,7 +10,7 @@ import torch.nn as nn
 from cccma_ppp.core.selectors import deterministicModelSelector
 from cccma_ppp.core.models.deterministic import deterministicOutput
 
-from cccma_ppp.architectures.models_abc import (
+from cccma_ppp.architectures.architecture_abc import (
     deterministicmodelsABC,
     modelConfigABC,
     DeterministicRequest,

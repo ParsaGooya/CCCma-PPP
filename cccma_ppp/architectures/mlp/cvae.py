@@ -4,7 +4,7 @@ import numpy as np
 from typing import ClassVar
 import dataclasses
 
-from cccma_ppp.architectures.models_abc import (
+from cccma_ppp.architectures.architecture_abc import (
     cVAEmodelsABC,
     cVAEmodelConfigABC,
     cVAEForwardRequest,

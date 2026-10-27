@@ -174,7 +174,7 @@ class GenerativeContext:
             Description not yet provided.
         """
         if module is not None:
-            self.generator = getattr(module.model_config, "GENERATOR", None) is not None
+            self.generator = getattr(module.architecture_config, "GENERATOR", None) is not None
             self.generative_modeling = getattr(
                 module.model, "generative_modeling", False
             )

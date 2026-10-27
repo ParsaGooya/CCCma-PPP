@@ -154,7 +154,7 @@ class TrainConfig:
                 )
 
         if self.module.model_type.lower() in ["mlp"]:
-            if self.module.model_config.batch_normalization:
+            if self.module.architecture_config.batch_normalization:
                 if self.train_loader.batch_size == 1:
                     raise ValueError(
                         f"With {self.module.model_type} architecture, if batch_normalization is True, "
@@ -510,14 +510,15 @@ def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
                 ["flattener" in pipeline for pipeline in metadata.get("preprocessors")]
             ):
                 raise RuntimeError(
-                    f"The selected model supports 2D {which} but the data has {metadata.get('NN_dims')} "
-                    f"{which} NN dims. add Flattennanremove as a preprocessing step to flatten the data."
+                    f"The selected model supports 2D {which} but the input or target data has {metadata.get('NN_dims')} "
+                    f"{which} NN dims. add Flattennanremove as a preprocessing step to flatten all data sources. "
+                    "This includes all model, condition and observation data that are not flat."
                 )
     else:
         if any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
             raise RuntimeError(
                 f"For {model_dims}D {which} models, do not add Flattennanremove "
-                "as a preprocessing step as it flattens the data."
+                "as a preprocessing step to any of the data sources as it flattens the data."
             )
 
         if model_dims != len(metadata.get("NN_dims")):

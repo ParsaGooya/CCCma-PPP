@@ -111,7 +111,7 @@ class DetermninisticPredictor(PredictorABC):
         if num_output_sampling <= 0:
             raise ValueError("num_output_sampling must be larger than 1.")
 
-        if module.model_config.GENERATOR is None:
+        if module.architecture_config.GENERATOR is None:
             self.num_output_covariance_sampling = num_output_sampling
 
         self.distributed = distributed
@@ -254,7 +254,7 @@ class DetermninisticPredictor(PredictorABC):
         if self.num_output_sampling == 1:
             prediction = prediction.unsqueeze(0)
 
-        num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
+        num_output_dims = self.raw_module.architecture_config.NUM_OUTPUT_DIMS
         extra_dims_sorted = ["output_samples"]
         assign_coords = None
         attrs = {"source": "predictions"}

@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import xarray as xr
 from typing import Dict, Optional, Union
-from cccma_ppp.architectures.models_abc import DeterministicRequest
+from cccma_ppp.architectures.architecture_abc import DeterministicRequest
 from cccma_ppp.core.models.deterministic import deterministicOutput
 from cccma_ppp.preprocessing.utils_preprocessing import Standardizer
 

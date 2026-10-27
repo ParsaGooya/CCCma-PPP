@@ -18,7 +18,7 @@ from cccma_ppp.architectures.layers.conv import (
 from cccma_ppp.architectures.layers.unet import (
     UNetOutputSIC,
 )
-from cccma_ppp.architectures.models_abc import DeterministicRequest
+from cccma_ppp.architectures.architecture_abc import DeterministicRequest
 from cccma_ppp.architectures.unet.cvae import (
     Generation,
     Recognition,

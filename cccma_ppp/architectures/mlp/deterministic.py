@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 
-from cccma_ppp.architectures.models_abc import (
+from cccma_ppp.architectures.architecture_abc import (
     modelConfigABC,
     deterministicmodelsABC,
     DeterministicRequest,

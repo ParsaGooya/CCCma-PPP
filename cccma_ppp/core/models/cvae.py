@@ -15,7 +15,7 @@ from cccma_ppp.core.selectors import (
     _load_config_from_checkpoint,
 )
 from cccma_ppp.architectures.normalized_flows import NormalizedFlowConfig
-from cccma_ppp.architectures.models_abc import cVAEPredictRequest, cVAEForwardRequest
+from cccma_ppp.architectures.architecture_abc import cVAEPredictRequest, cVAEForwardRequest
 from cccma_ppp.train.dataloader import BatchData
 from cccma_ppp.generic.runtime import RuntimeContext
 
@@ -60,7 +60,7 @@ class cVAEConfig(moduleConfigABC):
 
     Parameters
     ----------
-    ModelConfig : cVAEModelSelector | None
+    ArchitectureConfig : cVAEModelSelector | None
         Description not yet provided.
     posterior_variance_limits : list[float | None, float | None] | tuple[float | None, float | None] | None
         Description not yet provided.
@@ -72,7 +72,7 @@ class cVAEConfig(moduleConfigABC):
         Description not yet provided.
     """
 
-    ModelConfig: cVAEModelSelector | None = None
+    ArchitectureConfig: cVAEModelSelector | None = None
     posterior_variance_limits: (
         list[float | None, float | None] | tuple[float | None, float | None] | None
     ) = None
@@ -99,8 +99,8 @@ class cVAEConfig(moduleConfigABC):
         self.condition_dependant_flow = False
 
         if self.load_dir is None:
-            if self.ModelConfig is None:
-                raise ValueError("provide loading dir or model configurations")
+            if self.ArchitectureConfig is None:
+                raise ValueError("provide loading dir or architecture configurations")
 
         else:
             self._load_from_checkpoint(self.load_dir)
@@ -111,14 +111,14 @@ class cVAEConfig(moduleConfigABC):
         if self.combined_CGCN_weight is None:
             self.combined_CGCN_weight = 0
 
-        self.model_config = self.ModelConfig.get_model_config()
+        self.architecture_config = self.ArchitectureConfig.get_architecture_config()
 
-        self.latent_size = self.model_config.latent_size
+        self.latent_size = self.architecture_config.latent_size
 
         if self.prior_flow_config is not None:
-            self.condition_dependant_flow = self.model_config.condition_dependant_latent
+            self.condition_dependant_flow = self.architecture_config.condition_dependant_latent
 
-        self.model_config._resolve_flow_settings(self.condition_dependant_flow)
+        self.architecture_config._resolve_flow_settings(self.condition_dependant_flow)
 
         assert 0 <= self.combined_CGCN_weight <= 1, (
             "CGCN weight should be between [0,1]"
@@ -172,9 +172,9 @@ class cVAEConfig(moduleConfigABC):
             Path(load_path)
         )
         self.checkpoint_config = checkpoint_config
-        self.ModelConfig = dacite.from_dict(
+        self.ArchitectureConfig = dacite.from_dict(
             data_class=cVAEModelSelector,
-            data=checkpoint_module.get("ModelConfig"),
+            data=checkpoint_module.get("ArchitectureConfig"),
             config=dacite.Config(strict=True),
         )
 
@@ -243,7 +243,7 @@ class cVAE(moduleABC):
         """
         super().__init__()
         self.config = config
-        self.model_config = self.config.model_config
+        self.architecture_config = self.config.architecture_config
         self.latent_size = self.config.latent_size
         self.posterior_variance_limits = self.config.posterior_variance_limits
         self.prior_flow_config = self.config.prior_flow_config
@@ -258,7 +258,7 @@ class cVAE(moduleABC):
                 ]
             ), "posterior_variance_limits must be positive or None."
         if getattr(self.config, "condition_dependant_flow", False):
-            self.flow_condition_size = self.model_config.condition_embedding_size
+            self.flow_condition_size = self.architecture_config.condition_embedding_size
         else:
             self.flow_condition_size = None
 
@@ -312,7 +312,7 @@ class cVAE(moduleABC):
         self.output_shape = output_shape
         self.added_features_dim = added_features_dim
 
-        self.model = self.model_config.build(
+        self.model = self.architecture_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
             added_features_dim=added_features_dim,
@@ -444,7 +444,7 @@ class cVAE(moduleABC):
         cVAEOutput
             Description not yet provided.
         """
-        generator = self.model_config.GENERATOR
+        generator = self.architecture_config.GENERATOR
         output_sample_size = 1
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples
@@ -492,7 +492,7 @@ class cVAE(moduleABC):
         cVAEOutput
             Description not yet provided.
         """
-        generator = self.model_config.GENERATOR
+        generator = self.architecture_config.GENERATOR
         if self.training and generator is not None:
             output_sample_size = generator.num_training_noise_samples
 

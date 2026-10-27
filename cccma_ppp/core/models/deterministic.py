@@ -8,7 +8,7 @@ import warnings
 
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
-from cccma_ppp.architectures.models_abc import DeterministicRequest
+from cccma_ppp.architectures.architecture_abc import DeterministicRequest
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     deterministicModelSelector,
@@ -41,13 +41,13 @@ class deterministicConfig(moduleConfigABC):
 
     Parameters
     ----------
-    ModelConfig : deterministicModelSelector | None
+    ArchitectureConfig : deterministicModelSelector | None
         Description not yet provided.
     load_dir : str | None
         Description not yet provided.
     """
 
-    ModelConfig: deterministicModelSelector | None = None
+    ArchitectureConfig: deterministicModelSelector | None = None
     load_dir: str | None = None
 
     def __post_init__(self):
@@ -65,15 +65,15 @@ class deterministicConfig(moduleConfigABC):
             Description not yet provided.
         """
         if self.load_dir is None:
-            if self.ModelConfig is None:
-                raise ValueError("provide loading dir or model configurations")
+            if self.ArchitectureConfig is None:
+                raise ValueError("provide loading dir or architecture configurations")
         else:
             self._load_from_checkpoint(self.load_dir)
             warnings.warn(
                 f"all module config overwritten by the saved module: \n {self.load_dir}"
             )
 
-        self.model_config = self.ModelConfig.get_model_config()
+        self.architecture_config = self.ArchitectureConfig.get_architecture_config()
 
     def build(
         self,
@@ -123,9 +123,9 @@ class deterministicConfig(moduleConfigABC):
             Path(load_path)
         )
 
-        self.ModelConfig = dacite.from_dict(
+        self.ArchitectureConfig = dacite.from_dict(
             data_class=deterministicModelSelector,
-            data=checkpoint_module.get("ModelConfig"),
+            data=checkpoint_module.get("ArchitectureConfig"),
             config=dacite.Config(strict=True),
         )
 
@@ -178,7 +178,7 @@ class deterministic(moduleABC):
         """
         super().__init__()
         self.config = config
-        self.model_config = config.model_config
+        self.architecture_config = config.architecture_config
 
         self.criterion = None
 
@@ -214,7 +214,7 @@ class deterministic(moduleABC):
         self.output_shape = output_shape
         self.added_features_dim = added_features_dim
 
-        self.model = self.model_config.build(
+        self.model = self.architecture_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
             added_features_dim=added_features_dim,
@@ -288,7 +288,7 @@ class deterministic(moduleABC):
         deterministicOutput
             Description not yet provided.
         """
-        generator = self.model_config.GENERATOR
+        generator = self.architecture_config.GENERATOR
         output_sample_size = 1
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples

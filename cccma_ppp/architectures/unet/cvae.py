@@ -12,7 +12,7 @@ from cccma_ppp.core.models.cvae import cVAEOutput
 
 from cccma_ppp.configs import save_deterministic_guess_only
 
-from cccma_ppp.architectures.models_abc import (
+from cccma_ppp.architectures.architecture_abc import (
     cVAEmodelConfigABC,
     cVAEmodelsABC,
     cVAEForwardRequest,
@@ -188,7 +188,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
             )
 
             self.deterministic_guess_config = (
-                self.deterministic_guess_config.get_model_config()
+                self.deterministic_guess_config.get_architecture_config()
             )
 
             if not isinstance(self.deterministic_guess_config, UNetConfig):
