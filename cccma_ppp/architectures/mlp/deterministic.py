@@ -3,8 +3,8 @@ import numpy as np
 
 
 from cccma_ppp.architectures.architecture_abc import (
-    modelConfigABC,
-    deterministicmodelsABC,
+    ArchConfigABC,
+    deterministicArchABC,
     DeterministicRequest,
 )
 
@@ -30,7 +30,7 @@ AppendMode = Literal[1, 2, 3]
 
 @deterministicModelSelector.register("mlp")
 @dataclasses.dataclass
-class AutoencoderConfig(modelConfigABC):
+class AutoencoderConfig(ArchConfigABC):
     """
     Document this class.
 
@@ -120,7 +120,7 @@ class AutoencoderConfig(modelConfigABC):
         )
 
 
-class Autoencoder(deterministicmodelsABC):
+class Autoencoder(deterministicArchABC):
     """
     Document this class.
 

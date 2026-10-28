@@ -11,8 +11,8 @@ from cccma_ppp.core.selectors import deterministicModelSelector
 from cccma_ppp.core.models.deterministic import deterministicOutput
 
 from cccma_ppp.architectures.architecture_abc import (
-    deterministicmodelsABC,
-    modelConfigABC,
+    deterministicArchABC,
+    ArchConfigABC,
     DeterministicRequest,
     GENERATORConfig,
 )
@@ -51,7 +51,7 @@ from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tens
 
 @deterministicModelSelector.register("unet")
 @dataclasses.dataclass
-class UNetConfig(modelConfigABC):
+class UNetConfig(ArchConfigABC):
     """
     Document this class.
 
@@ -165,7 +165,7 @@ class UNetConfig(modelConfigABC):
         )
 
 
-class UNet(deterministicmodelsABC):
+class UNet(deterministicArchABC):
     """
     Document this class.
 

@@ -5,8 +5,8 @@ from typing import ClassVar
 import dataclasses
 
 from cccma_ppp.architectures.architecture_abc import (
-    cVAEmodelsABC,
-    cVAEmodelConfigABC,
+    cVAEArchABC,
+    cVAEArchConfigABC,
     cVAEForwardRequest,
     cVAEPredictRequest,
 )
@@ -24,7 +24,7 @@ from cccma_ppp.core.selectors import cVAEModelSelector
 
 @cVAEModelSelector.register("mlp")
 @dataclasses.dataclass
-class cVAE_MLPConfig(cVAEmodelConfigABC):
+class cVAE_MLPConfig(cVAEArchConfigABC):
     """
     Document this class.
 
@@ -143,7 +143,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         )
 
 
-class cVAE_MLP(cVAEmodelsABC):
+class cVAE_MLP(cVAEArchABC):
     """
     Document this class.
 

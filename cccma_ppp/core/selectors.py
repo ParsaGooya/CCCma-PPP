@@ -10,10 +10,10 @@ import warnings
 from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.architectures.architecture_abc import (
-    modelABC,
+    ArchABC,
     flowABC,
     CheckpointConfig,
-    modelConfigABC,
+    ArchConfigABC,
 )
 
 
@@ -130,7 +130,7 @@ class ModuleSelector:
         return self._module_config.Architecture.type
 
     @property
-    def architecture_config(self) -> modelConfigABC:
+    def architecture_config(self) -> ArchConfigABC:
         """
         Document this function.
 
@@ -243,7 +243,7 @@ class ModelSelector:
                 warnings.warn(f"Checkpoint {self.type} model weights will be frozen.")
 
     @classmethod
-    def register(cls, name: str) -> Callable[..., modelABC]:
+    def register(cls, name: str) -> Callable[..., ArchABC]:
         """
         Document this function.
 
@@ -254,7 +254,7 @@ class ModelSelector:
 
         Returns
         -------
-        Callable[..., modelABC]
+        Callable[..., ArchABC]
             Description not yet provided.
         """
         return cls.registery.register(name.lower())

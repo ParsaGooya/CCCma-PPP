@@ -117,7 +117,7 @@ class flowABC(nn.Module, abc.ABC):
         pass
 
 
-class modelConfigABC(abc.ABC):
+class ArchConfigABC(abc.ABC):
     """
     Document this class.
 
@@ -228,7 +228,7 @@ class modelConfigABC(abc.ABC):
         pass
 
 
-class modelABC(nn.Module, abc.ABC):
+class ArchABC(nn.Module, abc.ABC):
     """
     Document this class.
 
@@ -433,23 +433,23 @@ class DeterministicRequest:
     chunk_output_samples: bool = False
 
 
-class deterministicmodelsABC(modelABC):
+class deterministicArchABC(ArchABC):
     """
     Document this class.
 
     Parameters
     ----------
-    config : modelConfigABC
+    config : ArchConfigABC
         Description not yet provided.
     """
 
-    def __init__(self, config: modelConfigABC):
+    def __init__(self, config: ArchConfigABC):
         """
         Document this function.
 
         Parameters
         ----------
-        config : modelConfigABC
+        config : ArchConfigABC
             Description not yet provided.
         """
         super().__init__()
@@ -472,7 +472,7 @@ class deterministicmodelsABC(modelABC):
         pass
 
 
-class cVAEmodelConfigABC(modelConfigABC):
+class cVAEArchConfigABC(ArchConfigABC):
     """
     Document this class.
 
@@ -599,23 +599,23 @@ class cVAEPredictRequest:
     chunk_size: int | None = None
 
 
-class cVAEmodelsABC(modelABC):
+class cVAEArchABC(ArchABC):
     """
     Document this class.
 
     Parameters
     ----------
-    config : cVAEmodelConfigABC
+    config : cVAEArchConfigABC
         Description not yet provided.
     """
 
-    def __init__(self, config: cVAEmodelConfigABC):
+    def __init__(self, config: cVAEArchConfigABC):
         """
         Document this function.
 
         Parameters
         ----------
-        config : cVAEmodelConfigABC
+        config : cVAEArchConfigABC
             Description not yet provided.
         """
         super().__init__()

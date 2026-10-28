@@ -13,8 +13,8 @@ from cccma_ppp.core.models.cvae import cVAEOutput
 from cccma_ppp.configs import save_deterministic_guess_only
 
 from cccma_ppp.architectures.architecture_abc import (
-    cVAEmodelConfigABC,
-    cVAEmodelsABC,
+    cVAEArchConfigABC,
+    cVAEArchABC,
     cVAEForwardRequest,
     cVAEPredictRequest,
     DeterministicRequest,
@@ -74,7 +74,7 @@ class UNetSelector(deterministicModelSelector):
 
 @cVAEModelSelector.register("unet")
 @dataclasses.dataclass
-class cVAEUNetConfig(cVAEmodelConfigABC):
+class cVAEUNetConfig(cVAEArchConfigABC):
     """
     Document this class.
 
@@ -285,7 +285,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
         )
 
 
-class cVAEUNet(cVAEmodelsABC):
+class cVAEUNet(cVAEArchABC):
     """
     Document this class.
 
