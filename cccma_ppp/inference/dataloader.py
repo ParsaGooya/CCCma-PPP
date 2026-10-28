@@ -158,7 +158,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         """
         if self.dataset_config is None:
             raise RuntimeError(
-                "dataset_config must be provided or read from train configs "
+                "dataset config must be provided or read from train configs "
                 "via read_configs_from_train method."
             )
 

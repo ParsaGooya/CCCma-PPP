@@ -93,6 +93,7 @@ class DataloaderConfigABC(abc.ABC):
         """
         self._setup = False
         self.pin_memory = False
+        self.dataset_config = self.dataset
 
         if self.num_data_workers == 0:
             self.prefetch_factor = None
