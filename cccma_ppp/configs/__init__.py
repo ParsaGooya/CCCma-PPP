@@ -18,19 +18,19 @@ supported_NN_dimensions_sorted = tuple(data["supported_NN_dimensions_sorted"])
 if lead_time_resolution not in ["day", "month"]:
     raise ValueError(f"lead_time_resolution must be in {lead_time_resolution}.")
 
-model_data_allowed_dimensions = frozenset(
-    set(data["model_data_allowed_dimensions"])
+forecast_data_allowed_dimensions = frozenset(
+    set(data["forecast_data_allowed_dimensions"])
 ).union(set(supported_NN_dimensions_sorted))
-observation_data_allowed_dimensions = frozenset(
-    set(data["observation_data_allowed_dimensions"])
+reference_data_allowed_dimensions = frozenset(
+    set(data["reference_data_allowed_dimensions"])
 ).union(set(supported_NN_dimensions_sorted))
 condition_data_allowed_dimensions = frozenset(
     set(data["condition_data_allowed_dimensions"])
 ).union(set(supported_NN_dimensions_sorted))
 
-model_data_required_dimensions = frozenset(set(data["model_data_required_dimensions"]))
-observation_data_required_dimensions = frozenset(
-    set(data["observation_data_required_dimensions"])
+forecast_data_required_dimensions = frozenset(set(data["forecast_data_required_dimensions"]))
+reference_data_required_dimensions = frozenset(
+    set(data["reference_data_required_dimensions"])
 )
 condition_data_required_dimensions = frozenset(
     set(data["condition_data_required_dimensions"])

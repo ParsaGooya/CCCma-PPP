@@ -34,7 +34,7 @@ class DatasetOperator:
         self.config = config
 
     @property
-    def config_observation(self):
+    def config_reference(self):
         """
         Document this function.
 
@@ -43,8 +43,8 @@ class DatasetOperator:
         Any
             Description not yet provided.
         """
-        if hasattr(self.config, "observation"):
-            return self.config.observation
+        if hasattr(self.config, "reference"):
+            return self.config.reference
 
     def fit_preprocessors(
         self,
@@ -86,19 +86,19 @@ class DatasetOperator:
         if missing:
             raise ValueError(f"The following train_times are unavailable: {missing}")
 
-        if self.config.model is not None:
+        if self.config.forecast is not None:
             selection = {
                 self.config.init_time_dim: self.config.get_input_times(train_times),
-                self.config.lead_time_dim: self.config.model.coords[
+                self.config.lead_time_dim: self.config.forecast.coords[
                     self.config.lead_time_dim
                 ],
             }
-            if self.config.model.coords.get(self.config.realization_dim) is not None:
-                selection[self.config.realization_dim] = self.config.model.coords[
+            if self.config.forecast.coords.get(self.config.realization_dim) is not None:
+                selection[self.config.realization_dim] = self.config.forecast.coords[
                     self.config.realization_dim
                 ]
 
-            self.config.model.fit_preprocessor_pipeline(
+            self.config.forecast.fit_preprocessor_pipeline(
                 selection=selection,
                 mask=True,
                 save=save,
@@ -106,17 +106,17 @@ class DatasetOperator:
                 save_name=save_name,
             )
 
-        if self.config_observation is not None:
+        if self.config_reference is not None:
             selection = {self.config.init_time_dim: train_times}
             if (
-                self.config_observation.coords.get(self.config.realization_dim)
+                self.config_reference.coords.get(self.config.realization_dim)
                 is not None
             ):
-                selection[self.config.realization_dim] = self.config_observation.coords[
+                selection[self.config.realization_dim] = self.config_reference.coords[
                     self.config.realization_dim
                 ]
 
-            self.config_observation.fit_preprocessor_pipeline(
+            self.config_reference.fit_preprocessor_pipeline(
                 selection=selection, save=save, save_path=save_path, save_name=save_name
             )
 
@@ -161,11 +161,11 @@ class DatasetOperator:
         load_dir : Path | str | None
             Description not yet provided.
         """
-        if self.config.model is not None:
-            self.config.model.load_preprocessor_pipeline(load_dir)
+        if self.config.forecast is not None:
+            self.config.forecast.load_preprocessor_pipeline(load_dir)
 
-        if self.config_observation is not None:
-            self.config_observation.load_preprocessor_pipeline(load_dir)
+        if self.config_reference is not None:
+            self.config_reference.load_preprocessor_pipeline(load_dir)
 
         if self.config.effective_condition is not None:
             self.config.effective_condition.load_preprocessor_pipeline(load_dir)
@@ -199,12 +199,12 @@ class DatasetOperator:
         if not preprocessor.fitted:
             raise ValueError("The preprocessor must be fitted before adding.")
 
-        if self.config.model is not None:
-            self.config.model.preprocessing_pipeline.add_fitted_preprocessor(
+        if self.config.forecast is not None:
+            self.config.forecast.preprocessing_pipeline.add_fitted_preprocessor(
                 preprocessor, index=index
             )
-        if self.config_observation is not None:
-            self.config_observation.preprocessing_pipeline.add_fitted_preprocessor(
+        if self.config_reference is not None:
+            self.config_reference.preprocessing_pipeline.add_fitted_preprocessor(
                 preprocessor, index=index
             )
         if self.config.effective_condition is not None:
@@ -248,13 +248,13 @@ class DatasetOperator:
         if config is None:
             config = WeightsConfig()
 
-        if self.config_observation is not None:
-            ref = self.config_observation
-        elif self.config.model is not None:
-            ref = self.config.model
+        if self.config_reference is not None:
+            ref = self.config_reference
+        elif self.config.forecast is not None:
+            ref = self.config.forecast
         else:
             raise ValueError(
-                "No model or observation data is availablle. "
+                "No forecast or reference data is availablle. "
                 "Weights could not be generated"
             )
 
@@ -298,22 +298,22 @@ class DatasetOperator:
 
         if self.config.effective_condition is None:
             metadata = self._update_metadata_with_dataconfig_metadata(
-                metadata, self.config.model
+                metadata, self.config.forecast
             )
 
             for dim in [
                 dim
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config.model.coords
+                if dim in self.config.forecast.coords
             ]:
                 NN_dims.append(dim)
 
         else:
             
-            if not self.config._using_model_data_as_condition:
+            if not self.config._using_forecast_data_as_condition:
                 
                 metadata = self._update_metadata_with_dataconfig_metadata(
-                    metadata, self.config.model
+                    metadata, self.config.forecast
                 )
                 metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.effective_condition
@@ -351,33 +351,33 @@ class DatasetOperator:
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
 
-        if self.config_observation is None:
-            if self.config.model is None:
+        if self.config_reference is None:
+            if self.config.forecast is None:
                 raise ValueError(
-                    "No model or observation data is availablle. "
+                    "No forecast or reference data is availablle. "
                     "target variable metadata could not be generated"
                 )
 
             metadata = self._update_metadata_with_dataconfig_metadata(
-                metadata, self.config.model
+                metadata, self.config.forecast
             )
 
             for dim in [
                 dim
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config.model.coords
+                if dim in self.config.forecast.coords
             ]:
                 NN_dims.append(dim)
 
         else:
             metadata = self._update_metadata_with_dataconfig_metadata(
-                metadata, self.config_observation
+                metadata, self.config_reference
             )
 
             for dim in [
                 dim
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config_observation.coords
+                if dim in self.config_reference.coords
             ]:
                 NN_dims.append(dim)
 
@@ -417,10 +417,10 @@ class DatasetOperator:
     def _fitted_preprocessors(self) -> bool:
         """Check if all active pipelines are fitted."""
         pipelines = []
-        if self.config.model is not None:
-            pipelines.append(self.config.model.preprocessing_pipeline.fitted)
-        if self.config_observation is not None:
-            pipelines.append(self.config_observation.preprocessing_pipeline.fitted)
+        if self.config.forecast is not None:
+            pipelines.append(self.config.forecast.preprocessing_pipeline.fitted)
+        if self.config_reference is not None:
+            pipelines.append(self.config_reference.preprocessing_pipeline.fitted)
         if self.config.effective_condition is not None:
             pipelines.append(
                 self.config.effective_condition.preprocessing_pipeline.fitted

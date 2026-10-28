@@ -53,7 +53,7 @@ class infoclass:
     final_time : xr.DataArray | np.ndarray | str | int | None
         Latest time covered by the dataset. Accepts the same formats as
         `start_time`. If None, the ending time is unspecified.
-        For model datasets, this is typically the last prediction time available.
+        For forecast datasets, this is typically the last prediction time available.
         i.e. final_time = final initial_time + maximum lead_time
     coords : dict
         Mapping of coordinate names to their corresponding coordinate values.
@@ -85,7 +85,7 @@ class DataConfigABC(abc.ABC):
     Abstract base class for DataConfig objects, providing a standardized interface for handling
     xarray datasets in the CCCma_PPP framework.
 
-    Defines a common interface for model and observational datasets, including
+    Defines a common interface for forecast and reference datasets, including
     temporal resolution, ensemble selection, temporal and spatial metadata,
     preprocessing, and data access. Requires a coordinate matching each dimension,
     requires time coordinate to be either a datetime or cftime type,
@@ -187,7 +187,7 @@ class DataConfigABC(abc.ABC):
     @abc.abstractmethod
     def TYPE(self) -> str:
         """
-        Return the data source type identifier, e.g. model data or observations.
+        Return the data source type identifier, e.g. forecast data or reference data.
         Must be implemented by subclasses to specify the dataset source.
 
         Used to distinguish between different dataset sources and

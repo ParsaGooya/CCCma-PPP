@@ -10,10 +10,10 @@ from cccma_ppp.configs import (
     lead_time_unit,
     lead_time_resolution,
     required_sample_dimensions,
-    model_data_allowed_dimensions,
-    model_data_required_dimensions,
-    observation_data_allowed_dimensions,
-    observation_data_required_dimensions,
+    forecast_data_allowed_dimensions,
+    forecast_data_required_dimensions,
+    reference_data_allowed_dimensions,
+    reference_data_required_dimensions,
     condition_data_allowed_dimensions,
     condition_data_required_dimensions,
 )
@@ -23,11 +23,11 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 
 @dataclasses.dataclass
-class ModelDataConfig(DataConfigABC):
+class ForecastDataConfig(DataConfigABC):
     """
-    Configuration for model prediction data.
+    Configuration for forecast data.
 
-    Extends `DataConfigABC` with model-specific dimension requirements
+    Extends `DataConfigABC` with forecast-specific dimension requirements
     and forecast temporal coverage. The forecast time range is constructed
     from the initialization times, maximum lead time, and configured
     lead-time resolution.
@@ -57,7 +57,7 @@ class ModelDataConfig(DataConfigABC):
     def __post_init__(self) -> None:
 
         """
-        Initialize the model configuration and construct its forecast time range.
+        Initialize the forecast configuration and construct its forecast time range.
 
         Performs base-class initialization and constructs `time_range` from
         the initialization-time coordinates and maximum available lead time.
@@ -76,43 +76,43 @@ class ModelDataConfig(DataConfigABC):
         """
         Define the type of data condifured with this class.
         """
-        return "model"
+        return "forecast"
 
     @final
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Return the dimensions permitted for model data.
+        Return the dimensions permitted for forecast data.
         """
-        return model_data_allowed_dimensions
+        return forecast_data_allowed_dimensions
 
     @final
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Return the dimensions required for model data.
+        Return the dimensions required for forecast data.
 
         Notes
         ----
-        Model data must have initialization time and lead time dimensions
+        Forecast data must have initialization time and lead time dimensions
         and spatial dimensions but may also include additional dimensions such
         and ensemble member. The allowed and required dimensions are defined in pipelne configs.
         """
-        return model_data_required_dimensions
+        return forecast_data_required_dimensions
 
 
 @dataclasses.dataclass
-class ObsDataConfig(DataConfigABC):
+class RefDataConfig(DataConfigABC):
     """
-    Configuration for observational data.
+    Configuration for reference data.
 
-    Extends `DataConfigABC` with observation-specific dimension
-    requirements and temporal validation. Observational data must
+    Extends `DataConfigABC` with reference-specific dimension
+    requirements and temporal validation. reference data must
     have the same temporal frequency as the configured forecast
     lead-time resolution.
 
-    The observation time range is constructed from the available
-    observation times.
+    The reference time range is constructed from the available
+    reference times.
 
     All configuration parameters and data management methods are inherited
     from `DataConfigABC`.
@@ -137,16 +137,16 @@ class ObsDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Initialize the observation configuration and validate temporal resolution.
+        Initialize the reference data configuration and validate temporal resolution.
 
         Performs base-class initialization and verifies that the inferred
-        observation frequency matches the configured lead-time resolution.
-        Constructs `time_range` from the observation time coordinates.
+        reference frequency matches the configured lead-time resolution.
+        Constructs `time_range` from the reference time coordinates.
 
         Raises
         ------
         RuntimeError
-            If the observation frequency differs from the configured
+            If the reference frequency differs from the configured
             lead-time resolution.
         """
 
@@ -154,7 +154,7 @@ class ObsDataConfig(DataConfigABC):
 
         if self.init_time_frequency != self.lead_time_resolution:
             raise RuntimeError(
-                "Observation data must have same temporal frequency as the "
+                "Reference data must have same temporal frequency as the "
                 f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
         
@@ -169,28 +169,28 @@ class ObsDataConfig(DataConfigABC):
         """
         Define the type of data condifured with this class.
         """
-        return "observation"
+        return "reference"
 
     @final
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Return the dimensions permitted for observation data.
+        Return the dimensions permitted for reference data.
         """
-        return observation_data_allowed_dimensions
+        return reference_data_allowed_dimensions
 
     @final
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Return the dimensions required for observation data.
+        Return the dimensions required for reference data.
 
         Notes
         ----
-        Observation data must have initialization time dimension and spatial dimensions,
+        Reference data must have initialization time dimension and spatial dimensions,
         The allowed and requied dimensions are defined in pipelne configs.
         """
-        return observation_data_required_dimensions
+        return reference_data_required_dimensions
 
 
 @dataclasses.dataclass

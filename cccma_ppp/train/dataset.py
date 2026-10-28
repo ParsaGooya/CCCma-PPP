@@ -18,8 +18,8 @@ from cccma_ppp.data_modules.dataset.dataset_abc import (
 )
 from cccma_ppp.data_modules.dataset.operator import DatasetOperator
 from cccma_ppp.data_modules.data.data_configs import (
-    ModelDataConfig,
-    ObsDataConfig,
+    ForecastDataConfig,
+    RefDataConfig,
     ConditionDataConfig,
 )
 
@@ -36,9 +36,9 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     Parameters
     ----------
-    model : ModelDataConfig
+    forecast : ForecastDataConfig
         Description not yet provided.
-    observation : ObsDataConfig | None
+    reference : RefDataConfig | None
         Description not yet provided.
     condition : ConditionDataConfig | None
         Description not yet provided.
@@ -48,8 +48,8 @@ class TrainDatasetConfig(DatasetConfigABC):
         Description not yet provided.
     """
 
-    model: ModelDataConfig
-    observation: ObsDataConfig | None = None
+    forecast: ForecastDataConfig
+    reference: RefDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
     lead_times: lead_time_config | None = None
@@ -60,9 +60,9 @@ class TrainDatasetConfig(DatasetConfigABC):
         """
         super().__init__()
 
-        self._check_observation()
+        self._check_reference()
 
-    def _check_observation(self):
+    def _check_reference(self):
         """
         Document this function.
 
@@ -81,40 +81,40 @@ class TrainDatasetConfig(DatasetConfigABC):
         UserWarning
             Description not yet provided.
         """
-        if self.observation is not None:
+        if self.reference is not None:
             for dim in [
                 dim
                 for dim in self.supported_NN_dimensions
-                if dim in self.observation.coords
+                if dim in self.reference.coords
             ]:
-                if dim in self.model.coords:
-                    if not self.observation.coords[dim].equals(self.model.coords[dim]):
+                if dim in self.forecast.coords:
+                    if not self.reference.coords[dim].equals(self.forecast.coords[dim]):
                         warnings.warn(
                             "\n=====================================================================\n"
-                            f"model and observation data do not have the same {dim} cooridnates.\n"
+                            f"Forecast and reference data do not have the same {dim} cooridnates.\n"
                             "=====================================================================\n"
                         )
 
                 else:
                     warnings.warn(
                         "\n======================================================================\n"
-                        f"observation data has NN dim {dim} which is not present in model data.\n"
+                        f"reference data has NN dim {dim} which is not present in forecast data.\n"
                         "======================================================================\n"
                     )
 
                 if (
-                    self.model.info.time_coords_type
-                    != self.observation.info.time_coords_type
+                    self.forecast.info.time_coords_type
+                    != self.reference.info.time_coords_type
                 ):
                     raise ValueError(
-                        "Observation data and model data must have the same"
+                        "reference data and forecast data must have the same"
                         " cftime/datetime type time coordinates."
                     )
 
         else:
             if self.condition_method is None:
                 raise ValueError(
-                    "No target observation is specified. Specify condition_method!"
+                    "No target reference is specified. Specify condition_method!"
                 )
 
         return self
@@ -129,7 +129,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         Any
             Description not yet provided.
         """
-        return self.model
+        return self.forecast
 
     @property
     def ds_operator(self):
@@ -153,11 +153,11 @@ class TrainDatasetConfig(DatasetConfigABC):
         Any
             Description not yet provided.
         """
-        if self.observation is None:
-            return self.model.time_range
+        if self.reference is None:
+            return self.forecast.time_range
 
         else:
-            return self.model.time_range.intersection(self.observation.time_range)
+            return self.forecast.time_range.intersection(self.reference.time_range)
 
     @property
     def available_times(self):
@@ -169,21 +169,21 @@ class TrainDatasetConfig(DatasetConfigABC):
         Any
             Description not yet provided.
         """
-        model_times = self.model.coords[self.init_time_dim].to_index()
+        forecast_times = self.forecast.coords[self.init_time_dim].to_index()
         common_times = self.get_common_time
-        time_freq = self.model.init_time_frequency
+        time_freq = self.forecast.init_time_frequency
 
         if time_freq == "year":
-            min_year = model_times.year.min()
-            max_year = model_times.year.max()
+            min_year = forecast_times.year.min()
+            max_year = forecast_times.year.max()
 
             return common_times[
                 (common_times.year >= min_year) & (common_times.year <= max_year)
             ]
 
         elif time_freq == "month" and self.lead_time_resolution == "day":
-            min_time = model_times.min()
-            max_time = model_times.max()
+            min_time = forecast_times.min()
+            max_time = forecast_times.max()
 
             min_month = min_time.year * 12 + min_time.month
             max_month = max_time.year * 12 + max_time.month
@@ -195,7 +195,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             ]
 
         return common_times[
-            (common_times >= model_times.min()) & (common_times <= model_times.max())
+            (common_times >= forecast_times.min()) & (common_times <= forecast_times.max())
         ]
 
     def fit_preprocessors(
@@ -335,15 +335,15 @@ class TrainDataset(DatasetABC):
         """
         super().__init__()
 
-        if self.config.observation is not None:
-            self.config.observation.open_xarray_data(
+        if self.config.reference is not None:
+            self.config.reference.open_xarray_data(
                 load=self.load, add_time_auxiliary_coords=True
             )
 
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
 
     @property
-    def _autoencoding_model_data(self):
+    def _autoencoding_forecast_data(self):
         """
         Document this function.
 
@@ -352,10 +352,10 @@ class TrainDataset(DatasetABC):
         Any
             Description not yet provided.
         """
-        return self.config.observation is None
+        return self.config.reference is None
 
     @property
-    def _load_model(self):
+    def _load_forecast(self):
         """
         Document this function.
 
@@ -366,8 +366,8 @@ class TrainDataset(DatasetABC):
         """
         return any(
             [
-                self._autoencoding_model_data,
-                not self.config._using_model_data_as_condition,
+                self._autoencoding_forecast_data,
+                not self.config._using_forecast_data_as_condition,
             ]
         )
 
@@ -381,10 +381,10 @@ class TrainDataset(DatasetABC):
         Any
             Description not yet provided.
         """
-        if self.config._using_model_data_as_condition:
+        if self.config._using_forecast_data_as_condition:
             return True
         else:
-            if self._autoencoding_model_data:
+            if self._autoencoding_forecast_data:
                 return True
 
         return False
@@ -426,36 +426,36 @@ class TrainDataset(DatasetABC):
         ValueError
             Description not yet provided.
         """
-        if self.config.observation is None:
+        if self.config.reference is None:
             return None
 
-        model_times = np.asarray(sample_coords[self.config.init_time_dim])
+        forecast_times = np.asarray(sample_coords[self.config.init_time_dim])
         lead_times = np.asarray(sample_coords[self.config.lead_time_dim])
 
-        observation_times = add_lead_times(
-            init_times=model_times,
+        reference_times = add_lead_times(
+            init_times=forecast_times,
             lead_times=lead_times,
             lead_time_resolution=lead_time_resolution,
         )
 
-        observation_coords = {
-            self.config.init_time_dim: observation_times,
+        reference_coords = {
+            self.config.init_time_dim: reference_times,
         }
 
         indexes = {
-            dim: self.config.observation.indexes[dim].get_indexer(values)
-            for dim, values in observation_coords.items()
+            dim: self.config.reference.indexes[dim].get_indexer(values)
+            for dim, values in reference_coords.items()
         }
 
         missing_values = {
-            dim: observation_coords[dim][positions == -1]
+            dim: reference_coords[dim][positions == -1]
             for dim, positions in indexes.items()
             if np.any(positions == -1)
         }
 
         if missing_values:
             raise ValueError(
-                "Some observation coordinates were not found in the observation "
+                "Some reference coordinates were not found in the reference "
                 f"dataset: {missing_values}"
             )
 
@@ -470,21 +470,21 @@ class TrainDataset(DatasetABC):
         Any
             Description not yet provided.
         """
-        if self.config.observation is not None:
+        if self.config.reference is not None:
 
-            len_names = len(self.config.observation.names)
+            len_names = len(self.config.reference.names)
 
-            if self.config.observation.preprocessing_pipeline.has_flattener:
+            if self.config.reference.preprocessing_pipeline.has_flattener:
                 flattener = (
-                    self.config.observation.preprocessing_pipeline.get_flattener()
+                    self.config.reference.preprocessing_pipeline.get_flattener()
                 )
                 out_shape = flattener.final_locations.shape
 
             else:
                 out_shape = tuple(
-                    self.config.observation.coords[dim].size
+                    self.config.reference.coords[dim].size
                     for dim in self.config.supported_NN_dimensions
-                    if dim in self.config.observation.coords
+                    if dim in self.config.reference.coords
                 )
 
             return tuple([len_names, *out_shape])
@@ -492,7 +492,7 @@ class TrainDataset(DatasetABC):
         else:
             return self.get_input_shape()
 
-    def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
+    def _index_reference_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Document this function.
 
@@ -506,22 +506,22 @@ class TrainDataset(DatasetABC):
         xr.DataArray | None
             Description not yet provided.
         """
-        if self.config.observation is None:
+        if self.config.reference is None:
             return None
 
         selection = {dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()}
 
         if (
-            not self.config.observation.ensemble_mean
-            and self.config.realization_dim in self.config.observation.dims
+            not self.config.reference.ensemble_mean
+            and self.config.realization_dim in self.config.reference.dims
         ):
             selection[self.config.realization_dim] = [
                 np.random.randint(
-                    self.config.observation.data.sizes[self.config.realization_dim]
+                    self.config.reference.data.sizes[self.config.realization_dim]
                 )
             ]
 
-        obs = self.config.observation.isel(**selection)
+        obs = self.config.reference.isel(**selection)
 
         return _unwrap_data_variables(obs)
 
@@ -542,10 +542,10 @@ class TrainDataset(DatasetABC):
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
         condition = self._index_condition_dataset(ind)
-        target = self._index_observation_dataset(ind)
-        input = self._index_model_dataset(ind)
+        target = self._index_reference_dataset(ind)
+        input = self._index_forecast_dataset(ind)
 
-        if self._autoencoding_model_data:
+        if self._autoencoding_forecast_data:
             target = input
 
         if self._write_condition_to_input:

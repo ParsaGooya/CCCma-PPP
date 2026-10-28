@@ -10,7 +10,7 @@ import dask
 from collections.abc import Sequence
 
 from cccma_ppp.data_modules.data.data_configs import (
-    ModelDataConfig,
+    ForecastDataConfig,
     ConditionDataConfig,
 )
 
@@ -103,13 +103,13 @@ class DatasetConfigABC(abc.ABC):
     """
     Abstract base class for configuring pipeline datasets.
 
-    Defines the shared interface for selecting model and conditioning data,
+    Defines the shared interface for selecting forecast and conditioning data,
     resolving conditioning methods, validating compatibility between data
     sources, and selecting forecast lead times. Train and Inference datasets
     inherit from this class to implement specific data-loading.
 
     Supports ensemble-mean, cross-ensemble, same-member, and static
-    conditioning. Model data can also serve as the conditioning source
+    conditioning. Forecast data can also serve as the conditioning source
     when a separate conditioning dataset is not provided.
 
     Subclasses must implement `available_times`, `ds_operator`,
@@ -118,16 +118,16 @@ class DatasetConfigABC(abc.ABC):
 
     Attributes
     ----------
-    model : ModelDataConfig | None
-        Configuration for the model prediction data. Could only be
+    forecast : ForecastDataConfig | None
+        Configuration for the forecast data. Could only be
         None for Inference pipeline where the
         conditioning dataset must provide the required input.
     condition : ConditionDataConfig | None
         Optional configuration for auxiliary conditioning data.
-        If None, model data may be reused as conditioning data,
+        If None, forecast data may be reused as conditioning data,
         depending on the selected conditioning method.
     condition_method : str | None
-        Method used to associate conditioning data with model inputs.
+        Method used to associate conditioning data with forecast inputs.
         Supported methods are "ensemble_mean", "cross_ensemble",
         "same_member", and "static".
     lead_times : lead_time_config | list | np.ndarray | None
@@ -141,7 +141,7 @@ class DatasetConfigABC(abc.ABC):
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
     )
 
-    model: ModelDataConfig | None
+    forecast: ForecastDataConfig | None
     condition: ConditionDataConfig | None
     condition_method: str | None
     lead_times: lead_time_config | None
@@ -159,10 +159,10 @@ class DatasetConfigABC(abc.ABC):
 
         Verifies that at least one input source is available, validates the
         conditioning method, and resolves the effective conditioning dataset.
-        At least one of the model or conditioning datasets must be provided.
+        At least one of the forecast or conditioning datasets must be provided.
         If both are provided, the conditioning method must be compatible.
 
-        Checks compatibility between model and conditioning data, including
+        Checks compatibility between forecast and conditioning data, including
         temporal coordinates, ensemble realizations, and spatial dimensions
         where applicable.
 
@@ -173,22 +173,22 @@ class DatasetConfigABC(abc.ABC):
         ------
         ValueError
             If no input source is provided, the conditioning configuration
-            is invalid, model and conditioning data are incompatible, or
+            is invalid, forecast and conditioning data are incompatible, or
             the requested lead times are unavailable.
         """
 
         self._fitted_preprocessors: bool = False
-        self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
+        self._effective_condition: ConditionDataConfig | ForecastDataConfig | None = None
 
         self._check_required_input_source()
         self._check_condition_method()
 
         self._resolve_condition()
-        self._check_model_vs_condition()
+        self._check_forecast_vs_condition()
 
         self._resolve_lead_times()
 
-        self._check_model()
+        self._check_forecast()
         self._check_condition()
 
         if self.lead_times is None:
@@ -212,25 +212,25 @@ class DatasetConfigABC(abc.ABC):
         Raises
         ------
         ValueError
-            If both `model` and `condition` are None.
+            If both `forecast` and `condition` are None.
         """
 
-        if self.model is None and self.condition is None:
+        if self.forecast is None and self.condition is None:
             raise ValueError(
-                "For a PPP dataset to create an input, either model or "
+                "For a PPP dataset to create an input, either forecast or "
                 "condition data must be provided."
             )
         return self
 
     @final
-    def _check_model_vs_condition(self):
+    def _check_forecast_vs_condition(self):
 
         """
-        Validate compatibility between model and conditioning datasets.
+        Validate compatibility between forecast and conditioning datasets.
 
-        When separate model and conditioning datasets are provided,
+        When separate forecast and conditioning datasets are provided,
         verifies that non-static conditioning data contain all required
-        model initialization-time and lead-time dimensions and coordinates and
+        forecast initialization-time and lead-time dimensions and coordinates and
         use the same datetime or cftime representation.
 
         For non ensemble-mean conditioning, ensures that the effective conditioning
@@ -239,8 +239,8 @@ class DatasetConfigABC(abc.ABC):
         For same-member conditioning, verifies that both datasets have
         identical ensemble realization coordinates.
 
-        When observational targets is available, also requires matching
-        neural-network dimensions and coordinates between model and
+        When reference data is available, also requires matching
+        neural-network dimensions and coordinates between forecast and
         conditioning datasets to be able to concatenate them for bias correction.
 
         Raises
@@ -248,87 +248,87 @@ class DatasetConfigABC(abc.ABC):
         ValueError
             If required temporal coordinates are missing or incompatible,
             same-member conditioning uses different ensemble realizations,
-            or spatial coordinates differ when observational targets
+            or spatial coordinates differ when reference data
             are provided.
         """
 
         if all(
             [
                 self.condition is not None,
-                self.model is not None,
-                not self._using_model_data_as_condition,
+                self.forecast is not None,
+                not self._using_forecast_data_as_condition,
             ]
         ):
             if self.effective_condition_method != "static":
                 for dim in [
                     dim
-                    for dim in self.model.coords
+                    for dim in self.forecast.coords
                     if dim in (self.init_time_dim, self.lead_time_dim)
                 ]:
                     if self.condition.coords.get(dim) is None:
                         raise ValueError(
                             "Condition data should be available"
-                            f" on the same {dim} dimestions as model data."
+                            f" on the same {dim} dimestions as forecast data."
                         )
 
-                    if not set(self.model.coords[dim].values).issubset(
+                    if not set(self.forecast.coords[dim].values).issubset(
                         set(self.condition.coords[dim].values)
                     ):
                         raise ValueError(
                             "Condition data should be available"
-                            f" on the same {dim} coordinates as model data."
+                            f" on the same {dim} coordinates as forecast data."
                         )
 
                 if (
-                    self.model.info.time_coords_type
+                    self.forecast.info.time_coords_type
                     != self.condition.info.time_coords_type
                 ):
                     raise ValueError(
-                        "Condition data and model data must have the same"
+                        "Condition data and forecast data must have the same"
                         " cftime/datetime type time coordinates."
                     )
 
             if self.effective_condition_method == "same_member":
                 if any(
                     [
-                        self.model.coords.get(self.realization_dim) is None,
+                        self.forecast.coords.get(self.realization_dim) is None,
                         self.effective_condition.coords.get(self.realization_dim)
                         is None,
                     ]
                 ):
                     raise ValueError(
-                        f"Condition data and model data must have {self.realization_dim} "
+                        f"Condition data and forecast data must have {self.realization_dim} "
                         "dims and coords for same_member conditioning."
                     )
 
-                if not self.model.coords[self.realization_dim].equals(
+                if not self.forecast.coords[self.realization_dim].equals(
                     self.condition.coords[self.realization_dim]
                 ):
                     raise ValueError(
                         "Condition data should have the same ensemble members"
-                        "as model data for same_member conditioning."
+                        "as forecast data for same_member conditioning."
                     )
 
-            if getattr(self, "observation", None) is not None:
+            if getattr(self, "reference", None) is not None:
                 for dim in [
                     dim
-                    for dim in self.model.coords
+                    for dim in self.forecast.coords
                     if dim in self.supported_NN_dimensions
                 ]:
                     if self.condition.coords.get(dim, None) is None:
                         raise ValueError(
-                            "model and condition data must have the same NN dims. "
-                            "when bias correcting to observations"
+                            "forecast and condition data must have the same NN dims. "
+                            "when bias correcting to reference data"
                         )
 
                     if not self.condition.coords.get(dim).equals(
-                        self.model.coords.get(dim)
+                        self.forecast.coords.get(dim)
                     ):
 
                         raise ValueError(
-                            f"model and condition data do not have the same {dim} cooridnates. "
-                            f"when bias correcting to observations. Got {self.condition.coords.get(dim)} "
-                            f"vs {self.model.coords.get(dim)}"
+                            f"Forecast and condition data do not have the same {dim} coordinates. "
+                            f"when bias correcting to reference data. Got {self.condition.coords.get(dim)} "
+                            f"vs {self.forecast.coords.get(dim)}"
                         )
 
     @final
@@ -358,10 +358,10 @@ class DatasetConfigABC(abc.ABC):
                 )
         return self
 
-    def _check_model(self):
+    def _check_forecast(self):
 
         """
-        Validate model configuration requirements for the conditioning method.
+        Validate forecast configuration requirements for the conditioning method.
 
         Returns
         -------
@@ -371,15 +371,15 @@ class DatasetConfigABC(abc.ABC):
         Raises
         ------
         ValueError
-            If same-member conditioning is requested while the model
+            If same-member conditioning is requested while the forecast
             configuration specifies ensemble averaging.
         """
 
-        if self.model is not None:
+        if self.forecast is not None:
             if self.effective_condition_method == "same_member":
-                if self.model.ensemble_mean:
+                if self.forecast.ensemble_mean:
                     raise ValueError(
-                        "for same member coniditioning the model data should not be ensemble mean."
+                        "for same member coniditioning the forecast data should not be ensemble mean."
                     )
 
         return self
@@ -436,9 +436,9 @@ class DatasetConfigABC(abc.ABC):
                     raise ValueError(
                         'For "static" conditioning fields cannot specify realization list.'
                     )
-                if self._using_model_data_as_condition:
+                if self._using_forecast_data_as_condition:
                     raise ValueError(
-                        "'static' conditioning method cannot point to the same model data!"
+                        "'static' conditioning method cannot point to the same forecast data!"
                     )
 
             if self.effective_condition_method == "static":
@@ -486,8 +486,8 @@ class DatasetConfigABC(abc.ABC):
         Return the time span available for dataset construction.
         This is different than input time because it should be the
         common time range resolved by the forecast and if available,
-        the observation data. Forecasts range is based on initialization
-        time and lead time, while observation data has one time resolution.
+        the reference data. Forecasts range is based on initialization
+        time and lead time, while reference data has one time resolution.
 
         For instance, for decadal predictions, the initial times are the
         start of the years, but the available times are the span of coverage
@@ -529,7 +529,7 @@ class DatasetConfigABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def effective_input(self) -> ConditionDataConfig | ModelDataConfig | None:
+    def effective_input(self) -> ConditionDataConfig | ForecastDataConfig | None:
 
         """
         Return the input data that effectively goes into the dataset.
@@ -541,7 +541,7 @@ class DatasetConfigABC(abc.ABC):
 
         Returns
         -------
-        ConditionDataConfig | ModelDataConfig | None
+        ConditionDataConfig | ForecastDataConfig | None
             Effective input configuration.
         """
 
@@ -549,23 +549,23 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     @property
-    def _using_model_data_as_condition(self) -> bool:
+    def _using_forecast_data_as_condition(self) -> bool:
 
         """
-        Determine whether the same model data are used as the conditioning source.
+        Determine whether the same forecast data are used as the conditioning source.
 
-        When no separate conditioning dataset is provided, model data
+        When no separate conditioning dataset is provided, forecast data
         are reused for ensemble-mean, cross-ensemble, or same-member
         conditioning.
 
         When both configurations are provided, compares their paths,
         variable names, and realization selections. If those point to
-        the same data, the model data are considered to be used as the conditioning source.
+        the same data, the forecast data are considered to be used as the conditioning source.
 
         Returns
         -------
         bool
-            True if model data are used as conditioning data;
+            True if forecast data are used as conditioning data;
             otherwise, False.
         """
 
@@ -576,28 +576,28 @@ class DatasetConfigABC(abc.ABC):
                 "same_member",
             }
 
-        elif self.model is not None:
+        elif self.forecast is not None:
             return (
-                self.condition.paths == self.model.paths
-                and self.condition.names == self.model.names
-                and self.condition.realization_list == self.model.realization_list
+                self.condition.paths == self.forecast.paths
+                and self.condition.names == self.forecast.names
+                and self.condition.realization_list == self.forecast.realization_list
             )
 
         return False
 
     @final
     @property
-    def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
+    def effective_condition(self) -> ConditionDataConfig | ForecastDataConfig | None:
 
         """
         Return the resolved conditioning data.
         Resolved at __init__ time based on the provided
-        model and condition configs.
+        forecast and condition configs.
 
         Returns
         -------
-        ConditionDataConfig | ModelDataConfig | None
-            Explicit or model-derived conditioning configuration,
+        ConditionDataConfig | ForecastDataConfig | None
+            Explicit or forecast-derived conditioning configuration,
             or None if no conditioning dataset is required.
         """
 
@@ -619,12 +619,12 @@ class DatasetConfigABC(abc.ABC):
         return None if self.condition_method is None else self.condition_method.lower()
 
     @final
-    def _model_as_condition(self) -> ModelDataConfig:
+    def _forecast_as_condition(self) -> ForecastDataConfig:
 
         """
-        Create a data object from the model dataset to be used as condition.
+        Create a data object from the forecast dataset to be used as condition.
 
-        Constructs a new `ModelDataConfig` using the existing model's
+        Constructs a new `ForecastDataConfig` using the existing forecast's
         data sources, variable selection, preprocessing pipeline,
         ensemble realizations, and file configuration.
 
@@ -632,20 +632,20 @@ class DatasetConfigABC(abc.ABC):
 
         Returns
         -------
-        ModelDataConfig
-            Model configuration adapted for use as conditioning data.
+        ForecastDataConfig
+            Forecast configuration adapted for use as conditioning data.
         """
 
         ensemble_mean = self.condition_method.lower() == "ensemble_mean"
-        return ModelDataConfig(
-            paths=self.model.paths,
-            names=self.model.names,
-            preprocessing_pipeline=self.model.preprocessing_pipeline,
-            realization_list=self.model.realization_list,
-            concat_dim=self.model.concat_dim,
-            file_type=self.model.file_type,
+        return ForecastDataConfig(
+            paths=self.forecast.paths,
+            names=self.forecast.names,
+            preprocessing_pipeline=self.forecast.preprocessing_pipeline,
+            realization_list=self.forecast.realization_list,
+            concat_dim=self.forecast.concat_dim,
+            file_type=self.forecast.file_type,
             ensemble_mean=ensemble_mean,
-            rename_dict=self.model.rename_dict,
+            rename_dict=self.forecast.rename_dict,
         )
 
     @final
@@ -666,7 +666,7 @@ class DatasetConfigABC(abc.ABC):
         initialization-time coordinates to iterate over.
 
         The intention for this code is the dataset available temporal coverage
-        is based on the model/condition/observation common time span. But, the
+        is based on the forecast/condition/reference common time span. But, the
         exact initial times to be iterated over is not necessarily the same as the available times.
         See documentation for `available_times` for more details.
 
@@ -715,8 +715,8 @@ class DatasetConfigABC(abc.ABC):
         Resolve the effective conditioning data source.
 
         Uses the explicitly configured conditioning dataset when available.
-        Otherwise, creates a model-derived conditioning configuration if
-        the selected method requires model data as conditioning input.
+        Otherwise, creates a forecast-derived conditioning configuration if
+        the selected method requires forecast data as conditioning input.
 
         If neither applies, the effective conditioning dataset is None.
 
@@ -728,8 +728,8 @@ class DatasetConfigABC(abc.ABC):
 
         if self.condition is not None:
             self._effective_condition = self.condition
-        elif self._using_model_data_as_condition:
-            self._effective_condition = self._model_as_condition()
+        elif self._using_forecast_data_as_condition:
+            self._effective_condition = self._forecast_as_condition()
         else:
             self._effective_condition = None
 
@@ -742,7 +742,7 @@ class DatasetConfigABC(abc.ABC):
         Construct the dataset from this validated configuration.
 
         Subclasses must implement this method to assemble the required
-        model, conditioning, and optional observational data according
+        forecast, conditioning, and optional reference data according
         to their dataset-specific sampling and preprocessing procedures.
         """
         pass
@@ -1104,8 +1104,8 @@ class DatasetABC(Dataset, abc.ABC):
         self._prepare_sampling_mask(self._sampling_times_selectors)
         self._rng = np.random.default_rng(seed)
 
-        if self._load_model:
-            self.config.model.open_xarray_data(
+        if self._load_forecast:
+            self.config.forecast.open_xarray_data(
                 load=self.load, add_time_auxiliary_coords=True
             )
 
@@ -1119,7 +1119,7 @@ class DatasetABC(Dataset, abc.ABC):
 
         self.sample_coords = self.get_sampling_coords()
 
-        self.model_indexes = self.get_model_indexes(self.sample_coords)
+        self.forecast_indexes = self.get_forecast_indexes(self.sample_coords)
         self.cond_indexes = self.get_cond_indexes(self.sample_coords)
 
         self.time_features = dataclasses.replace(self.time_features)
@@ -1201,7 +1201,7 @@ class DatasetABC(Dataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def _load_model(self) -> bool:
+    def _load_forecast(self) -> bool:
         """
         Document this function.
         """
@@ -1291,7 +1291,7 @@ class DatasetABC(Dataset, abc.ABC):
         return {dim: np.asarray(stacked_mask.coords[dim].values) for dim in sample_dims}
 
     @final
-    def get_model_indexes(
+    def get_forecast_indexes(
         self,
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
@@ -1313,11 +1313,11 @@ class DatasetABC(Dataset, abc.ABC):
         ValueError
             Description not yet provided.
         """
-        if not self._load_model:
+        if not self._load_forecast:
             return None
         
         indexes = {
-            dim: self.config.model.indexes[dim].get_indexer(values)
+            dim: self.config.forecast.indexes[dim].get_indexer(values)
             for dim, values in sample_coords.items()
         }
 
@@ -1329,7 +1329,7 @@ class DatasetABC(Dataset, abc.ABC):
 
         if missing:
             raise ValueError(
-                f"Some sampling coordinates were not found in the model dataset: {missing}"
+                f"Some sampling coordinates were not found in the forecast dataset: {missing}"
             )
 
         return indexes
@@ -1481,7 +1481,7 @@ class DatasetABC(Dataset, abc.ABC):
         return _unwrap_data_variables(condition)
 
     @final
-    def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
+    def _index_forecast_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Document this function.
 
@@ -1495,16 +1495,16 @@ class DatasetABC(Dataset, abc.ABC):
         xr.DataArray | None
             Description not yet provided.
         """
-        if not self._load_model:
+        if not self._load_forecast:
             return None
 
         selection = {
-            dim: [int(indexes[ind])] for dim, indexes in self.model_indexes.items()
+            dim: [int(indexes[ind])] for dim, indexes in self.forecast_indexes.items()
         }
 
-        model = self.config.model.isel(**selection)
+        forecast = self.config.forecast.isel(**selection)
 
-        return _unwrap_data_variables(model)
+        return _unwrap_data_variables(forecast)
 
     @staticmethod
     def _compute(*arrays) -> tuple:

@@ -239,8 +239,8 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         else:
             load_dir = Path(load_dir)
 
-        if self.dataset_config.model is not None:
-            preprocessor_name = self.dataset_config.model.preprocessing_pipeline.name
+        if self.dataset_config.forecast is not None:
+            preprocessor_name = self.dataset_config.forecast.preprocessing_pipeline.name
             preprocessor_to_check.append(
                 load_dir / f"{preprocessor_name}_preprocessing_pipeline.joblib"
             )

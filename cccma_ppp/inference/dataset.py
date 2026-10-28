@@ -17,7 +17,7 @@ from cccma_ppp.data_modules.dataset.dataset_abc import (
 from cccma_ppp.data_modules.dataset.operator import DatasetOperator
 
 from cccma_ppp.data_modules.data.data_configs import (
-    ModelDataConfig,
+    ForecastDataConfig,
     ConditionDataConfig,
 )
 
@@ -32,7 +32,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     Parameters
     ----------
-    model : ModelDataConfig | None
+    forecast : ForecastDataConfig | None
         Description not yet provided.
     condition : ConditionDataConfig | None
         Description not yet provided.
@@ -42,7 +42,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
         Description not yet provided.
     """
 
-    model: ModelDataConfig | None = None
+    forecast: ForecastDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
     lead_times: lead_time_config | None = None
@@ -63,8 +63,8 @@ class InferenceDatasetConfig(DatasetConfigABC):
         Any
             Description not yet provided.
         """
-        if self.model is not None:
-            return self.model
+        if self.forecast is not None:
+            return self.forecast
         else:
             return self.condition
 
@@ -95,9 +95,9 @@ class InferenceDatasetConfig(DatasetConfigABC):
             time_coords.append(
                 self.condition.coords[self.init_time_dim].to_index(),
             )
-        if self.model is not None:
+        if self.forecast is not None:
             time_coords.append(
-                self.model.coords[self.init_time_dim].to_index(),
+                self.forecast.coords[self.init_time_dim].to_index(),
             )
 
         common = time_coords[0]
@@ -212,7 +212,7 @@ class InferenceDataset(DatasetABC):
         super().__init__()
 
     @property
-    def _load_model(self):
+    def _load_forecast(self):
         """
         Document this function.
 
@@ -223,8 +223,8 @@ class InferenceDataset(DatasetABC):
         """
         return all(
             [
-                not self.config._using_model_data_as_condition,
-                self.config.model is not None,
+                not self.config._using_forecast_data_as_condition,
+                self.config.forecast is not None,
             ]
         )
 
@@ -239,7 +239,7 @@ class InferenceDataset(DatasetABC):
             Description not yet provided.
         """
         return any(
-            [self.config._using_model_data_as_condition, self.config.model is None]
+            [self.config._using_forecast_data_as_condition, self.config.forecast is None]
         )
 
     @property
@@ -274,7 +274,7 @@ class InferenceDataset(DatasetABC):
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
         condition = self._index_condition_dataset(ind)
-        input = self._index_model_dataset(ind)
+        input = self._index_forecast_dataset(ind)
 
         if self._write_condition_to_input:
             input = condition
@@ -327,19 +327,19 @@ def _from_train(
         "lead_times": copy.deepcopy(train_dataset_config.lead_times),
     }
 
-    train_has_observation = train_dataset_config.observation is not None
+    train_has_reference = train_dataset_config.reference is not None
     train_has_condition = train_dataset_config.effective_condition is not None
-    train_condition_from_model = train_dataset_config._using_model_data_as_condition
+    train_condition_from_forecast = train_dataset_config._using_forecast_data_as_condition
 
-    if train_has_observation and not train_has_condition:
-        kwargs["model"] = copy.deepcopy(train_dataset_config.model)
+    if train_has_reference and not train_has_condition:
+        kwargs["forecast"] = copy.deepcopy(train_dataset_config.forecast)
 
-    elif train_condition_from_model:
-        kwargs["model"] = copy.deepcopy(train_dataset_config.model)
+    elif train_condition_from_forecast:
+        kwargs["forecast"] = copy.deepcopy(train_dataset_config.forecast)
 
     elif train_has_condition:
-        if train_has_observation:
-            kwargs["model"] = copy.deepcopy(train_dataset_config.model)
+        if train_has_reference:
+            kwargs["forecast"] = copy.deepcopy(train_dataset_config.forecast)
         kwargs["condition"] = copy.deepcopy(train_dataset_config.condition)
 
     else:

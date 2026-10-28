@@ -130,9 +130,9 @@ class TrainConfig:
                 )
 
         if self.module.type.lower() in ["deterministic", "default"]:
-            if self.train_loader.dataset_config.observation is None:
+            if self.train_loader.dataset_config.reference is None:
                 raise ValueError(
-                    "with determisitic models target observation must be specified."
+                    "with determisitic models reference data must be specified."
                 )
             if self.trainer.beta_finder is None:
                 warnings.warn(
@@ -141,7 +141,7 @@ class TrainConfig:
         else:
             if (
                 self.train_loader.dataset_config.condition_method is None
-                and self.train_loader.dataset_config.observation is None
+                and self.train_loader.dataset_config.reference is None
             ):
                 raise ValueError(
                     "with generative models you must specify condition method if not bias correcting to a target!"
@@ -512,7 +512,7 @@ def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
                 raise RuntimeError(
                     f"The selected model supports 2D {which} but the input or target data has {metadata.get('NN_dims')} "
                     f"{which} NN dims. add Flattennanremove as a preprocessing step to flatten all data sources. "
-                    "This includes all model, condition and observation data that are not flat."
+                    "This includes all model, condition and reference data that are not flat."
                 )
     else:
         if any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):

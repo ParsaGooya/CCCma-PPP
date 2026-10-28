@@ -2,7 +2,7 @@ experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_
 max_epochs: 100
 train_loader:
   dataset:
-    model:
+    forecast:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime/forecast_like
       names:
       - tas
@@ -19,7 +19,7 @@ train_loader:
       # rename_dict:
       #   year: time
       # drop_vars_list: [height]
-    # observation:
+    # reference:
     #   paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
     #   names:
     #   - tas

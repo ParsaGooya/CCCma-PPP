@@ -102,10 +102,10 @@ class InferenceConfig:
         Any
             Description not yet provided.
         """
-        if "observation" in self.train_config["train_loader"]["dataset_config"]:
-            preprocessor_name = "observation"
+        if "reference" in self.train_config["train_loader"]["dataset_config"]:
+            preprocessor_name = "reference"
         else:
-            preprocessor_name = "model"
+            preprocessor_name = "forecast"
 
         location = self.experiment_dir / "preprocessing_pipeline"
         return location / f"{preprocessor_name}_preprocessing_pipeline.joblib"
@@ -358,7 +358,7 @@ def build_writer(
             module.added_features_dim == inference_loader.added_features_dim,
         ]
     ):
-        raise RuntimeError("Data and model IO dimensions do not match!")
+        raise RuntimeError("Data and NN model IO dimensions do not match!")
 
     log("Loading postprocessor ...")
     post_processor = PreprocessingPipeline().load_from_memory(

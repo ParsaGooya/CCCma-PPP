@@ -10,13 +10,13 @@ realization_dim: "ensembles"
 
 supported_NN_dimensions_sorted: ["sequence", "lev", "lat", "lon"]
 
-model_data_allowed_dimensions:
+forecast_data_allowed_dimensions:
   ["time", "lead_time", "ensembles", "sequence", "lev", "lat", "lon"]
-model_data_required_dimensions: ["time", "lead_time", "lat", "lon"]
+forecast_data_required_dimensions: ["time", "lead_time", "lat", "lon"]
 
-observation_data_allowed_dimensions:
+reference_data_allowed_dimensions:
   ["time", "ensembles", "sequence", "lev", "lat", "lon"]
-observation_data_required_dimensions: ["time", "lat", "lon"]
+reference_data_required_dimensions: ["time", "lat", "lon"]
 
 condition_data_allowed_dimensions:
   ["time", "lead_time", "ensembles", "sequence", "lev", "lat", "lon"]
