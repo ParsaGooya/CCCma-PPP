@@ -119,7 +119,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     Parameters
     ----------
-    dataset_config : TrainDatasetConfig
+    dataset : TrainDatasetConfig
         Description not yet provided.
     batch_size : int
         Description not yet provided.
@@ -141,7 +141,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         Description not yet provided.
     """
 
-    dataset_config: TrainDatasetConfig
+    dataset: TrainDatasetConfig
     batch_size: int
     time_features: list | None = None
     train_years_slice: tuple | list = None
@@ -157,7 +157,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         Document this function.
         """
         super().__init__()
-
+        self.dataset_config = self.dataset
         self.time_features = AddedTimeFeatures(self.dataset_config, self.time_features)
 
         if self.train_years_slice is None:

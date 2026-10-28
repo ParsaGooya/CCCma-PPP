@@ -1,7 +1,7 @@
 experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_for_Reinel
 max_epochs: 100
 train_loader:
-  dataset_config:
+  dataset:
     model:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime/forecast_like
       names:

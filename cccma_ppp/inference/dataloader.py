@@ -96,7 +96,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     Parameters
     ----------
-    dataset_config : InferenceDatasetConfig | None
+    dataset : InferenceDatasetConfig | None
         Description not yet provided.
     batch_size : int
         Description not yet provided.
@@ -116,7 +116,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         Description not yet provided.
     """
 
-    dataset_config: InferenceDatasetConfig | None = None
+    dataset: InferenceDatasetConfig | None = None
     batch_size: int = 1
     inference_years_slice: tuple | list = None
     num_data_workers: int = 0
@@ -136,6 +136,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         """
         super().__init__()
         self.train_dataset_config = None
+        self.dataset_config = self.dataset
 
         if self.dataset_config is not None:
             _ = self._inference_times

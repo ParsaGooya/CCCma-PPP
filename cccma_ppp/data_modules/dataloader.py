@@ -63,7 +63,7 @@ class DataloaderConfigABC(abc.ABC):
 
     Attributes
     ----------
-    dataset_config : DatasetConfigABC
+    dataset : DatasetConfigABC
         Description not yet provided.
     pin_memory : bool
         Description not yet provided.
@@ -77,7 +77,7 @@ class DataloaderConfigABC(abc.ABC):
         Description not yet provided.
     """
 
-    dataset_config: DatasetConfigABC
+    dataset: DatasetConfigABC
     pin_memory: bool
     time_features: AddedTimeFeatures | list[str] | None
     prefetch_factor: int | None
