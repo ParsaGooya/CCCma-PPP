@@ -14,3 +14,57 @@ Contact: parsa.gooya@ec.gc.ca
 All rights reserved. This software and associated materials may not be used, copied, modified, distributed, or shared without prior written permission from the authors.
 
 Copyright © 2026 Parsa Gooya and CCCma.
+
+# Installation
+
+## Install `uv`
+
+```bash
+pip install uv
+```
+
+## Create a new virtual environment
+
+```bash
+uv venv
+```
+
+## Activate the virtual environment
+
+- **Linux/macOS**
+
+```bash
+  source .venv/bin/activate
+```
+
+- **Windows (PowerShell)**
+
+```powershell
+  .venv\Scripts\Activate.ps1
+```
+
+## Install the package
+
+```bash
+uv pip install .
+```
+
+For development mode:
+
+```bash
+uv pip install -e .
+```
+
+# Usage
+
+## Training
+
+```bash
+torchrun --nproc_per_node=gpu -m cccma_ppp.train path_to_train_config.yaml
+```
+
+## Inference
+
+```bash
+torchrun --nproc_per_node=gpu -m cccma_ppp.inference path_to_inference_config.yaml
+```
