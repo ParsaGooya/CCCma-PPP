@@ -176,7 +176,7 @@ class GenerativeContext:
         if module is not None:
             self.generator = getattr(module.architecture_config, "GENERATOR", None) is not None
             self.generative_modeling = getattr(
-                module.model, "generative_modeling", False
+                module.arch, "generative_modeling", False
             )
 
         else:

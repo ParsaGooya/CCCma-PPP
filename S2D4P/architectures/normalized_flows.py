@@ -99,7 +99,7 @@ class NormalizedFlowModel(flowABC):
         self.flows = []
 
         for step in self.list_flows:
-            self.flows.append(step.get_model())
+            self.flows.append(step.get_arch())
 
         self.condition_size = condition_size
 

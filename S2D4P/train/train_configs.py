@@ -153,11 +153,11 @@ class TrainConfig:
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
 
-        if self.module.model_type.lower() in ["mlp"]:
+        if self.module.arch_type.lower() in ["mlp"]:
             if self.module.architecture_config.batch_normalization:
                 if self.train_loader.batch_size == 1:
                     raise ValueError(
-                        f"With {self.module.model_type} architecture, if batch_normalization is True, "
+                        f"With {self.module.arch_type} architecture, if batch_normalization is True, "
                         "batch_size must be greater thatn one duting training."
                     )
 

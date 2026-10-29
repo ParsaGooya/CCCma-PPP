@@ -56,7 +56,7 @@ class LosspipelineConfig:
         3- D1, D2, ...
 
         where C is channel size and D1, D2, ... are output sizes.
-        The sizes must match that of the model and target data.
+        The sizes must match that of the input and target data.
     """
 
     loss_pipeline: list[LossStepConfig]

@@ -118,7 +118,7 @@ class ModuleSelector:
         return self.architecture_config.EXPECTS_MASK
 
     @property
-    def model_type(self) -> str:
+    def arch_type(self) -> str:
         """
         Document this function.
 
@@ -217,12 +217,12 @@ class ArchSelector:
 
         if all([self.config is None, self.load_dir is None]):
             raise RuntimeError(
-                "Either specify model configuration with config or specify a path for loading."
+                "Either specify architecture configuration with config or specify a path for loading."
             )
 
         if all([self.load_dir is None, self.freeze_weights]):
             raise ValueError(
-                "When ''load_dir'' is not provided for a checkpoint model, ''freeze_weights'' must be False or None."
+                "When ''load_dir'' is not provided for a checkpoint architecture, ''freeze_weights'' must be False or None."
             )
 
         if self.load_dir is not None:
@@ -233,14 +233,14 @@ class ArchSelector:
             )
             checkpoint_model = checkpoint_module.get("Architecture")
             assert self.type.lower() == checkpoint_model.get("type").lower(), (
-                f"The checkpoint {checkpoint_model.get('type')} model does not have the correct type {self.type}"
+                f"The checkpoint {checkpoint_model.get('type')} architecture does not have the correct type {self.type}"
             )
             self.config = checkpoint_model.get("config")
             warnings.warn(
-                f"all model config overwritten by the saved model from {self.load_dir}"
+                f"all architecture config overwritten by the saved model from {self.load_dir}"
             )
             if self._freeze_weights:
-                warnings.warn(f"Checkpoint {self.type} model weights will be frozen.")
+                warnings.warn(f"Checkpoint {self.type} architecture weights will be frozen.")
 
     @classmethod
     def register(cls, name: str) -> Callable[..., ArchABC]:
@@ -355,7 +355,7 @@ class FlowSelector:
         """
         return cls.registery.available()
 
-    def get_model(self):
+    def get_flow(self):
         """
         Document this function.
 

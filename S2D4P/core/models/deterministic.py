@@ -214,7 +214,7 @@ class deterministic(moduleABC):
         self.output_shape = output_shape
         self.added_features_dim = added_features_dim
 
-        self.model = self.architecture_config.build(
+        self.arch = self.architecture_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
             added_features_dim=added_features_dim,
@@ -293,7 +293,7 @@ class deterministic(moduleABC):
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples
 
-        return self.model(
+        return self.arch(
             DeterministicRequest(
                 input=data.input,
                 input_mask=data.input_mask,

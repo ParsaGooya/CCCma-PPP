@@ -105,7 +105,7 @@ class cVAEConfig(moduleConfigABC):
         else:
             self._load_from_checkpoint(self.load_dir)
             warnings.warn(
-                f"Model and prior flow config overwritten by the saved module: \n {self.load_dir}"
+                f"Architecture and prior flow config overwritten by the saved module: \n {self.load_dir}"
             )
 
         if self.combined_CGCN_weight is None:
@@ -312,7 +312,7 @@ class cVAE(moduleABC):
         self.output_shape = output_shape
         self.added_features_dim = added_features_dim
 
-        self.model = self.architecture_config.build(
+        self.arch = self.architecture_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
             added_features_dim=added_features_dim,
@@ -449,7 +449,7 @@ class cVAE(moduleABC):
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples
 
-        return self.model(
+        return self.arch(
             cVAEForwardRequest(
                 target=data.target,
                 target_mask=data.target_mask,
@@ -496,7 +496,7 @@ class cVAE(moduleABC):
         if self.training and generator is not None:
             output_sample_size = generator.num_training_noise_samples
 
-        return self.model.predict(
+        return self.arch.predict(
             cVAEPredictRequest(
                 condition=data.input,
                 condition_mask=data.input_mask,

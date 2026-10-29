@@ -394,9 +394,9 @@ class ArchABC(nn.Module, abc.ABC):
         )["module"]
 
         model_state_dict = {
-            key.removeprefix("model."): value
+            key.removeprefix("arch."): value
             for key, value in checkpoint.items()
-            if key.startswith("model.")
+            if key.startswith("arch.")
         }
 
         self.load_state_dict(model_state_dict, strict=checkpoint_config.strict)
