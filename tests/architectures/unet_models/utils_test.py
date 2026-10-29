@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from cccma_ppp.architectures.unet.utils import (
+from S2D4P.architectures.unet.utils import (
     _unet_config_checks,
 )
 

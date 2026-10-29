@@ -6,8 +6,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.core.trainer as trainer_mod
-from cccma_ppp.core.trainer import Trainer, TrainerConfig
+import S2D4P.core.trainer as trainer_mod
+from S2D4P.core.trainer import Trainer, TrainerConfig
 
 
 @dataclasses.dataclass

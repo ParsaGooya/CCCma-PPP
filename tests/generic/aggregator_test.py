@@ -3,11 +3,11 @@ import numpy as np
 import pytest
 import torch
 
-from cccma_ppp.generic.aggregator import (
+from S2D4P.generic.aggregator import (
     MetricsAggregator,
     RunningCovariance,
 )
-from cccma_ppp.generic.runtime import RuntimeContext
+from S2D4P.generic.runtime import RuntimeContext
 
 
 class DummyDistributed:

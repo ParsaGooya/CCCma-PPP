@@ -31,22 +31,22 @@ from tqdm import tqdm
 # MLPs (simple dense networks) and UNets (encoder-decoder with skip connections)
 # Each has two variants: CVAE (Conditional Variational AutoEncoder - probabilistic)
 # and deterministic (direct prediction)
-from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
-from cccma_ppp.architectures.mlp import (
+from S2D4P.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from S2D4P.architectures.mlp import (
     deterministic as _mlp_deterministic,  # noqa: F401
 )
-from cccma_ppp.architectures.unet import cvae as _unet_cvae  # noqa: F401
-from cccma_ppp.architectures.unet import (
+from S2D4P.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from S2D4P.architectures.unet import (
     deterministic as _unet_deterministic,  # noqa: F401
 )
-from cccma_ppp.configs import required_sample_dimensions
-from cccma_ppp.generic import registry_imports  # noqa: F401
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
-from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
-from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
-from cccma_ppp.train.train_configs import TrainConfig, prepare_config
+from S2D4P.configs import required_sample_dimensions
+from S2D4P.generic import registry_imports  # noqa: F401
+from S2D4P.generic.distributed import Distributed
+from S2D4P.generic.runtime import RuntimeContext
+from S2D4P.loss import kld as _loss_kld  # noqa: F401
+from S2D4P.loss import loss as _loss_pipeline  # noqa: F401
+from S2D4P.loss import utils_loss as _loss_utils  # noqa: F401
+from S2D4P.train.train_configs import TrainConfig, prepare_config
 
 # Suppress warnings during testing - we're checking structure, not debugging warnings
 warnings.filterwarnings("ignore")
@@ -2446,7 +2446,7 @@ def run_preprocessor_case(config_path: Path, params: dict[str, Any]) -> None:
 
 def run_inference_case(config_path: Path, params: dict[str, Any]) -> None:
     """Test inference loader compatibility with training config"""
-    from cccma_ppp.inference.inference_configs import InferenceConfig
+    from S2D4P.inference.inference_configs import InferenceConfig
 
     configure_runtime_context(config_path)
     train_config = load_train_config(config_path)

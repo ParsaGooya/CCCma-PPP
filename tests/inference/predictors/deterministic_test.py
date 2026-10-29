@@ -5,8 +5,8 @@ from unittest.mock import Mock
 import pytest
 import torch
 
-import cccma_ppp.inference.predictors.deterministic as module
-from cccma_ppp.inference.predictors.deterministic import (
+import S2D4P.inference.predictors.deterministic as module
+from S2D4P.inference.predictors.deterministic import (
     DeterministicPredictorConfig,
     DetermninisticPredictor,
 )

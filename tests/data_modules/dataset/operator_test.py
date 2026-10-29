@@ -6,11 +6,11 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from cccma_ppp.data_modules.dataset.operator import (
+from S2D4P.data_modules.dataset.operator import (
     DatasetOperator,
     _build_chunks,
 )
-from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from S2D4P.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 INIT_TIME_DIM = "time"
 LEAD_TIME_DIM = "lead_time"
@@ -787,7 +787,7 @@ class TestGetWeights:
 
     @pytest.mark.pruned
     def test_with_flattennanremove_passes_flattener(self):
-        from cccma_ppp.preprocessing.utils_preprocessing import (
+        from S2D4P.preprocessing.utils_preprocessing import (
             Flattennanremove,
         )
 

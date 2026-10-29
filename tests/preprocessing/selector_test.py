@@ -5,8 +5,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from cccma_ppp.preprocessing.registery import Registery
-from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
+from S2D4P.preprocessing.registery import Registery
+from S2D4P.preprocessing.selector import PreprocessingStepSelector
 
 
 class DummyPreprocessor:

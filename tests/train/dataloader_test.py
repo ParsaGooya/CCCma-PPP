@@ -7,8 +7,8 @@ import pytest
 import torch
 import xarray as xr
 
-import cccma_ppp.train.dataloader as module
-from cccma_ppp.train.dataloader import (
+import S2D4P.train.dataloader as module
+from S2D4P.train.dataloader import (
     BatchData,
     TrainDataloaderConfig,
     collate_batch,

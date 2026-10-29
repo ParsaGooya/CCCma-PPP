@@ -6,8 +6,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.architectures.architecture_abc as module
-from cccma_ppp.architectures.architecture_abc import (
+import S2D4P.architectures.architecture_abc as module
+from S2D4P.architectures.architecture_abc import (
     CheckpointConfig,
     GENERATORConfig,
     cVAEmodelConfigABC,
@@ -19,7 +19,7 @@ from cccma_ppp.architectures.architecture_abc import (
     modelConfigABC,
     weights_init,
 )
-from cccma_ppp.generic.runtime import RuntimeContext
+from S2D4P.generic.runtime import RuntimeContext
 
 
 class ConcreteFlow(flowABC):

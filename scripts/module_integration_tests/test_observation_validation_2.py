@@ -12,8 +12,8 @@ from dataclasses import dataclass
 
 # Import actual TrainDatasetConfig from cccma_ppp
 try:
-    from cccma_ppp.train.dataset import TrainDatasetConfig
-    from cccma_ppp.data_modules.utils import add_lead_times
+    from S2D4P.train.dataset import TrainDatasetConfig
+    from S2D4P.data_modules.utils import add_lead_times
 
     CCCMA_AVAILABLE = True
 except ImportError:

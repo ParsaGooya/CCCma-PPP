@@ -20,26 +20,26 @@ import yaml
 from tqdm import tqdm
 
 # Import architecture modules
-from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
-from cccma_ppp.architectures.mlp import (
+from S2D4P.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from S2D4P.architectures.mlp import (
     deterministic as _mlp_deterministic,  # noqa: F401
 )
-from cccma_ppp.architectures.unet import cvae as _unet_cvae  # noqa: F401
-from cccma_ppp.architectures.unet import (
+from S2D4P.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from S2D4P.architectures.unet import (
     deterministic as _unet_deterministic,  # noqa: F401
 )
-from cccma_ppp.configs import required_sample_dimensions
-from cccma_ppp.generic import registry_imports  # noqa: F401
-from cccma_ppp.generic.distributed import Distributed
+from S2D4P.configs import required_sample_dimensions
+from S2D4P.generic import registry_imports  # noqa: F401
+from S2D4P.generic.distributed import Distributed
 
 # Import loss modules
-from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
-from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
-from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
+from S2D4P.loss import kld as _loss_kld  # noqa: F401
+from S2D4P.loss import loss as _loss_pipeline  # noqa: F401
+from S2D4P.loss import utils_loss as _loss_utils  # noqa: F401
 
 # Import the training entry point
-from cccma_ppp.train.train import main as train_main
-from cccma_ppp.train.train_configs import TrainConfig, prepare_config
+from S2D4P.train.train import main as train_main
+from S2D4P.train.train_configs import TrainConfig, prepare_config
 
 warnings.filterwarnings("ignore")
 logging.raiseExceptions = False

@@ -7,7 +7,7 @@ import xarray as xr
 from torch.utils.data import Dataset
 from torch.utils.data.distributed import DistributedSampler
 
-from cccma_ppp.data_modules.dataloader import (
+from S2D4P.data_modules.dataloader import (
     BatchDataABC,
     Dataloader,
     DataloaderConfigABC,

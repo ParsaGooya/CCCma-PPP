@@ -5,13 +5,13 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from cccma_ppp.data_modules.data.data_abc import (
+from S2D4P.data_modules.data.data_abc import (
     DataConfigABC,
     _get_ds_info,
     _resolve_data,
     infoclass,
 )
-from cccma_ppp.generic.runtime import RuntimeContext
+from S2D4P.generic.runtime import RuntimeContext
 
 INIT_TIME_DIM = DataConfigABC.init_time_dim
 LEAD_TIME_DIM = DataConfigABC.lead_time_dim

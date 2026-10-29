@@ -8,13 +8,13 @@ import logging
 import pandas as pd
 
 # cccma_ppp imports
-from cccma_ppp.data_modules.data.data_configs import (
+from S2D4P.data_modules.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
 )
-from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from S2D4P.train.dataset import TrainDatasetConfig
+from S2D4P.preprocessing.selector import PreprocessingStepSelector
+from S2D4P.preprocessing.preprocessing import PreprocessingPipeline
 
 # Configuration
 CONFIG_PATH = "scripts/integration_suite_train_config.yaml"

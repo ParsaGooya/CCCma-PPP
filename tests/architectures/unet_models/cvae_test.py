@@ -7,19 +7,19 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.architectures.unet.cvae as cvae_module
-from cccma_ppp.architectures.layers.conv import (
+import S2D4P.architectures.unet.cvae as cvae_module
+from S2D4P.architectures.layers.conv import (
     ConvBlockConfig,
     ConvNeXtBlockConfig,
     LatentVector,
     PartialConvBlockConfig,
     TensorMask,
 )
-from cccma_ppp.architectures.layers.unet import (
+from S2D4P.architectures.layers.unet import (
     UNetOutputSIC,
 )
-from cccma_ppp.architectures.architecture_abc import DeterministicRequest
-from cccma_ppp.architectures.unet.cvae import (
+from S2D4P.architectures.architecture_abc import DeterministicRequest
+from S2D4P.architectures.unet.cvae import (
     Generation,
     Recognition,
     cVAEUNet,
@@ -27,8 +27,8 @@ from cccma_ppp.architectures.unet.cvae import (
     cVAEUNetSIC,
     cVAEUNetSICEConfig,
 )
-from cccma_ppp.architectures.unet.deterministic import UNetConfig
-from cccma_ppp.core.models.cvae import cVAEOutput
+from S2D4P.architectures.unet.deterministic import UNetConfig
+from S2D4P.core.models.cvae import cVAEOutput
 
 
 def make_config(**overrides):

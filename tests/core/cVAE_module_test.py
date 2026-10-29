@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 import torch
 
-import cccma_ppp.core.models.cvae as mod
-from cccma_ppp.core.models.cvae import cVAE, cVAEConfig, cVAEOutput
-from cccma_ppp.generic.runtime import RuntimeContext
+import S2D4P.core.models.cvae as mod
+from S2D4P.core.models.cvae import cVAE, cVAEConfig, cVAEOutput
+from S2D4P.generic.runtime import RuntimeContext
 
 
 @pytest.fixture(autouse=True)

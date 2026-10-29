@@ -2,7 +2,7 @@ import dataclasses
 
 import pytest
 
-from cccma_ppp.preprocessing.registery import Registery
+from S2D4P.preprocessing.registery import Registery
 
 
 @pytest.mark.pruned

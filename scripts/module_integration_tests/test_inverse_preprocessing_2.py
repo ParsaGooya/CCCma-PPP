@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
-from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
-from cccma_ppp.preprocessing.utils_preprocessing import TrendRemover
+from S2D4P.preprocessing.selector import PreprocessingStepSelector
+from S2D4P.preprocessing.utils_preprocessing import TrendRemover
 
 DATA_PATH = Path(
     "/space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime"

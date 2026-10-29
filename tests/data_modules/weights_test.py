@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from cccma_ppp.data_modules.weights import WeightsConfig
+from S2D4P.data_modules.weights import WeightsConfig
 
 
 def make_target_coords():

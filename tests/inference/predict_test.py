@@ -5,8 +5,8 @@ from unittest.mock import Mock
 
 import pytest
 
-import cccma_ppp.inference.predict as predict_mod
-from cccma_ppp.inference.predict import get_parser, main
+import S2D4P.inference.predict as predict_mod
+from S2D4P.inference.predict import get_parser, main
 
 
 class DummyDistributed:

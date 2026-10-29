@@ -12,8 +12,8 @@ matplotlib.use("Agg")
 
 import threading
 
-import cccma_ppp.generic.monitoring as module
-from cccma_ppp.generic.monitoring import (
+import S2D4P.generic.monitoring as module
+from S2D4P.generic.monitoring import (
     Monitor,
     build_distributed_monitor,
     combine_rank_results,

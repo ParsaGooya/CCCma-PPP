@@ -1,0 +1,511 @@
+import torch
+import numpy as np
+from pathlib import Path
+import warnings
+import dataclasses
+import dacite
+import gc
+
+from S2D4P.loss.loss import Losspipeline
+from S2D4P.loss.kld import KLD
+from S2D4P.core.core_abc import moduleABC, moduleConfigABC, OutputABC
+from S2D4P.core.selectors import (
+    ModuleSelector,
+    cVAEModelSelector,
+    _load_config_from_checkpoint,
+)
+from S2D4P.architectures.normalized_flows import NormalizedFlowConfig
+from S2D4P.architectures.architecture_abc import cVAEPredictRequest, cVAEForwardRequest
+from S2D4P.train.dataloader import BatchData
+from S2D4P.generic.runtime import RuntimeContext
+
+
+@dataclasses.dataclass
+class cVAEOutput(OutputABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    output : torch.Tensor
+        Description not yet provided.
+    mu : torch.Tensor | None
+        Description not yet provided.
+    log_var : torch.Tensor | None
+        Description not yet provided.
+    samples : torch.Tensor | None
+        Description not yet provided.
+    cond_mu : torch.Tensor | None
+        Description not yet provided.
+    cond_log_var : torch.Tensor | None
+        Description not yet provided.
+    deterministic_guess : bool
+        Description not yet provided.
+    """
+
+    output: torch.Tensor
+    mu: torch.Tensor | None
+    log_var: torch.Tensor | None
+    samples: torch.Tensor | None = None
+    cond_mu: torch.Tensor | None = None
+    cond_log_var: torch.Tensor | None = None
+    deterministic_guess: bool = False
+
+
+@ModuleSelector.register("cvae")
+@dataclasses.dataclass
+class cVAEConfig(moduleConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    Architecture : cVAEModelSelector | None
+        Description not yet provided.
+    posterior_variance_limits : list[float | None, float | None] | tuple[float | None, float | None] | None
+        Description not yet provided.
+    prior_flow_config : NormalizedFlowConfig | None
+        Description not yet provided.
+    combined_CGCN_weight : float
+        Description not yet provided.
+    load_dir : str | None
+        Description not yet provided.
+    """
+
+    Architecture: cVAEModelSelector | None = None
+    posterior_variance_limits: (
+        list[float | None, float | None] | tuple[float | None, float | None] | None
+    ) = None
+    prior_flow_config: NormalizedFlowConfig | None = None
+    combined_CGCN_weight: float = None
+    load_dir: str | None = None
+
+    def __post_init__(self):
+        """
+        Document this function.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
+        self.condition_dependant_flow = False
+
+        if self.load_dir is None:
+            if self.Architecture is None:
+                raise ValueError("provide loading dir or architecture configurations")
+
+        else:
+            self._load_from_checkpoint(self.load_dir)
+            warnings.warn(
+                f"Model and prior flow config overwritten by the saved module: \n {self.load_dir}"
+            )
+
+        if self.combined_CGCN_weight is None:
+            self.combined_CGCN_weight = 0
+
+        self.architecture_config = self.Architecture.get_architecture_config()
+
+        self.latent_size = self.architecture_config.latent_size
+
+        if self.prior_flow_config is not None:
+            self.condition_dependant_flow = self.architecture_config.condition_dependant_latent
+
+        self.architecture_config._resolve_flow_settings(self.condition_dependant_flow)
+
+        assert 0 <= self.combined_CGCN_weight <= 1, (
+            "CGCN weight should be between [0,1]"
+        )
+
+    def build(
+        self,
+        input_shape: np.ndarray | tuple,
+        output_shape: np.ndarray | tuple | None = None,
+        added_features_dim: int = None,
+    ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        return cVAE(
+            config=self,
+            input_shape=input_shape,
+            output_shape=output_shape,
+            added_features_dim=added_features_dim,
+        )
+
+    def _load_from_checkpoint(self, load_path: Path | str):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        load_path : Path | str
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
+            Path(load_path)
+        )
+        self.checkpoint_config = checkpoint_config
+        self.Architecture = dacite.from_dict(
+            data_class=cVAEModelSelector,
+            data=checkpoint_module.get("Architecture"),
+            config=dacite.Config(strict=True),
+        )
+
+        self.prior_flow_config = checkpoint_module.get("prior_flow_config", None)
+        self.prior_flow_config = dacite.from_dict(
+            data_class=NormalizedFlowConfig,
+            data=self.prior_flow_config,
+            config=dacite.Config(strict=True),
+        )
+
+        if self.posterior_variance_limits is None:
+            self.posterior_variance_limits = checkpoint_module.get(
+                "posterior_variance_limits", None
+            )
+        if self.combined_CGCN_weight is None:
+            self.combined_CGCN_weight = checkpoint_module.get("combined_CGCN_weight", 0)
+
+        del checkpoint_config, checkpoint_module
+        gc.collect()
+        return self
+
+
+class cVAE(moduleABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : cVAEConfig
+        Description not yet provided.
+    input_shape : np.ndarray
+        Description not yet provided.
+    output_shape : np.ndarray | None
+        Description not yet provided.
+    added_features_dim : int
+        Description not yet provided.
+    """
+
+    def __init__(
+        self,
+        config: cVAEConfig,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray | None = None,
+        added_features_dim: int = None,
+    ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        config : cVAEConfig
+            Description not yet provided.
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        RuntimeError
+            Description not yet provided.
+        """
+        super().__init__()
+        self.config = config
+        self.architecture_config = self.config.architecture_config
+        self.latent_size = self.config.latent_size
+        self.posterior_variance_limits = self.config.posterior_variance_limits
+        self.prior_flow_config = self.config.prior_flow_config
+        self.combined_CGCN_weight = self.config.combined_CGCN_weight
+
+        if self.posterior_variance_limits is not None:
+            assert all(
+                [
+                    limit > 0
+                    for limit in self.posterior_variance_limits
+                    if limit is not None
+                ]
+            ), "posterior_variance_limits must be positive or None."
+        if getattr(self.config, "condition_dependant_flow", False):
+            self.flow_condition_size = self.architecture_config.condition_embedding_size
+        else:
+            self.flow_condition_size = None
+
+        self.criterion = None
+        self.prior_flow = None
+
+        if output_shape is None:
+            output_shape = input_shape.copy()
+
+        if self.config.load_dir is not None:
+            if (
+                RuntimeContext.INPUT_VAR_METADATA
+                != self.config.checkpoint_config.checkpoint_input_var_metadata
+            ):
+                raise RuntimeError(
+                    "the loaded module was not trained for the consistent input variables or preprocessing steps"
+                )
+            if (
+                RuntimeContext.TARGET_VAR_METADATA
+                != self.config.checkpoint_config.checkpoint_output_var_metadata
+            ):
+                raise RuntimeError(
+                    "the loaded module was not trained for the consistent output variables or preprocessing steps"
+                )
+
+            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
+                raise RuntimeError(
+                    f"the requested input shape ({input_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_input_shape}"
+                )
+            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
+                raise RuntimeError(
+                    f"the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}"
+                )
+
+        if self.posterior_variance_limits is not None:
+            min = (
+                torch.log(torch.tensor(self.posterior_variance_limits[0]))
+                if self.posterior_variance_limits[0] is not None
+                else None
+            )
+
+            max = (
+                torch.log(torch.tensor(self.posterior_variance_limits[1]))
+                if self.posterior_variance_limits[1] is not None
+                else None
+            )
+
+            self.posterior_variance_limits = [min, max]
+
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.added_features_dim = added_features_dim
+
+        self.model = self.architecture_config.build(
+            input_shape=input_shape,
+            output_shape=output_shape,
+            added_features_dim=added_features_dim,
+        )
+
+        if self.prior_flow_config is not None:
+            self.prior_flow = self.prior_flow_config.build(
+                latent_size=self.latent_size, condition_size=self.flow_condition_size
+            )
+
+        if self.config.load_dir is not None:
+            self._load_state_dict(self.config.load_dir)
+
+    def init_loss_function(self, reconstruction_loss: Losspipeline):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        reconstruction_loss : Losspipeline
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
+        if self.prior_flow_config is not None:
+            if reconstruction_loss.reduction.lower() != "sum":
+                raise RuntimeError(
+                    "with normalized flow all loss reduction has to be sum."
+                )
+
+        self.criterion = reconstruction_loss.to(self._get_device())
+        self.KLD = KLD(reduction=self.criterion.reduction).to(self._get_device())
+
+    def _compute_loss(self, beta: float, data: BatchData):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        beta : float
+            Description not yet provided.
+        data : BatchData
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
+        if self.criterion is None:
+            raise RuntimeError(
+                "crieterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
+            )
+
+        latent_sample_size = 1
+        output = self.forward(data, latent_sample_size)
+
+        target = data.target
+        target_mask = data.target_mask
+
+        target = target.unsqueeze(0).expand(
+            latent_sample_size,
+            *target.shape,
+        )
+
+        if target_mask is not None and target_mask.shape != target.shape:
+            target_mask = target_mask.unsqueeze(0).expand_as(target)
+
+        reconstruction_loss, indiv_losses = self.criterion(
+            output.output,
+            target,
+            target_mask=target_mask,
+            print_loss=False,
+        )
+
+        kld_loss = self.KLD(
+            output.mu,
+            output.log_var,
+            output.cond_mu,
+            output.cond_log_var,
+            prior_flow=self.prior_flow,
+            print_loss=False,
+        )
+
+        total_loss = reconstruction_loss + beta * kld_loss
+
+        if self.combined_CGCN_weight > 0:
+            output_CGCN = self.predict(data)
+            reconstruction_loss_CGCN, _ = self.criterion(
+                output_CGCN.output,
+                target,
+                print_loss=False,
+            )
+
+            total_loss = (
+                total_loss * (1 - self.combined_CGCN_weight)
+                + self.combined_CGCN_weight * reconstruction_loss_CGCN
+            )
+            indiv_losses["total_loss_CGCN"] = reconstruction_loss_CGCN.item()
+
+        losses_dict = {"total_loss": total_loss.item(), "kld": kld_loss.item()}
+
+        for key, value in indiv_losses.items():
+            losses_dict[key] = value
+
+        return total_loss, losses_dict
+
+    def forward(self, data: BatchData, latent_sample_size=1) -> cVAEOutput:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : BatchData
+            Description not yet provided.
+        latent_sample_size : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+        """
+        generator = self.architecture_config.GENERATOR
+        output_sample_size = 1
+        if not self.training and generator is not None:
+            output_sample_size = generator.num_validation_noise_samples
+
+        return self.model(
+            cVAEForwardRequest(
+                target=data.target,
+                target_mask=data.target_mask,
+                added_features=data.added_features,
+                condition=data.input,
+                condition_mask=data.input_mask,
+                posterior_variance_limits=self.posterior_variance_limits,
+                latent_sample_size=latent_sample_size,
+                output_sample_size=output_sample_size,
+            )
+        )
+
+    def predict(
+        self,
+        data: BatchData,
+        latent_sample_size: int = 1,
+        nstds: int = 1,
+        latent_samples: torch.Tensor = None,
+        output_sample_size: int = 1,
+        chunk_size: int | None = None,
+    ) -> cVAEOutput:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : BatchData
+            Description not yet provided.
+        latent_sample_size : int
+            Description not yet provided.
+        nstds : int
+            Description not yet provided.
+        latent_samples : torch.Tensor
+            Description not yet provided.
+        output_sample_size : int
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+        """
+        generator = self.architecture_config.GENERATOR
+        if self.training and generator is not None:
+            output_sample_size = generator.num_training_noise_samples
+
+        return self.model.predict(
+            cVAEPredictRequest(
+                condition=data.input,
+                condition_mask=data.input_mask,
+                added_features=data.added_features,
+                prior_flow=self.prior_flow,
+                latent_sample_size=latent_sample_size,
+                nstds=nstds,
+                latent_samples=latent_samples,
+                output_sample_size=output_sample_size,
+                chunk_size=chunk_size,
+            )
+        )

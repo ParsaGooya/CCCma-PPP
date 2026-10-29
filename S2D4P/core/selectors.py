@@ -1,0 +1,421 @@
+import numpy as np
+import dataclasses
+import torch
+from typing import Any, ClassVar
+from collections.abc import Callable, Mapping
+from pathlib import Path
+import gc
+import warnings
+
+from S2D4P.core.registery import Registery
+from S2D4P.core.core_abc import moduleABC
+from S2D4P.architectures.architecture_abc import (
+    ArchABC,
+    flowABC,
+    CheckpointConfig,
+    ArchConfigABC,
+)
+
+
+@dataclasses.dataclass
+class ModuleSelector:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    type : str
+        Description not yet provided.
+    config : Mapping[str, Any]
+        Description not yet provided.
+    """
+
+    type: str
+    config: Mapping[str, Any]
+    registery: ClassVar[Registery] = Registery()
+
+    def __post_init__(self):
+        """
+        Document this function.
+        """
+        self._module_config = self.registery.get(self.type.lower(), self.config)
+
+    @classmethod
+    def register(cls, name: str) -> Callable[..., moduleABC]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Returns
+        -------
+        Callable[..., moduleABC]
+            Description not yet provided.
+        """
+        return cls.registery.register(name.lower())
+
+    @classmethod
+    def available(cls):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        return cls.registery.available()
+
+    @property
+    def NUM_INPUT_DIMS(self) -> int:
+        """
+        Document this function.
+
+        Returns
+        -------
+        int
+            Description not yet provided.
+        """
+        return self.architecture_config.NUM_INPUT_DIMS
+
+    @property
+    def NUM_OUTPUT_DIMS(self) -> int:
+        """
+        Document this function.
+
+        Returns
+        -------
+        int
+            Description not yet provided.
+        """
+        return self.architecture_config.NUM_OUTPUT_DIMS
+
+    @property
+    def GENERATOR(self) -> bool:
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
+        return self.architecture_config.GENERATOR
+
+    @property
+    def EXPECTS_MASK(self) -> bool:
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
+        return self.architecture_config.EXPECTS_MASK
+
+    @property
+    def model_type(self) -> str:
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
+        return self._module_config.Architecture.type
+
+    @property
+    def architecture_config(self) -> ArchConfigABC:
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
+        return self._module_config.architecture_config
+
+    def build_module(
+        self,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray | None = None,
+        added_features_dim: int = None,
+    ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        return self._module_config.build(
+            input_shape=input_shape,
+            output_shape=output_shape,
+            added_features_dim=added_features_dim,
+        )
+
+
+@dataclasses.dataclass
+class ModelSelector:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    type : str
+        Description not yet provided.
+    config : Mapping[str, Any] | None
+        Description not yet provided.
+    load_dir : Path | str | None
+        Description not yet provided.
+    freeze_weights : bool | None
+        Description not yet provided.
+    """
+
+    type: str
+    config: Mapping[str, Any] | None = None
+    load_dir: Path | str | None = None
+    freeze_weights: bool | None = None
+
+    registery: ClassVar[Registery]
+
+    def __post_init__(self):
+        """
+        Document this function.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
+        self.checkpoint_config = None
+
+        if all([self.config is None, self.load_dir is None]):
+            raise RuntimeError(
+                "Either specify model configuration with config or specify a path for loading."
+            )
+
+        if all([self.load_dir is None, self.freeze_weights]):
+            raise ValueError(
+                "When ''load_dir'' is not provided for a checkpoint model, ''freeze_weights'' must be False or None."
+            )
+
+        if self.load_dir is not None:
+            self._freeze_weights = self.freeze_weights or False
+
+            checkpoint_module, self.checkpoint_config = _load_config_from_checkpoint(
+                self.load_dir, self._freeze_weights
+            )
+            checkpoint_model = checkpoint_module.get("Architecture")
+            assert self.type.lower() == checkpoint_model.get("type").lower(), (
+                f"The checkpoint {checkpoint_model.get('type')} model does not have the correct type {self.type}"
+            )
+            self.config = checkpoint_model.get("config")
+            warnings.warn(
+                f"all model config overwritten by the saved model from {self.load_dir}"
+            )
+            if self._freeze_weights:
+                warnings.warn(f"Checkpoint {self.type} model weights will be frozen.")
+
+    @classmethod
+    def register(cls, name: str) -> Callable[..., ArchABC]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Returns
+        -------
+        Callable[..., ArchABC]
+            Description not yet provided.
+        """
+        return cls.registery.register(name.lower())
+
+    @classmethod
+    def available(cls):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        return cls.registery.available()
+
+    def get_architecture_config(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        architecture_config = self.registery.get(self.type.lower(), self.config)
+        if self.checkpoint_config is not None:
+            architecture_config._add_checkpoint_config(self.checkpoint_config)
+
+        return architecture_config
+
+
+class cVAEModelSelector(ModelSelector):
+    """
+    Document this class.
+    """
+
+    registery: ClassVar[Registery] = Registery()
+
+
+class deterministicModelSelector(ModelSelector):
+    """
+    Document this class.
+    """
+
+    registery: ClassVar[Registery] = Registery()
+
+
+@dataclasses.dataclass
+class FlowSelector:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    type : str
+        Description not yet provided.
+    args : dict[str, object]
+        Description not yet provided.
+    """
+
+    type: str
+    args: dict[str, object]
+    registery: ClassVar[Registery] = Registery()
+
+    def __post_init__(self):
+        """
+        Document this function.
+        """
+        pass
+
+    @classmethod
+    def register(cls, name: str) -> Callable[..., flowABC]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Returns
+        -------
+        Callable[..., flowABC]
+            Description not yet provided.
+        """
+        return cls.registery.register(name.lower())
+
+    @classmethod
+    def available(cls):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        return cls.registery.available()
+
+    def get_model(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        return self.registery.get(self.type.lower(), self.args)
+
+
+def _load_config_from_checkpoint(
+    load_path: Path | str, freeze_weights: bool = False, strict: bool = True
+):
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    load_path : Path | str
+        Description not yet provided.
+    freeze_weights : bool
+        Description not yet provided.
+    strict : bool
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+
+    Raises
+    ------
+    FileNotFoundError
+        Description not yet provided.
+    """
+    if not Path(load_path).exists():
+        raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+
+    checkpoint = torch.load(
+        Path(load_path), weights_only=False, map_location=torch.device("cpu")
+    )
+
+    checkpoint_module = checkpoint.get("module_config")
+    checkpoint_input_shape = checkpoint.get("input_shape")
+    checkpoint_output_shape = checkpoint.get("output_shape")
+    checkpoint_input_var_metadata = checkpoint.get("input_var_metadata")
+    checkpoint_output_var_metadata = checkpoint.get("output_var_metadata")
+
+    checkpoint_config = CheckpointConfig(
+        load_path,
+        checkpoint_input_shape=checkpoint_input_shape,
+        checkpoint_output_shape=checkpoint_output_shape,
+        checkpoint_input_var_metadata=checkpoint_input_var_metadata,
+        checkpoint_output_var_metadata=checkpoint_output_var_metadata,
+        freeze_weights=freeze_weights,
+        strict=strict,
+    )
+
+    del checkpoint
+    gc.collect()
+
+    return checkpoint_module, checkpoint_config

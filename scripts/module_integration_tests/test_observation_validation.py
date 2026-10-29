@@ -6,7 +6,7 @@ from typing import Literal
 
 lead_time_unit = Literal["day", "month"]
 
-from cccma_ppp.data_modules.utils import add_lead_times
+from S2D4P.data_modules.utils import add_lead_times
 
 
 def create_observation_validation_csv(

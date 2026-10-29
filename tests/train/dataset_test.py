@@ -9,8 +9,8 @@ import pytest
 import torch
 import xarray as xr
 
-import cccma_ppp.train.dataset as module
-from cccma_ppp.train.dataset import (
+import S2D4P.train.dataset as module
+from S2D4P.train.dataset import (
     TrainDataset,
     TrainDatasetConfig,
 )

@@ -2,7 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.architectures.layers.mlp import build_mlp
+from S2D4P.architectures.layers.mlp import build_mlp
 
 
 @pytest.mark.pruned

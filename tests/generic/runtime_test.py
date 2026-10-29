@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from cccma_ppp.generic.runtime import RuntimeContext
+from S2D4P.generic.runtime import RuntimeContext
 
 
 class TestRuntimeContextDefaults:

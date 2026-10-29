@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-import cccma_ppp.generic.distributed as mod
+import S2D4P.generic.distributed as mod
 
 
 class DummyDist:

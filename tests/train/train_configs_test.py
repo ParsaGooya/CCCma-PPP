@@ -6,8 +6,8 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-from cccma_ppp.train.train_configs import (
+from S2D4P.preprocessing.utils_preprocessing import Flattennanremove
+from S2D4P.train.train_configs import (
     RuntimeContext,
     TrainConfig,
     _check_IO,
@@ -2938,7 +2938,7 @@ def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     assert calls["n"] == 2
 
 
-import cccma_ppp.train.train_configs as train_configs_module
+import S2D4P.train.train_configs as train_configs_module
 
 
 @pytest.mark.pruned

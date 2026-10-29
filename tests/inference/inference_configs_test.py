@@ -6,7 +6,7 @@ import pytest
 import torch
 import yaml
 
-from cccma_ppp.inference.inference_configs import (
+from S2D4P.inference.inference_configs import (
     InferenceConfig,
     build_writer,
 )

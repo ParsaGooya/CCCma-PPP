@@ -2,9 +2,9 @@ import torch
 import numpy as np
 import xarray as xr
 from typing import Dict, Optional, Union
-from cccma_ppp.architectures.architecture_abc import DeterministicRequest
-from cccma_ppp.core.models.deterministic import deterministicOutput
-from cccma_ppp.preprocessing.utils_preprocessing import Standardizer
+from S2D4P.architectures.architecture_abc import DeterministicRequest
+from S2D4P.core.models.deterministic import deterministicOutput
+from S2D4P.preprocessing.utils_preprocessing import Standardizer
 
 
 class InverseTransformationMapper:

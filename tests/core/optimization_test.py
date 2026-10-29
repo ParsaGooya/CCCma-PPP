@@ -5,8 +5,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.optimization import (
+from S2D4P.core.core_abc import moduleABC
+from S2D4P.core.optimization import (
     CosineAnnealingLRScheduler,
     LRSchedulerConfig,
     OptimizerConfig,

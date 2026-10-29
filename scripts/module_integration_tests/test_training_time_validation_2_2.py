@@ -14,14 +14,14 @@ import pandas as pd
 import xarray as xr
 import yaml
 
-from cccma_ppp.data_modules.data.data_configs import (
+from S2D4P.data_modules.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
 )
-from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.data_modules.utils import _create_train_mask
+from S2D4P.train.dataset import TrainDatasetConfig
+from S2D4P.preprocessing.selector import PreprocessingStepSelector
+from S2D4P.preprocessing.preprocessing import PreprocessingPipeline
+from S2D4P.data_modules.utils import _create_train_mask
 
 BASE_CONFIG = (
     "scripts/integration_suite_train_config.yaml"  # template YAML for all cases

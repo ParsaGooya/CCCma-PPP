@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from cccma_ppp.configs import (
+from S2D4P.configs import (
     lead_time_resolution,
     required_sample_dimensions,
 )
-from cccma_ppp.data_modules.data.data_configs import (
+from S2D4P.data_modules.data.data_configs import (
     ConditionDataConfig,
     ModelDataConfig,
     ObsDataConfig,
