@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -26,20 +27,20 @@ from cccma_ppp.data_modules.utils import _create_train_mask
 BASE_CONFIG = (
     "scripts/integration_suite_train_config.yaml"  # template YAML for all cases
 )
-BASE_DIR = Path(
-    "/fs/site7/eccc/crd/cccma/users/rna002/output/training_time_validation_2_2_monthly_init_12"
-)  # where dummy data is written
-OUTPUT_ROOT = BASE_DIR  # where validation outputs are written, one folder per case
+CONFIGS_YAML = Path(
+    "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/configs/configs.yaml"
+)  # library config; its lead_time_resolution is overridden by the profile at runtime
 
 MODEL_VAR = "tas"  # model variable name; must match the YAML "names" entry
 OBS_VAR = "tas"  # obs variable name; must match the YAML "names" entry
 N_LAT, N_LON = 4, 4  # small grid to keep files tiny
 
 # Each case: (name, model_start, model_end, obs_start, obs_end).
-# Model inits are decadal (10YS) between the model dates; obs are monthly (MS).
+# Model inits follow profile[0] between the model dates.
+# Obs follow profile[2] between the obs dates.
 CASES = [
     ("case_obs_1995", "1980-01-01", "2000-01-01", "1980-01-01", "1995-12-01"),
-    ("case_obs_2000jun", "1980-01-01", "2000-01-01", "1980-01-01", "2000-06-01"),
+    ("case_obs_2000jun", "1980-01-01", "2000-01-01", "1980-01-01", "2000-01-12"),
     (
         "case_obs_2005mar",
         "1980-01-01",
@@ -50,10 +51,54 @@ CASES = [
     ("case_obs_2015", "1980-01-01", "2000-01-01", "1980-01-01", "2015-12-01"),
 ]
 
+# Dummy-data and config profile.
+#   [0] Model init frequency, a pandas offset alias. "MS" = one init per month.
+#   [1] Exclusive upper bound for model leads. np.arange(1, 13) gives leads 1-12.
+#       Must equal profile[3] + 1 so the model provides every lead the config asks for.
+#   [2] Observation frequency, a pandas offset alias. "MS" = first day of each month.
+#   [3] Lead-time end written into the config's lead_times.end, so the mask covers leads 1 through this value.
+#   [4] Lead-time unit passed as lead_time_resolution to _create_train_mask. Must be a valid lead_time_unit value.
+
+profile = ["MS", 366, "D", 365, "day"]
+
+# ["YS", 121, "MS", 120, "month"]
+# ["MS", 13, "MS", 12, "month"]
+# ["MS", 366, "D", 365, "day"]
+
+FREQ_NAMES = {
+    "YS": "annual",
+    "MS": "monthly",
+    "D": "daily",
+}  # readable names for pandas aliases
+OFFSET_KWARG = {"month": "months", "day": "days"}  # DateOffset keyword per lead unit
+
+OUTPUT_PARENT = Path("/fs/site7/eccc/crd/cccma/users/rna002/output")
+BASE_DIR = OUTPUT_PARENT / (
+    f"training_time_validation_2_2_{FREQ_NAMES[profile[0]]}_init_{profile[3]}"
+)  # where dummy data is written; name follows profile
+OUTPUT_ROOT = BASE_DIR  # where validation outputs are written, one folder per case
+
 
 def _coverage(valid: int, total: int) -> float:
     """Percent of valid pairs. Returns 0.0 for an empty mask instead of dividing by zero."""
     return 100.0 * valid / total if total else 0.0
+
+
+def set_lead_time_resolution(value: str) -> None:
+    """Override the library's lead_time_resolution for this process.
+
+    The library reads configs.yaml once at import and copies the value into
+    module globals and class attributes, so every copy is updated here.
+    """
+    for mod in list(sys.modules.values()):
+        name = getattr(mod, "__name__", "") or ""
+        if not name.startswith("cccma_ppp"):
+            continue
+        if hasattr(mod, "lead_time_resolution"):
+            mod.lead_time_resolution = value
+        for obj in list(vars(mod).values()):
+            if isinstance(obj, type) and hasattr(obj, "lead_time_resolution"):
+                obj.lead_time_resolution = value
 
 
 def make_grid():
@@ -64,9 +109,12 @@ def make_grid():
 
 
 def make_model(start: str, end: str, lat, lon) -> xr.Dataset:
-    """Build dummy decadal model output with dims (time, lead_time, lat, lon)."""
-    init_times = pd.date_range(start, end, freq="MS")  # one init every 1 year
-    lead_times = np.arange(1, 13)  # leads 1-120 months
+    """Build dummy model output with dims (time, lead_time, lat, lon).
+
+    Inits use profile[0]. Leads run from 1 to profile[1] - 1.
+    """
+    init_times = pd.date_range(start, end, freq=profile[0])
+    lead_times = np.arange(1, profile[1])
     data = np.random.default_rng(0).normal(  # seeded so runs are reproducible
         size=(len(init_times), len(lead_times), N_LAT, N_LON)
     )
@@ -82,11 +130,11 @@ def make_model(start: str, end: str, lat, lon) -> xr.Dataset:
 
 
 def make_obs(start: str, end: str, lat, lon) -> xr.Dataset:
-    """Build dummy monthly observations with dims (time, lat, lon)."""
-    times = pd.date_range(start, end, freq="MS")  # first day of each month
-    data = np.random.default_rng(1).normal(
+    """Build dummy observations with dims (time, lat, lon). Uses profile[2]."""
+    times = pd.date_range(start, end, freq=profile[2])
+    data = np.random.default_rng(1).normal(  # separate seed from model
         size=(len(times), N_LAT, N_LON)
-    )  # separate seed from model
+    )
     return xr.Dataset(
         {OBS_VAR: (("time", "lat", "lon"), data)},
         coords={"time": times, "lat": lat, "lon": lon},
@@ -149,7 +197,10 @@ def _build_pipeline(section: dict) -> PreprocessingPipeline:
 
 
 def create_config_from_yaml(config_dict: dict) -> TrainDatasetConfig:
-    """Build the model, obs, and training dataset configs from the YAML dict."""
+    """Build the model, obs, and training dataset configs from the YAML dict.
+
+    The YAML's lead_times.end is overwritten with profile[3] before the lead list is built.
+    """
     logger = logging.getLogger(__name__)
     dataset_dict = config_dict["train_loader"]["dataset_config"]
 
@@ -176,6 +227,7 @@ def create_config_from_yaml(config_dict: dict) -> TrainDatasetConfig:
     logger.info("ObsDataConfig created")
 
     lt = dataset_dict["lead_times"]
+    lt["end"] = profile[3]
     lead_times = list(range(lt["start"], lt["end"] + 1))  # end is inclusive
     train_config = TrainDatasetConfig(
         model=model_config,
@@ -188,11 +240,11 @@ def create_config_from_yaml(config_dict: dict) -> TrainDatasetConfig:
 
 
 def verify_and_print_times(config: TrainDatasetConfig):
-    """Log the common and available time sets, and return both."""
+    """Log the common, available, and input time sets, and return all three."""
     logger = logging.getLogger(__name__)
     common_times = config.get_common_time
     available_times = config.available_times
-    input_time = config.get_input_times(available_times)
+    input_times = config.get_input_times(available_times)
 
     logger.info("COMMON TIMES (intersection of model and obs):")
     logger.info(f"   Count: {len(common_times)}")
@@ -205,9 +257,9 @@ def verify_and_print_times(config: TrainDatasetConfig):
         logger.info(f"   Range: {available_times[0]} to {available_times[-1]}")
 
     logger.info("INPUT TIMES (intersection of model and available):")
-    logger.info(f"   Count: {len(input_time)}")
-    if len(input_time):
-        logger.info(f"   Range: {input_time[0]} to {input_time[-1]}")
+    logger.info(f"   Count: {len(input_times)}")
+    if len(input_times):
+        logger.info(f"   Range: {input_times[0].values} to {input_times[-1].values}")
 
     logger.info("COMMON TIMES (first 5 and last 5):")
     for i, t in enumerate(common_times):
@@ -223,7 +275,7 @@ def verify_and_print_times(config: TrainDatasetConfig):
         elif i == 5:
             logger.info(f"   ... ({len(available_times) - 10} more) ...")
 
-    return common_times, available_times
+    return common_times, available_times, input_times
 
 
 def create_training_mask(
@@ -244,7 +296,7 @@ def create_training_mask(
     model_valid = ~_create_train_mask(
         init_times=model_init_times.values,
         lead_times=lead_times,
-        lead_time_resolution="month",  # check the allowed values of lead_time_unit
+        lead_time_resolution=profile[4],  # must be a valid lead_time_unit value
         max_allowed_time=max_allowed_time,
     ).values
 
@@ -252,10 +304,13 @@ def create_training_mask(
     available = set(
         pd.DatetimeIndex(available_times)
     )  # set gives fast membership tests
+    offset_kwarg = OFFSET_KWARG[profile[4]]
     obs_valid = np.zeros_like(model_valid)
     for i, init_time in enumerate(model_init_times):
         for j, lead in enumerate(lead_times):
-            obs_valid[i, j] = init_time + pd.DateOffset(months=int(lead)) in available
+            obs_valid[i, j] = (
+                init_time + pd.DateOffset(**{offset_kwarg: int(lead)}) in available
+            )
 
     mask = model_valid & obs_valid
 
@@ -293,7 +348,7 @@ def plot_training_mask(mask: np.ndarray, output_dir: Path, lead_times=None) -> N
         cbar.set_label("Valid (1) / Masked (0)", fontsize=11)
 
         if lead_times is not None and len(lead_times) == mask.shape[1]:
-            step = max(1, len(lead_times) // 20)  # label about 20 leads, not all 120
+            step = max(1, len(lead_times) // 20)  # label about 20 leads
             ticks = np.arange(0, len(lead_times), step)
             ax.set_xticks(ticks)
             ax.set_xticklabels(
@@ -323,14 +378,28 @@ def plot_training_mask(mask: np.ndarray, output_dir: Path, lead_times=None) -> N
 
 def validate_case(config_path: Path, output_dir: Path) -> None:
     """Run the full training-time validation for one case and write its outputs."""
+    set_lead_time_resolution(profile[4])  # the profile decides the library setting
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy of the library config, with lead_time_resolution set to the value this run used
+    with open(CONFIGS_YAML) as f:
+        lib_config = yaml.safe_load(f)
+    lib_config["lead_time_resolution"] = profile[4]
+    with open(output_dir / "configs.yaml", "w") as f:
+        yaml.safe_dump(lib_config, f, sort_keys=False)
+
     logger = setup_logging(output_dir)
     logger.info("TRAINING TIME VALIDATION")
     logger.info(f"Config: {config_path}")
 
     config_dict = load_config(str(config_path))
     train_config = create_config_from_yaml(config_dict)
-    common_times, available_times = verify_and_print_times(train_config)
+
+    # Overwrite the config with the dict as it was used (lead_times.end etc. applied)
+    with open(config_path, "w") as f:
+        yaml.safe_dump(config_dict, f, sort_keys=False)
+
+    common_times, available_times, input_times = verify_and_print_times(train_config)
     max_allowed_time = common_times.max()
     lead_times = list(train_config.lead_times)
     mask = create_training_mask(
@@ -347,9 +416,12 @@ def validate_case(config_path: Path, output_dir: Path) -> None:
             "common_times_range": [str(common_times[0]), str(common_times[-1])]
             if len(common_times)
             else [],  # empty when model and obs don't overlap
-            "available_times_count": len(available_times),
-            "available_times_range": [str(available_times[0]), str(available_times[-1])]
-            if len(available_times)
+            "input_times_count": len(input_times),
+            "input_times_range": [
+                str(input_times[0].values),
+                str(input_times[-1].values),
+            ]
+            if len(input_times)
             else [],
         },
         "mask": {
@@ -376,9 +448,10 @@ def run_validation(case_dirs: dict) -> None:
         dataset = cfg["train_loader"]["dataset_config"]
         dataset["model"]["paths"] = str(case_dir / "model")
         dataset["observation"]["paths"] = str(case_dir / "obs")
-        dataset["model"][
-            "rename_dict"
-        ] = {}  # dummy model already uses 'time'; no rename needed
+        dataset["model"]["rename_dict"] = {}  # dummy model already uses 'time'
+        dataset["lead_times"]["end"] = profile[
+            3
+        ]  # keep the saved YAML in sync with the profile
 
         out_dir = OUTPUT_ROOT / name
         out_dir.mkdir(parents=True, exist_ok=True)
