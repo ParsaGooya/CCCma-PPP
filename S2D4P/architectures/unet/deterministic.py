@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 
-from S2D4P.core.selectors import deterministicModelSelector
+from S2D4P.core.selectors import deterministicArchSelector
 from S2D4P.core.models.deterministic import deterministicOutput
 
 from S2D4P.architectures.architecture_abc import (
@@ -49,7 +49,7 @@ from S2D4P.architectures.layers.conv import (
 from S2D4P.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
 
 
-@deterministicModelSelector.register("unet")
+@deterministicArchSelector.register("unet")
 @dataclasses.dataclass
 class UNetConfig(ArchConfigABC):
     """
@@ -582,7 +582,7 @@ class UNet(deterministicArchABC):
         return self.output
 
 
-@deterministicModelSelector.register("unetsic")
+@deterministicArchSelector.register("unetsic")
 @dataclasses.dataclass
 class UNetSICConfig(UNetConfig):
     """

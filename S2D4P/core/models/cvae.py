@@ -11,7 +11,7 @@ from S2D4P.loss.kld import KLD
 from S2D4P.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from S2D4P.core.selectors import (
     ModuleSelector,
-    cVAEModelSelector,
+    cVAEArchSelector,
     _load_config_from_checkpoint,
 )
 from S2D4P.architectures.normalized_flows import NormalizedFlowConfig
@@ -60,7 +60,7 @@ class cVAEConfig(moduleConfigABC):
 
     Parameters
     ----------
-    Architecture : cVAEModelSelector | None
+    Architecture : cVAEArchSelector | None
         Description not yet provided.
     posterior_variance_limits : list[float | None, float | None] | tuple[float | None, float | None] | None
         Description not yet provided.
@@ -72,7 +72,7 @@ class cVAEConfig(moduleConfigABC):
         Description not yet provided.
     """
 
-    Architecture: cVAEModelSelector | None = None
+    Architecture: cVAEArchSelector | None = None
     posterior_variance_limits: (
         list[float | None, float | None] | tuple[float | None, float | None] | None
     ) = None
@@ -173,7 +173,7 @@ class cVAEConfig(moduleConfigABC):
         )
         self.checkpoint_config = checkpoint_config
         self.Architecture = dacite.from_dict(
-            data_class=cVAEModelSelector,
+            data_class=cVAEArchSelector,
             data=checkpoint_module.get("Architecture"),
             config=dacite.Config(strict=True),
         )

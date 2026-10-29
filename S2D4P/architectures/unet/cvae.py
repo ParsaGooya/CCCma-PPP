@@ -7,7 +7,7 @@ import warnings
 import torch
 import torch.nn as nn
 
-from S2D4P.core.selectors import cVAEModelSelector, deterministicModelSelector
+from S2D4P.core.selectors import cVAEArchSelector, deterministicArchSelector
 from S2D4P.core.models.cvae import cVAEOutput
 
 from S2D4P.configs import save_deterministic_guess_only
@@ -56,7 +56,7 @@ from S2D4P.architectures.unet.deterministic import UNetConfig
 
 
 @dataclasses.dataclass
-class UNetSelector(deterministicModelSelector):
+class UNetSelector(deterministicArchSelector):
     """
     Document this class.
 
@@ -72,7 +72,7 @@ class UNetSelector(deterministicModelSelector):
     share_output_block: bool = True
 
 
-@cVAEModelSelector.register("unet")
+@cVAEArchSelector.register("unet")
 @dataclasses.dataclass
 class cVAEUNetConfig(cVAEArchConfigABC):
     """
@@ -1211,7 +1211,7 @@ class Generation(nn.Module):
         return output
 
 
-@cVAEModelSelector.register("unetsic")
+@cVAEArchSelector.register("unetsic")
 @dataclasses.dataclass
 class cVAEUNetSICEConfig(cVAEUNetConfig):
     """

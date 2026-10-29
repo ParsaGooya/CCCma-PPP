@@ -172,7 +172,7 @@ class ModuleSelector:
 
 
 @dataclasses.dataclass
-class ModelSelector:
+class ArchSelector:
     """
     Document this class.
 
@@ -287,7 +287,7 @@ class ModelSelector:
         return architecture_config
 
 
-class cVAEModelSelector(ModelSelector):
+class cVAEArchSelector(ArchSelector):
     """
     Document this class.
     """
@@ -295,7 +295,7 @@ class cVAEModelSelector(ModelSelector):
     registery: ClassVar[Registery] = Registery()
 
 
-class deterministicModelSelector(ModelSelector):
+class deterministicArchSelector(ArchSelector):
     """
     Document this class.
     """

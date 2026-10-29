@@ -19,10 +19,10 @@ from S2D4P.architectures.layers.generic import (
     _validate_dropout,
 )
 
-from S2D4P.core.selectors import cVAEModelSelector
+from S2D4P.core.selectors import cVAEArchSelector
 
 
-@cVAEModelSelector.register("mlp")
+@cVAEArchSelector.register("mlp")
 @dataclasses.dataclass
 class cVAE_MLPConfig(cVAEArchConfigABC):
     """

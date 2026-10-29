@@ -16,7 +16,7 @@ from typing import ClassVar
 import dataclasses
 from typing import Literal
 
-from S2D4P.core.selectors import deterministicModelSelector
+from S2D4P.core.selectors import deterministicArchSelector
 
 from S2D4P.architectures.layers.generic import (
     InitMethod,
@@ -28,7 +28,7 @@ from S2D4P.architectures.layers.generic import (
 AppendMode = Literal[1, 2, 3]
 
 
-@deterministicModelSelector.register("mlp")
+@deterministicArchSelector.register("mlp")
 @dataclasses.dataclass
 class AutoencoderConfig(ArchConfigABC):
     """

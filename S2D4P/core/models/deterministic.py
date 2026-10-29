@@ -11,7 +11,7 @@ from S2D4P.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from S2D4P.architectures.architecture_abc import DeterministicRequest
 from S2D4P.core.selectors import (
     ModuleSelector,
-    deterministicModelSelector,
+    deterministicArchSelector,
     _load_config_from_checkpoint,
 )
 from S2D4P.train.dataloader import BatchData
@@ -41,13 +41,13 @@ class deterministicConfig(moduleConfigABC):
 
     Parameters
     ----------
-    Architecture : deterministicModelSelector | None
+    Architecture : deterministicArchSelector | None
         Description not yet provided.
     load_dir : str | None
         Description not yet provided.
     """
 
-    Architecture: deterministicModelSelector | None = None
+    Architecture: deterministicArchSelector | None = None
     load_dir: str | None = None
 
     def __post_init__(self):
@@ -124,7 +124,7 @@ class deterministicConfig(moduleConfigABC):
         )
 
         self.Architecture = dacite.from_dict(
-            data_class=deterministicModelSelector,
+            data_class=deterministicArchSelector,
             data=checkpoint_module.get("Architecture"),
             config=dacite.Config(strict=True),
         )
