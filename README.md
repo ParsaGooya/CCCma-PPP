@@ -1,4 +1,4 @@
-# S2D4P: Sub-seasonal to decadal predictions pre-processing package 
+# S2D4P: Sub-seasonal to Decadal Predictions Post-Processing Package 
 
 A machine learning pipeline for post-processing seasonal-to-decadal predictions produced by the Canadian Earth System Models (CanESM) at the Canadian Centre for Climate Modelling and Analysis (CCCma).
 
