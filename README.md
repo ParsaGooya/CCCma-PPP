@@ -8,7 +8,7 @@ The package is currently under active development and is undergoing quality assu
 
 ---
 Note:
-Packged name recently changed from cccma_ppp to S2D4P.
+Package name recently changed from cccma_ppp to S2D4P.
 
 ---
 ## Installation
