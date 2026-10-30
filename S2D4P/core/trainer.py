@@ -11,7 +11,7 @@ from tqdm import tqdm
 from S2D4P.core.core_abc import moduleABC
 from S2D4P.core.optimization import OptimizerWrapper
 from S2D4P.core.models.cvae import cVAE
-from S2D4P.data_modules.dataloader import Dataloader
+from S2D4P.data.dataloader import Dataloader
 from S2D4P.generic.distributed import Distributed
 from S2D4P.generic.aggregator import MetricsAggregator
 from S2D4P.generic.runtime import RuntimeContext

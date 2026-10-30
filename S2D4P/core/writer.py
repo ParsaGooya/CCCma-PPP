@@ -10,7 +10,7 @@ import xarray as xr
 
 from S2D4P.core.trainer import clear_memory
 
-from S2D4P.data_modules.dataloader import Dataloader
+from S2D4P.data.dataloader import Dataloader
 from S2D4P.generic.distributed import Distributed
 from S2D4P.generic.runtime import RuntimeContext
 from S2D4P.generic.aggregator import RunningCovariance

@@ -9,7 +9,7 @@ from S2D4P.configs import (
     lead_time_resolution,
     required_sample_dimensions,
 )
-from S2D4P.data_modules.data.data_configs import (
+from S2D4P.data.data_configs.data_configs import (
     ConditionDataConfig,
     ModelDataConfig,
     ObsDataConfig,

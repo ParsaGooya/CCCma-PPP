@@ -8,7 +8,7 @@ import logging
 import pandas as pd
 
 # cccma_ppp imports
-from S2D4P.data_modules.data.data_configs import (
+from S2D4P.data.data_configs.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
 )

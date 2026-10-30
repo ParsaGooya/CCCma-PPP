@@ -17,7 +17,7 @@ from S2D4P.configs import (
     lead_time_resolution,
 )
 
-from S2D4P.data_modules.utils import (
+from S2D4P.data.utils import (
     TEMPORAL_ORDER,
     _load_xarray_data,
     _create_train_mask,

@@ -3,7 +3,7 @@ from typing import ClassVar, final
 import xarray as xr
 import numpy as np
 
-from S2D4P.data_modules.utils import add_lead_times
+from S2D4P.data.utils import add_lead_times
 
 from S2D4P.configs import (
     required_sample_dimensions,

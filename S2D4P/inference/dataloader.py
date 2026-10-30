@@ -5,12 +5,12 @@ import copy
 
 from S2D4P.train.dataloader import TrainDataloaderConfig
 from S2D4P.inference.dataset import InferenceDatasetConfig, _from_train
-from S2D4P.data_modules.dataloader import (
+from S2D4P.data.dataloader import (
     Dataloader,
     DataloaderConfigABC,
     BatchDataABC,
 )
-from S2D4P.data_modules.dataset.dataset_abc import AddedTimeFeatures
+from S2D4P.data.dataset.dataset_abc import AddedTimeFeatures
 from S2D4P.generic.distributed import Distributed
 from S2D4P.generic.runtime import RuntimeContext
 

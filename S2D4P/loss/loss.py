@@ -9,7 +9,7 @@ from S2D4P.loss.loss_abc import Reduction
 from S2D4P.loss.registery import Registery
 
 from S2D4P.core.core_abc import GenerativeContext
-from S2D4P.data_modules.utils import _unwrap_data_variables
+from S2D4P.data.utils import _unwrap_data_variables
 
 
 @dataclasses.dataclass

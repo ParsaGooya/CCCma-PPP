@@ -12,7 +12,7 @@ import dacite
 from S2D4P.loss.loss import LosspipelineConfig
 
 from S2D4P.train.dataloader import TrainDataloaderConfig
-from S2D4P.data_modules.weights import WeightsConfig
+from S2D4P.data.weights import WeightsConfig
 
 from S2D4P.generic.distributed import Distributed
 from S2D4P.generic.runtime import RuntimeContext

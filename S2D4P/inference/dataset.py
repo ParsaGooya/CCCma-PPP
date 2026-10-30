@@ -7,16 +7,16 @@ import torch
 import cftime
 import datetime
 
-from S2D4P.data_modules.dataset.dataset_abc import (
+from S2D4P.data.dataset.dataset_abc import (
     DatasetConfigABC,
     DatasetABC,
     lead_time_config,
     AddedTimeFeatures,
 )
 
-from S2D4P.data_modules.dataset.operator import DatasetOperator
+from S2D4P.data.dataset.operator import DatasetOperator
 
-from S2D4P.data_modules.data.data_configs import (
+from S2D4P.data.data_configs.data_configs import (
     ForecastDataConfig,
     ConditionDataConfig,
 )

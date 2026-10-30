@@ -8,7 +8,7 @@ from typing import Literal
 
 from S2D4P.preprocessing.utils_preprocessing import Flattennanremove
 from S2D4P.generic.runtime import RuntimeContext
-from S2D4P.data_modules.utils import _unwrap_data_variables
+from S2D4P.data.utils import _unwrap_data_variables
 
 
 Spatialmethod = Literal["uniform", "cosine_lat"]

@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from S2D4P.data_modules.data.data_abc import (
+from S2D4P.data.data_configs.data_configs_abc import (
     DataConfigABC,
     _get_ds_info,
     _resolve_data,

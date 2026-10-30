@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-import S2D4P.data_modules.dataset.dataset_abc as module
-from S2D4P.data_modules.dataset.dataset_abc import (
+import S2D4P.data.dataset.dataset_abc as module
+from S2D4P.data.dataset.dataset_abc import (
     AddedTimeFeatures,
     DatasetABC,
     DatasetConfigABC,

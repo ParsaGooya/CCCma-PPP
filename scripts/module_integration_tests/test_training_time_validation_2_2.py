@@ -14,14 +14,14 @@ import pandas as pd
 import xarray as xr
 import yaml
 
-from S2D4P.data_modules.data.data_configs import (
+from S2D4P.data.data_configs.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
 )
 from S2D4P.train.dataset import TrainDatasetConfig
 from S2D4P.preprocessing.selector import PreprocessingStepSelector
 from S2D4P.preprocessing.preprocessing import PreprocessingPipeline
-from S2D4P.data_modules.utils import _create_train_mask
+from S2D4P.data.utils import _create_train_mask
 
 BASE_CONFIG = (
     "scripts/integration_suite_train_config.yaml"  # template YAML for all cases

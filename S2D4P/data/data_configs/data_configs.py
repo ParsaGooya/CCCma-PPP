@@ -4,7 +4,7 @@ import dataclasses
 from typing import final, Literal
 import cftime
 
-from S2D4P.data_modules.data.data_abc import DataConfigABC
+from S2D4P.data.data_configs.data_configs_abc import DataConfigABC
 from S2D4P.preprocessing.preprocessing import PreprocessingPipeline
 from S2D4P.configs import (
     lead_time_unit,

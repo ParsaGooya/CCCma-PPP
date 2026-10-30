@@ -12,7 +12,7 @@ from S2D4P.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,
 )
-from S2D4P.data_modules.dataloader import BatchDataABC
+from S2D4P.data.dataloader import BatchDataABC
 
 
 @dataclasses.dataclass

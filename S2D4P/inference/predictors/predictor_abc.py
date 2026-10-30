@@ -7,7 +7,7 @@ import xarray as xr
 from pathlib import Path
 from typing import Callable
 
-from S2D4P.data_modules.dataloader import BatchDataABC
+from S2D4P.data.dataloader import BatchDataABC
 from S2D4P.core.core_abc import OutputABC
 from S2D4P.generic.aggregator import RunningCovariance
 

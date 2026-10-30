@@ -4,12 +4,12 @@ import cftime
 import pandas as pd
 from pathlib import Path
 
-from S2D4P.data_modules.data.data_configs import (
+from S2D4P.data.data_configs.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
 )
 from S2D4P.train.dataset import TrainDatasetConfig
-from S2D4P.data_modules.utils import add_lead_times
+from S2D4P.data.utils import add_lead_times
 
 
 def create_synthetic_model_data(output_path: str, years: list = None) -> xr.Dataset:

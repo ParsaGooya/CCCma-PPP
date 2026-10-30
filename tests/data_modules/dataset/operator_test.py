@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from S2D4P.data_modules.dataset.operator import (
+from S2D4P.data.dataset.operator import (
     DatasetOperator,
     _build_chunks,
 )

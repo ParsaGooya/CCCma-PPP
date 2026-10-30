@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from S2D4P.data_modules.utils import (
+from S2D4P.data.utils import (
     _add_cftime_offset,
     _add_months,
     _calculate_target_times,

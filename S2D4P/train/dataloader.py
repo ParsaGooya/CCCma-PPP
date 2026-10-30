@@ -6,10 +6,10 @@ from pathlib import Path
 
 
 from S2D4P.train.dataset import TrainDatasetConfig
-from S2D4P.data_modules.utils import _create_train_mask
-from S2D4P.data_modules.weights import WeightsConfig
-from S2D4P.data_modules.dataset.dataset_abc import AddedTimeFeatures
-from S2D4P.data_modules.dataloader import (
+from S2D4P.data.utils import _create_train_mask
+from S2D4P.data.weights import WeightsConfig
+from S2D4P.data.dataset.dataset_abc import AddedTimeFeatures
+from S2D4P.data.dataloader import (
     Dataloader,
     DataloaderConfigABC,
     BatchDataABC,

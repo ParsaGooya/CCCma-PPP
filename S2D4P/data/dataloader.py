@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterator
 from itertools import islice
 
 
-from S2D4P.data_modules.dataset.dataset_abc import (
+from S2D4P.data.dataset.dataset_abc import (
     DatasetConfigABC,
     AddedTimeFeatures,
 )

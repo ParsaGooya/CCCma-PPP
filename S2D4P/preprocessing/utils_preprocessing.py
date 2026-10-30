@@ -13,7 +13,7 @@ from typing import ClassVar, Literal
 from S2D4P.preprocessing.selector import PreprocessingStepSelector
 from S2D4P.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from S2D4P.generic.runtime import RuntimeContext
-from S2D4P.data_modules.utils import (add_lead_times, 
+from S2D4P.data.utils import (add_lead_times, 
                                           TEMPORAL_ORDER, 
                                           infer_time_resolution)
 from S2D4P.configs import (

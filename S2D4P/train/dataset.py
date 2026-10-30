@@ -8,22 +8,22 @@ import datetime
 from pathlib import Path
 from collections.abc import Sequence
 
-from S2D4P.data_modules.dataset.dataset_abc import (
+from S2D4P.data.dataset.dataset_abc import (
     DatasetConfigABC,
     lead_time_config,
 )
-from S2D4P.data_modules.dataset.dataset_abc import (
+from S2D4P.data.dataset.dataset_abc import (
     DatasetABC,
     AddedTimeFeatures,
 )
-from S2D4P.data_modules.dataset.operator import DatasetOperator
-from S2D4P.data_modules.data.data_configs import (
+from S2D4P.data.dataset.operator import DatasetOperator
+from S2D4P.data.data_configs.data_configs import (
     ForecastDataConfig,
     RefDataConfig,
     ConditionDataConfig,
 )
 
-from S2D4P.data_modules.utils import add_lead_times, _unwrap_data_variables
+from S2D4P.data.utils import add_lead_times, _unwrap_data_variables
 
 
 from S2D4P.configs import lead_time_resolution

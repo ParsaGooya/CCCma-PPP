@@ -9,7 +9,7 @@ import xarray as xr
 import dask
 from collections.abc import Sequence
 
-from S2D4P.data_modules.data.data_configs import (
+from S2D4P.data.data_configs.data_configs import (
     ForecastDataConfig,
     ConditionDataConfig,
 )
@@ -21,7 +21,7 @@ from S2D4P.configs import (
     realization_dim,
 )
 
-from S2D4P.data_modules.utils import (
+from S2D4P.data.utils import (
     _validate_time_sequence,
     _unwrap_data_variables,
     _create_train_mask,

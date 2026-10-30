@@ -5,10 +5,10 @@ from pathlib import Path
 import xarray as xr
 from collections.abc import Sequence
 
-from S2D4P.data_modules.data.data_abc import DataConfigABC
-from S2D4P.data_modules.dataset.dataset_abc import DatasetConfigABC
-from S2D4P.data_modules.utils import _validate_time_sequence
-from S2D4P.data_modules.weights import WeightsConfig
+from S2D4P.data.data_configs.data_configs_abc import DataConfigABC
+from S2D4P.data.dataset.dataset_abc import DatasetConfigABC
+from S2D4P.data.utils import _validate_time_sequence
+from S2D4P.data.weights import WeightsConfig
 from S2D4P.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
