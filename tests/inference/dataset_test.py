@@ -112,7 +112,7 @@ InferenceDatasetConfig.__abstractmethods__ = frozenset()
 
 def make_config(
     *,
-    model=None,
+    forecast=None,
     condition=None,
     condition_method=None,
     lead_times=None,
@@ -121,7 +121,7 @@ def make_config(
 ):
     config = object.__new__(InferenceDatasetConfig)
 
-    config.model = model
+    config.forecast = forecast
     config.condition = condition
     config.condition_method = condition_method
     config.lead_times = lead_times
@@ -139,14 +139,14 @@ def make_config(
 
 def make_dataset_config(
     *,
-    model=None,
+    forecast=None,
     condition=None,
     using_model_as_condition=False,
 ):
     return SimpleNamespace(
-        model=model,
+        forecast=forecast,
         condition=condition,
-        _using_model_data_as_condition=using_model_as_condition,
+        _using_forecast_data_as_condition=using_model_as_condition,
     )
 
 
@@ -162,7 +162,7 @@ def make_dataset(
 
     if config is None:
         config = make_dataset_config(
-            model=DummyDataConfig("model"),
+            forecast=DummyDataConfig("model"),
         )
 
     dataset.config = config
@@ -210,11 +210,11 @@ def make_data_array(
 def install_dataset_sources(
     dataset,
     *,
-    model=None,
+    forecast=None,
     condition=None,
 ):
-    dataset._index_model_dataset = MagicMock(
-        return_value=model,
+    dataset._index_forecast_dataset = MagicMock(
+        return_value=forecast,
     )
     dataset._index_condition_dataset = MagicMock(
         return_value=condition,
@@ -223,19 +223,19 @@ def install_dataset_sources(
 
 def make_train_config(
     *,
-    observation=None,
+    reference=None,
     effective_condition=None,
     using_model_as_condition=False,
-    model=None,
+    forecast=None,
     condition=None,
     condition_method="static",
     lead_times=None,
 ):
     return SimpleNamespace(
-        observation=observation,
+        reference=reference,
         effective_condition=effective_condition,
-        _using_model_data_as_condition=using_model_as_condition,
-        model=model,
+        _using_forecast_data_as_condition=using_model_as_condition,
+        forecast=forecast,
         condition=condition,
         condition_method=condition_method,
         lead_times=(np.asarray([1, 2]) if lead_times is None else lead_times),
@@ -247,7 +247,7 @@ def test_effective_input_prefers_model():
     condition = DummyDataConfig("condition")
 
     config = make_config(
-        model=model,
+        forecast=model,
         condition=condition,
     )
 
@@ -258,7 +258,7 @@ def test_effective_input_returns_model_without_condition():
     model = DummyDataConfig("model")
 
     config = make_config(
-        model=model,
+        forecast=model,
         condition=None,
     )
 
@@ -269,7 +269,7 @@ def test_effective_input_falls_back_to_condition():
     condition = DummyDataConfig("condition")
 
     config = make_config(
-        model=None,
+        forecast=None,
         condition=condition,
     )
 
@@ -278,7 +278,7 @@ def test_effective_input_falls_back_to_condition():
 
 def test_effective_input_returns_none_without_sources():
     config = make_config(
-        model=None,
+        forecast=None,
         condition=None,
     )
 
@@ -287,7 +287,7 @@ def test_effective_input_returns_none_without_sources():
 
 def test_available_times_model_only():
     config = make_config(
-        model=DummyDataConfig(
+        forecast=DummyDataConfig(
             "model",
             years=(2000, 2001, 2002),
         ),
@@ -315,7 +315,7 @@ def test_available_times_condition_only():
 
 def test_available_times_intersects_model_and_condition():
     config = make_config(
-        model=DummyDataConfig(
+        forecast=DummyDataConfig(
             "model",
             years=(2000, 2001, 2002),
         ),
@@ -333,7 +333,7 @@ def test_available_times_intersects_model_and_condition():
 
 def test_available_times_empty_intersection():
     config = make_config(
-        model=DummyDataConfig(
+        forecast=DummyDataConfig(
             "model",
             years=(2000, 2001),
         ),
@@ -362,7 +362,7 @@ def test_available_times_uses_info_coordinate_values():
     )
 
     config = make_config(
-        model=model,
+        forecast=model,
         condition=condition,
     )
 
@@ -379,7 +379,7 @@ def test_available_times_preserves_single_source_order():
     )
 
     config = make_config(
-        model=model,
+        forecast=model,
     )
 
     np.testing.assert_array_equal(
@@ -399,7 +399,7 @@ def test_available_times_intersection_is_sorted():
     )
 
     config = make_config(
-        model=model,
+        forecast=model,
         condition=condition,
     )
 
@@ -411,7 +411,7 @@ def test_available_times_intersection_is_sorted():
 
 def test_available_times_without_any_source_raises_index_error():
     config = make_config(
-        model=None,
+        forecast=None,
         condition=None,
     )
 
@@ -439,12 +439,12 @@ def test_load_model_truth_table(
 ):
     dataset = make_dataset(
         config=make_dataset_config(
-            model=(DummyDataConfig("model") if model_present else None),
+            forecast=(DummyDataConfig("model") if model_present else None),
             using_model_as_condition=using_model_as_condition,
         )
     )
 
-    assert dataset._load_model is expected
+    assert dataset._load_forecast is expected
 
 
 @pytest.mark.parametrize(
@@ -467,7 +467,7 @@ def test_write_condition_to_input_truth_table(
 ):
     dataset = make_dataset(
         config=make_dataset_config(
-            model=(DummyDataConfig("model") if model_present else None),
+            forecast=(DummyDataConfig("model") if model_present else None),
             using_model_as_condition=using_model_as_condition,
         )
     )
@@ -499,7 +499,7 @@ def test_concat_condition_to_input_truth_table(
 ):
     dataset = make_dataset(
         config=make_dataset_config(
-            model=(DummyDataConfig("model") if model_present else None),
+            forecast=(DummyDataConfig("model") if model_present else None),
             condition=(DummyDataConfig("condition") if condition_present else None),
             using_model_as_condition=using_model_as_condition,
         )
@@ -511,7 +511,7 @@ def test_concat_condition_to_input_truth_table(
 def test_getitem_model_only():
     dataset = make_dataset(
         config=make_dataset_config(
-            model=DummyDataConfig("model"),
+            forecast=DummyDataConfig("model"),
             condition=None,
             using_model_as_condition=False,
         )
@@ -524,7 +524,7 @@ def test_getitem_model_only():
 
     install_dataset_sources(
         dataset,
-        model=model_data,
+        forecast=model_data,
         condition=None,
     )
 
@@ -548,7 +548,7 @@ def test_getitem_model_only():
 
     assert result["added_features"] is None
 
-    dataset._index_model_dataset.assert_called_once_with(0)
+    dataset._index_forecast_dataset.assert_called_once_with(0)
     dataset._index_condition_dataset.assert_called_once_with(0)
     compute.assert_called_once()
 
@@ -558,7 +558,7 @@ def test_getitem_model_used_as_condition():
 
     dataset = make_dataset(
         config=make_dataset_config(
-            model=model,
+            forecast=model,
             condition=model,
             using_model_as_condition=True,
         )
@@ -575,7 +575,7 @@ def test_getitem_model_used_as_condition():
 
     install_dataset_sources(
         dataset,
-        model=model_data,
+        forecast=model_data,
         condition=condition_data,
     )
 
@@ -600,7 +600,7 @@ def test_getitem_model_used_as_condition():
 def test_getitem_condition_only():
     dataset = make_dataset(
         config=make_dataset_config(
-            model=None,
+            forecast=None,
             condition=DummyDataConfig("condition"),
             using_model_as_condition=False,
         )
@@ -613,7 +613,7 @@ def test_getitem_condition_only():
 
     install_dataset_sources(
         dataset,
-        model=None,
+        forecast=None,
         condition=condition_data,
     )
 
@@ -639,7 +639,7 @@ def test_getitem_condition_only():
 def test_getitem_concatenates_model_and_condition():
     dataset = make_dataset(
         config=make_dataset_config(
-            model=DummyDataConfig("model"),
+            forecast=DummyDataConfig("model"),
             condition=DummyDataConfig("condition"),
             using_model_as_condition=False,
         )
@@ -656,7 +656,7 @@ def test_getitem_concatenates_model_and_condition():
 
     install_dataset_sources(
         dataset,
-        model=model_data,
+        forecast=model_data,
         condition=condition_data,
     )
 
@@ -684,7 +684,7 @@ def test_getitem_concatenates_model_and_condition():
 def test_getitem_condition_replacement_precedes_concat():
     dataset = make_dataset(
         config=make_dataset_config(
-            model=DummyDataConfig("model"),
+            forecast=DummyDataConfig("model"),
             condition=DummyDataConfig("condition"),
             using_model_as_condition=True,
         )
@@ -692,7 +692,7 @@ def test_getitem_condition_replacement_precedes_concat():
 
     install_dataset_sources(
         dataset,
-        model=make_data_array([1.0]),
+        forecast=make_data_array([1.0]),
         condition=make_data_array([9.0]),
     )
 
@@ -726,7 +726,7 @@ def test_getitem_time_features_receive_final_model_input():
 
     dataset = make_dataset(
         config=make_dataset_config(
-            model=DummyDataConfig("model"),
+            forecast=DummyDataConfig("model"),
         ),
         time_features=features,
     )
@@ -735,7 +735,7 @@ def test_getitem_time_features_receive_final_model_input():
 
     install_dataset_sources(
         dataset,
-        model=model_data,
+        forecast=model_data,
         condition=None,
     )
 
@@ -774,7 +774,7 @@ def test_getitem_time_features_receive_condition_input():
 
     dataset = make_dataset(
         config=make_dataset_config(
-            model=None,
+            forecast=None,
             condition=DummyDataConfig("condition"),
         ),
         time_features=features,
@@ -784,7 +784,7 @@ def test_getitem_time_features_receive_condition_input():
 
     install_dataset_sources(
         dataset,
-        model=None,
+        forecast=None,
         condition=condition_data,
     )
 
@@ -808,7 +808,7 @@ def test_getitem_time_features_receive_concatenated_input():
 
     dataset = make_dataset(
         config=make_dataset_config(
-            model=DummyDataConfig("model"),
+            forecast=DummyDataConfig("model"),
             condition=DummyDataConfig("condition"),
         ),
         time_features=features,
@@ -825,7 +825,7 @@ def test_getitem_time_features_receive_concatenated_input():
 
     install_dataset_sources(
         dataset,
-        model=model_data,
+        forecast=model_data,
         condition=condition_data,
     )
 
@@ -851,7 +851,7 @@ def test_getitem_without_time_features_returns_none():
 
     install_dataset_sources(
         dataset,
-        model=make_data_array([1.0]),
+        forecast=make_data_array([1.0]),
         condition=None,
     )
 
@@ -877,7 +877,7 @@ def test_getitem_converts_tensors_to_float32():
 
     install_dataset_sources(
         dataset,
-        model=xr.DataArray(
+        forecast=xr.DataArray(
             np.asarray(
                 [1.0],
                 dtype=np.float64,
@@ -905,7 +905,7 @@ def test_getitem_without_metadata_returns_dictionary():
 
     install_dataset_sources(
         dataset,
-        model=make_data_array([1.0]),
+        forecast=make_data_array([1.0]),
         condition=None,
     )
 
@@ -936,7 +936,7 @@ def test_getitem_with_metadata_returns_tuple():
 
     install_dataset_sources(
         dataset,
-        model=make_data_array([1.0]),
+        forecast=make_data_array([1.0]),
         condition=None,
     )
 
@@ -983,7 +983,7 @@ def test_getitem_uses_requested_sample_index():
 
     install_dataset_sources(
         dataset,
-        model=make_data_array([2.0]),
+        forecast=make_data_array([2.0]),
         condition=None,
     )
 
@@ -1000,7 +1000,7 @@ def test_getitem_uses_requested_sample_index():
         "ensembles": 1,
     }
 
-    dataset._index_model_dataset.assert_called_once_with(1)
+    dataset._index_forecast_dataset.assert_called_once_with(1)
     dataset._index_condition_dataset.assert_called_once_with(1)
 
 
@@ -1011,7 +1011,7 @@ def test_getitem_passes_input_data_to_dask_compute():
 
     install_dataset_sources(
         dataset,
-        model=model_data,
+        forecast=model_data,
         condition=None,
     )
 
@@ -1041,10 +1041,10 @@ def test_from_train_observation_without_condition():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=object(),
+        reference=object(),
         effective_condition=None,
         using_model_as_condition=False,
-        model=model,
+        forecast=model,
         condition=None,
     )
 
@@ -1055,8 +1055,8 @@ def test_from_train_observation_without_condition():
     ):
         result = _from_train(train_config)
 
-    assert result["model"] is not model
-    assert result["model"].names == model.names
+    assert result["forecast"] is not model
+    assert result["forecast"].names == model.names
     assert "condition" not in result
 
 
@@ -1064,10 +1064,10 @@ def test_from_train_model_used_as_condition():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=None,
+        reference=None,
         effective_condition=model,
         using_model_as_condition=True,
-        model=model,
+        forecast=model,
         condition=None,
     )
 
@@ -1078,8 +1078,8 @@ def test_from_train_model_used_as_condition():
     ):
         result = _from_train(train_config)
 
-    assert result["model"] is not model
-    assert result["model"].names == model.names
+    assert result["forecast"] is not model
+    assert result["forecast"].names == model.names
     assert "condition" not in result
 
 
@@ -1088,10 +1088,10 @@ def test_from_train_model_condition_branch_precedes_condition_branch():
     condition = DummyDataConfig("condition")
 
     train_config = make_train_config(
-        observation=object(),
+        reference=object(),
         effective_condition=condition,
         using_model_as_condition=True,
-        model=model,
+        forecast=model,
         condition=condition,
     )
 
@@ -1102,9 +1102,9 @@ def test_from_train_model_condition_branch_precedes_condition_branch():
     ):
         result = _from_train(train_config)
 
-    assert "model" in result
+    assert "forecast" in result
     assert "condition" not in result
-    assert result["model"].names == ["model"]
+    assert result["forecast"].names == ["model"]
 
 
 def test_from_train_observation_and_independent_condition():
@@ -1112,10 +1112,10 @@ def test_from_train_observation_and_independent_condition():
     condition = DummyDataConfig("condition")
 
     train_config = make_train_config(
-        observation=object(),
+        reference=object(),
         effective_condition=condition,
         using_model_as_condition=False,
-        model=model,
+        forecast=model,
         condition=condition,
     )
 
@@ -1126,9 +1126,9 @@ def test_from_train_observation_and_independent_condition():
     ):
         result = _from_train(train_config)
 
-    assert result["model"] is not model
+    assert result["forecast"] is not model
     assert result["condition"] is not condition
-    assert result["model"].names == ["model"]
+    assert result["forecast"].names == ["model"]
     assert result["condition"].names == ["condition"]
 
 
@@ -1137,10 +1137,10 @@ def test_from_train_condition_without_observation():
     condition = DummyDataConfig("condition")
 
     train_config = make_train_config(
-        observation=None,
+        reference=None,
         effective_condition=condition,
         using_model_as_condition=False,
-        model=model,
+        forecast=model,
         condition=condition,
     )
 
@@ -1151,17 +1151,17 @@ def test_from_train_condition_without_observation():
     ):
         result = _from_train(train_config)
 
-    assert "model" not in result
+    assert "forecast" not in result
     assert result["condition"] is not condition
     assert result["condition"].names == ["condition"]
 
 
 def test_from_train_unresolvable_configuration_raises():
     train_config = make_train_config(
-        observation=None,
+        reference=None,
         effective_condition=None,
         using_model_as_condition=False,
-        model=None,
+        forecast=None,
         condition=None,
     )
 
@@ -1176,8 +1176,8 @@ def test_from_train_copies_condition_method():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
         condition_method="ensemble_mean",
     )
 
@@ -1195,8 +1195,8 @@ def test_from_train_copies_none_condition_method():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
         condition_method=None,
     )
 
@@ -1215,8 +1215,8 @@ def test_from_train_deepcopies_lead_times():
     lead_times = np.asarray([1, 3, 6])
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
         lead_times=lead_times,
     )
 
@@ -1239,8 +1239,8 @@ def test_from_train_preserves_none_lead_times():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
     )
     train_config.lead_times = None
 
@@ -1258,8 +1258,8 @@ def test_from_train_deepcopies_model():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
     )
 
     with patch.object(
@@ -1269,7 +1269,7 @@ def test_from_train_deepcopies_model():
     ):
         result = _from_train(train_config)
 
-    copied_model = result["model"]
+    copied_model = result["forecast"]
 
     assert copied_model is not model
     assert copied_model.names == model.names
@@ -1281,9 +1281,9 @@ def test_from_train_deepcopies_condition():
     condition = DummyDataConfig("condition")
 
     train_config = make_train_config(
-        observation=object(),
+        reference=object(),
         effective_condition=condition,
-        model=model,
+        forecast=model,
         condition=condition,
     )
 
@@ -1307,8 +1307,8 @@ def test_from_train_does_not_copy_time_features():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
     )
     train_config.time_features = [
         "year",
@@ -1330,12 +1330,12 @@ def test_from_train_does_not_mutate_training_config():
     lead_times = np.asarray([1, 2])
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
         lead_times=lead_times,
     )
 
-    original_model = train_config.model
+    original_model = train_config.forecast
     original_lead_times = train_config.lead_times.copy()
 
     with patch.object(
@@ -1345,7 +1345,7 @@ def test_from_train_does_not_mutate_training_config():
     ):
         _from_train(train_config)
 
-    assert train_config.model is original_model
+    assert train_config.forecast is original_model
 
     np.testing.assert_array_equal(
         train_config.lead_times,
@@ -1357,8 +1357,8 @@ def test_from_train_constructs_inference_config():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
-        observation=object(),
-        model=model,
+        reference=object(),
+        forecast=model,
         condition_method=None,
         lead_times=np.asarray([1, 2]),
     )
@@ -1382,5 +1382,5 @@ def test_from_train_constructs_inference_config():
         [1, 2],
     )
 
-    assert kwargs["model"] is not model
+    assert kwargs["forecast"] is not model
     assert "condition" not in kwargs

@@ -23,6 +23,7 @@ class DummyDistributed:
         self.rank = rank
         self.world_size = world_size
         self.device = torch.device(device)
+        self.architecture_config = SimpleNamespace(EXPECTS_MASK=False)
         self._root = root
         self.barrier_called = False
         self.barrier_calls = 0
@@ -121,7 +122,7 @@ class DummyTrainLoaderConfig:
 class DummyModule:
     input_shape = (2, 3)
     added_features_dim = 0
-    model_config = SimpleNamespace(EXPECTS_MASK=False)
+    architecture_config = SimpleNamespace(EXPECTS_MASK=False)
 
     def __init__(self):
         self.loaded_state = None
@@ -218,7 +219,7 @@ def config_file(tmp_path):
             {
                 "train_loader": {
                     "dataset_config": {
-                        "model": {
+                        "forecast": {
                             "names": ["tas"],
                         }
                     }
@@ -330,7 +331,7 @@ def test_output_preprocessor_dir_observation_branch(tmp_path):
     config.train_config = {
         "train_loader": {
             "dataset_config": {
-                "observation": {
+                "reference": {
                     "names": ["tas"],
                 }
             }
@@ -340,7 +341,7 @@ def test_output_preprocessor_dir_observation_branch(tmp_path):
     assert config.output_preprocessor_dir == (
         tmp_path
         / "preprocessing_pipeline"
-        / "observation_preprocessing_pipeline.joblib"
+        / "reference_preprocessing_pipeline.joblib"
     )
 
 
@@ -349,7 +350,7 @@ def test_output_preprocessor_dir_model_branch(tmp_path):
     config.train_config = {
         "train_loader": {
             "dataset_config": {
-                "model": {
+                "forecast": {
                     "names": ["tas"],
                 }
             }
@@ -357,7 +358,7 @@ def test_output_preprocessor_dir_model_branch(tmp_path):
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path / "preprocessing_pipeline" / "model_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "forecast_preprocessing_pipeline.joblib"
     )
 
 
@@ -696,7 +697,7 @@ def make_writer_config_fixture(tmp_path):
         output_preprocessor_dir=(
             tmp_path
             / "preprocessing_pipeline"
-            / "observation_preprocessing_pipeline.joblib"
+            / "reference_preprocessing_pipeline.joblib"
         ),
         output_dir=tmp_path / "inference",
         load_module=lambda loader=None: module,
@@ -967,8 +968,8 @@ def test_output_preprocessor_dir_prefers_observation(
     config.train_config = {
         "train_loader": {
             "dataset_config": {
-                "model": {"names": ["model"]},
-                "observation": {"names": ["observation"]},
+                "forecast": {"names": ["model"]},
+                "reference": {"names": ["observation"]},
             }
         }
     }
@@ -976,7 +977,7 @@ def test_output_preprocessor_dir_prefers_observation(
     assert config.output_preprocessor_dir == (
         tmp_path
         / "preprocessing_pipeline"
-        / "observation_preprocessing_pipeline.joblib"
+        / "reference_preprocessing_pipeline.joblib"
     )
 
 
@@ -985,11 +986,11 @@ def test_output_preprocessor_dir_uses_model_without_observation(
 ):
     config = make_bare_config(tmp_path)
     config.train_config = {
-        "train_loader": {"dataset_config": {"model": {"names": ["model"]}}}
+        "train_loader": {"dataset_config": {"forecast": {"names": ["model"]}}}
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path / "preprocessing_pipeline" / "model_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "forecast_preprocessing_pipeline.joblib"
     )
 
 

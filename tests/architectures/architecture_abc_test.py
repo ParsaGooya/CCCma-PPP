@@ -382,38 +382,6 @@ class TestLoadStateDict:
         with pytest.raises(FileNotFoundError, match="Checkpoint not found"):
             model._load_state_dict(config)
 
-    def test_loads_only_model_prefixed_keys(self, tmp_path):
-        model = ConcreteModel(ConcreteModelConfig())
-        path = tmp_path / "model.pt"
-        path.touch()
-
-        checkpoint = {
-            "module": {
-                "model.linear.weight": torch.full_like(model.linear.weight, 2.0),
-                "model.linear.bias": torch.full_like(model.linear.bias, 3.0),
-                "optimizer.state": torch.tensor(1),
-            }
-        }
-        config = make_load_config(path)
-
-        with (
-            patch.object(module.torch, "load", return_value=checkpoint) as load,
-            patch.object(model, "load_state_dict") as load_state,
-            patch.object(module.gc, "collect") as collect,
-        ):
-            model._load_state_dict(config)
-
-        load.assert_called_once_with(
-            path,
-            map_location=model._get_device(),
-            weights_only=True,
-        )
-
-        state = load_state.call_args.args[0]
-        assert set(state) == {"linear.weight", "linear.bias"}
-        load_state.assert_called_once_with(state, strict=True)
-        collect.assert_called_once()
-
     def test_forwards_non_strict_flag(self, tmp_path):
         model = ConcreteModel(ConcreteModelConfig())
         path = tmp_path / "model.pt"
@@ -427,39 +395,6 @@ class TestLoadStateDict:
             model._load_state_dict(config)
 
         load_state.assert_called_once_with({}, strict=False)
-
-    @pytest.mark.parametrize(
-        ("freeze_weights", "expected_requires_grad"),
-        [
-            (True, False),
-            (False, True),
-        ],
-    )
-    def test_freeze_flag_controls_requires_grad(
-        self, tmp_path, freeze_weights, expected_requires_grad
-    ):
-        model = ConcreteModel(ConcreteModelConfig())
-        path = tmp_path / "model.pt"
-        path.touch()
-        config = make_load_config(path, freeze_weights=freeze_weights)
-
-        checkpoint = {
-            "module": {
-                "model.linear.weight": model.linear.weight.detach().clone(),
-                "model.linear.bias": model.linear.bias.detach().clone(),
-            }
-        }
-
-        with (
-            patch.object(module.torch, "load", return_value=checkpoint),
-            patch.object(module.gc, "collect"),
-        ):
-            model._load_state_dict(config)
-
-        assert all(
-            parameter.requires_grad == expected_requires_grad
-            for parameter in model.parameters()
-        )
 
 
 class TestCVAEConfig:
@@ -795,3 +730,477 @@ class TestWeightsInit:
             weights_init(layer, method="xavier")
 
         constant.assert_not_called()
+
+
+class TestAdditionalBranchCoverage:
+    @pytest.mark.parametrize("num_samples", [0, 1])
+    def test_generator_config_rejects_too_few_validation_samples(
+        self,
+        num_samples,
+    ):
+        with pytest.raises(
+            ValueError,
+            match="at least two output ensemble samples",
+        ):
+            GENERATORConfig(
+                num_validation_noise_samples=num_samples,
+            )
+
+    def test_add_checkpoint_config_stores_configuration(self, tmp_path):
+        config = ConcreteModelConfig()
+        checkpoint = make_checkpoint(tmp_path / "model.pt")
+
+        result = config._add_checkpoint_config(checkpoint)
+
+        assert result is None
+        assert config.checkpoint_config is checkpoint
+
+    def test_concrete_flow_forward_returns_input(self):
+        flow = ConcreteFlow()
+        value = torch.randn(2, 3)
+        condition = torch.randn(2, 1)
+
+        result = flow.forward(
+            value,
+            condition=condition,
+        )
+
+        assert result is value
+
+    def test_concrete_flow_inverse_wraps_samples(self):
+        flow = ConcreteFlow()
+        latent = torch.randn(2, 3)
+
+        result = flow.inverse(latent)
+
+        assert result.e_samples is latent
+
+    def test_model_config_build_forwards_all_arguments(self):
+        config = ConcreteModelConfig()
+        input_shape = np.asarray([2, 3])
+        output_shape = np.asarray([1, 3])
+
+        result = config.build(
+            input_shape=input_shape,
+            output_shape=output_shape,
+            added_features_dim=4,
+            custom_argument="value",
+        )
+
+        assert result["input_shape"] is input_shape
+        assert result["output_shape"] is output_shape
+        assert result["added_features_dim"] == 4
+        assert result["custom_argument"] == "value"
+
+    def test_deterministic_model_initialization_sets_expected_state(self):
+        config = ConcreteModelConfig()
+
+        model = ConcreteDeterministicModel(config)
+
+        assert model.config is config
+        assert model.generative_modeling is False
+
+    def test_deterministic_model_forward_uses_request_input(self):
+        from S2D4P.architectures.architecture_abc import DeterministicRequest
+
+        model = ConcreteDeterministicModel(ConcreteModelConfig())
+        request = DeterministicRequest(
+            input=torch.ones(2, 2),
+        )
+
+        result = model(request)
+
+        assert result.shape == (2, 1)
+
+    def test_deterministic_request_defaults(self):
+        from S2D4P.architectures.architecture_abc import DeterministicRequest
+
+        input_tensor = torch.ones(2, 3)
+
+        request = DeterministicRequest(input=input_tensor)
+
+        assert request.input is input_tensor
+        assert request.input_mask is None
+        assert request.added_features is None
+        assert request.output_sample_size == 1
+        assert request.chunk_output_samples is False
+
+    def test_cvae_forward_request_defaults(self):
+        from S2D4P.architectures.architecture_abc import cVAEForwardRequest
+
+        target = torch.ones(2, 1)
+        condition = torch.ones(2, 1)
+
+        request = cVAEForwardRequest(
+            target=target,
+            condition=condition,
+        )
+
+        assert request.target is target
+        assert request.condition is condition
+        assert request.target_mask is None
+        assert request.condition_mask is None
+        assert request.added_features is None
+        assert request.latent_sample_size == 1
+        assert request.output_sample_size == 1
+        assert request.posterior_variance_limits is None
+
+    def test_cvae_predict_request_defaults(self):
+        condition = torch.ones(2, 1)
+
+        request = cVAEPredictRequest(condition=condition)
+
+        assert request.condition is condition
+        assert request.condition_mask is None
+        assert request.added_features is None
+        assert request.prior_flow is None
+        assert request.latent_samples is None
+        assert request.nstds == 1
+        assert request.latent_sample_size == 1
+        assert request.output_sample_size == 0
+        assert request.chunk_size is None
+
+    def test_cvae_model_initialization_sets_generative_state(self):
+        config = ConcreteCVAEConfig()
+
+        model = ConcreteCVAEModel(config)
+
+        assert model.config is config
+        assert model.generative_modeling is True
+        assert model.condition_dependant_flow is False
+
+    def test_checkpoint_config_defaults(self, tmp_path):
+        checkpoint = CheckpointConfig(
+            load_path=tmp_path / "model.pt",
+            checkpoint_input_shape=np.asarray([2]),
+            checkpoint_output_shape=np.asarray([1]),
+            checkpoint_input_var_metadata={},
+            checkpoint_output_var_metadata={},
+        )
+
+        assert checkpoint.strict is True
+        assert checkpoint.freeze_weights is False
+
+    def test_load_state_dict_filters_non_architecture_keys(self, tmp_path):
+        model = ConcreteModel(ConcreteModelConfig())
+        path = tmp_path / "model.pt"
+        path.touch()
+
+        checkpoint = {
+            "module": {
+                "arch.linear.weight": torch.ones_like(model.linear.weight),
+                "arch.linear.bias": torch.ones_like(model.linear.bias),
+                "optimizer.state": torch.tensor(1),
+                "unrelated": torch.tensor(2),
+            }
+        }
+
+        config = make_load_config(path)
+
+        with (
+            patch.object(
+                module.torch,
+                "load",
+                return_value=checkpoint,
+            ) as torch_load,
+            patch.object(model, "load_state_dict") as load_state,
+        ):
+            model._load_state_dict(config)
+
+        torch_load.assert_called_once_with(
+            path,
+            map_location=model._get_device(),
+            weights_only=True,
+        )
+
+        loaded_state = load_state.call_args.args[0]
+
+        assert set(loaded_state) == {
+            "linear.weight",
+            "linear.bias",
+        }
+        load_state.assert_called_once_with(
+            loaded_state,
+            strict=True,
+        )
+
+    def test_load_state_dict_freezes_all_parameters(self, tmp_path):
+        model = ConcreteModel(ConcreteModelConfig())
+        path = tmp_path / "model.pt"
+        path.touch()
+
+        checkpoint = {
+            "module": {
+                "arch.linear.weight": model.linear.weight.detach().clone(),
+                "arch.linear.bias": model.linear.bias.detach().clone(),
+            }
+        }
+
+        config = make_load_config(
+            path,
+            freeze_weights=True,
+        )
+
+        with patch.object(
+            module.torch,
+            "load",
+            return_value=checkpoint,
+        ):
+            model._load_state_dict(config)
+
+        assert all(parameter.requires_grad is False for parameter in model.parameters())
+
+    def test_load_state_dict_keeps_parameters_trainable_by_default(
+        self,
+        tmp_path,
+    ):
+        model = ConcreteModel(ConcreteModelConfig())
+        path = tmp_path / "model.pt"
+        path.touch()
+
+        checkpoint = {
+            "module": {
+                "arch.linear.weight": model.linear.weight.detach().clone(),
+                "arch.linear.bias": model.linear.bias.detach().clone(),
+            }
+        }
+
+        config = make_load_config(
+            path,
+            freeze_weights=False,
+        )
+
+        with patch.object(
+            module.torch,
+            "load",
+            return_value=checkpoint,
+        ):
+            model._load_state_dict(config)
+
+        assert all(parameter.requires_grad is True for parameter in model.parameters())
+
+    def test_load_state_dict_collects_garbage(self, tmp_path):
+        model = ConcreteModel(ConcreteModelConfig())
+        path = tmp_path / "model.pt"
+        path.touch()
+        config = make_load_config(path)
+
+        checkpoint = {
+            "module": {
+                "arch.linear.weight": model.linear.weight.detach().clone(),
+                "arch.linear.bias": model.linear.bias.detach().clone(),
+            }
+        }
+
+        with (
+            patch.object(
+                module.torch,
+                "load",
+                return_value=checkpoint,
+            ),
+            patch.object(module.gc, "collect") as collect,
+        ):
+            model._load_state_dict(config)
+
+        collect.assert_called_once_with()
+
+    def test_sample_prior_passes_requested_standard_deviation(self):
+        model = ConcreteCVAEModel(ConcreteCVAEConfig())
+        request = make_predict_request(nstds=2.5)
+        distribution = Mock()
+        distribution.sample.return_value = torch.zeros(4, 2, 3)
+
+        with patch.object(
+            module,
+            "_get_normal",
+            return_value=distribution,
+        ) as get_normal:
+            model._sample_prior(request)
+
+        get_normal.assert_called_once()
+        assert get_normal.call_args.kwargs["std"] == 2.5
+
+    def test_conditional_flow_receives_repeated_condition_means(self):
+        model = ConcreteCVAEModel(ConcreteCVAEConfig())
+        request = make_predict_request(
+            latent_sample_size=3,
+        )
+
+        distribution = Mock()
+        distribution.sample.return_value = torch.zeros(3, 2, 3)
+
+        flow = Mock()
+        flow.condition_size = 3
+        flow.inverse.return_value = SimpleNamespace(
+            e_samples=torch.zeros(6, 3),
+        )
+        request.prior_flow = flow
+
+        with patch.object(
+            module,
+            "_get_normal",
+            return_value=distribution,
+        ):
+            model._sample_prior(request)
+
+        passed_condition = flow.inverse.call_args.args[1]
+
+        assert passed_condition.shape == (6, 3)
+        torch.testing.assert_close(
+            passed_condition,
+            torch.full((6, 3), 2.0),
+        )
+
+    def test_prior_flow_output_is_reshaped_to_sample_batch_layout(self):
+        model = ConcreteCVAEModel(ConcreteCVAEConfig())
+        request = make_predict_request(
+            latent_sample_size=3,
+        )
+
+        distribution = Mock()
+        distribution.sample.return_value = torch.zeros(3, 2, 3)
+
+        transformed = torch.arange(
+            18,
+            dtype=torch.float32,
+        ).reshape(6, 3)
+
+        flow = Mock()
+        flow.condition_size = None
+        flow.inverse.return_value = SimpleNamespace(
+            e_samples=transformed,
+        )
+        request.prior_flow = flow
+
+        with patch.object(
+            module,
+            "_get_normal",
+            return_value=distribution,
+        ):
+            latent, _, _ = model._sample_prior(request)
+
+        assert latent.shape == (3, 2, 3)
+        torch.testing.assert_close(
+            latent,
+            transformed.reshape(3, 2, 3),
+        )
+
+    def test_weights_init_default_leaves_parameters_unchanged(self):
+        layer = nn.Linear(3, 2)
+        original_weight = layer.weight.detach().clone()
+        original_bias = layer.bias.detach().clone()
+
+        weights_init(
+            layer,
+            method="default",
+        )
+
+        torch.testing.assert_close(
+            layer.weight,
+            original_weight,
+        )
+        torch.testing.assert_close(
+            layer.bias,
+            original_bias,
+        )
+
+    def test_weights_init_xavier_zeros_trainable_bias(self):
+        layer = nn.Linear(3, 2)
+
+        with (
+            patch.object(
+                module.nn.init,
+                "xavier_uniform_",
+            ) as initializer,
+            patch.object(
+                module.nn.init,
+                "zeros_",
+            ) as zeros,
+        ):
+            weights_init(
+                layer,
+                method="xavier",
+            )
+
+        initializer.assert_called_once_with(layer.weight)
+        zeros.assert_called_once_with(layer.bias)
+
+    def test_weights_init_truncated_normal_zeros_trainable_bias(self):
+        layer = nn.Linear(3, 2)
+
+        with (
+            patch.object(
+                module,
+                "trunc_normal_",
+            ) as initializer,
+            patch.object(
+                module.nn.init,
+                "zeros_",
+            ) as zeros,
+        ):
+            weights_init(
+                layer,
+                method="trunc_normal",
+            )
+
+        initializer.assert_called_once_with(
+            layer.weight,
+            std=0.02,
+        )
+        zeros.assert_called_once_with(layer.bias)
+
+    def test_weights_init_rejects_unknown_method(self):
+        layer = nn.Linear(3, 2)
+
+        with pytest.raises(
+            NotImplementedError,
+            match="is not implemented",
+        ):
+            weights_init(
+                layer,
+                method="unknown",
+            )
+
+    def test_weights_init_skips_frozen_weight_but_initializes_bias(self):
+        layer = nn.Linear(3, 2)
+        layer.weight.requires_grad_(False)
+
+        with (
+            patch.object(
+                module.nn.init,
+                "xavier_uniform_",
+            ) as initializer,
+            patch.object(
+                module.nn.init,
+                "zeros_",
+            ) as zeros,
+        ):
+            weights_init(
+                layer,
+                method="xavier",
+            )
+
+        initializer.assert_not_called()
+        zeros.assert_called_once_with(layer.bias)
+
+    def test_weights_init_initializes_weight_but_skips_frozen_bias(self):
+        layer = nn.Linear(3, 2)
+        layer.bias.requires_grad_(False)
+
+        with (
+            patch.object(
+                module.nn.init,
+                "xavier_uniform_",
+            ) as initializer,
+            patch.object(
+                module.nn.init,
+                "zeros_",
+            ) as zeros,
+        ):
+            weights_init(
+                layer,
+                method="xavier",
+            )
+
+        initializer.assert_called_once_with(layer.weight)
+        zeros.assert_not_called()

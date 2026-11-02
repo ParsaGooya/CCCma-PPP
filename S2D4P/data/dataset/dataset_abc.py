@@ -844,6 +844,12 @@ class AddedTimeFeatures:
             .astype(int)
         )
 
+    def _validated_time_span(self):
+        """Return the nonzero span used to normalize initialization time."""
+        if self.max_time_ref == self.min_time_ref:
+            raise ValueError("zero-length reference span")
+        return self.time_span_ref
+
     def build_time_features(
         self,
         sample_coords: dict[str, np.ndarray],
@@ -906,7 +912,7 @@ class AddedTimeFeatures:
 
             normalized_times = np.asarray(
                 [
-                    (time - self.min_time_ref) / self.time_span_ref
+                    (time - self.min_time_ref) / self._validated_time_span()
                     for time in target_times
                 ],
                 dtype=np.float32,

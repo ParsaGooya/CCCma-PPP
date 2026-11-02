@@ -33,7 +33,7 @@ class DummyModule:
         generator=None,
         num_output_dims=1,
     ):
-        self.model_config = SimpleNamespace(
+        self.architecture_config = SimpleNamespace(
             GENERATOR=generator,
             NUM_OUTPUT_DIMS=num_output_dims,
         )

@@ -33,7 +33,7 @@ def make_module(
     output_shape=None,
     added_features_dim=None,
 ):
-    cfg = cfg or cVAEConfig(ModelConfig=DummySelector())
+    cfg = cfg or cVAEConfig(Architecture=DummySelector())
     return cfg.build(
         input_shape=input_shape,
         output_shape=output_shape,
@@ -107,7 +107,7 @@ class DummyModel:
 
 
 class DummySelector:
-    def get_model_config(self):
+    def get_architecture_config(self):
         return DummyModel()
 
 
@@ -153,27 +153,27 @@ class SumLoss:
 
 def test_config_requires_model_or_load():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        cVAEConfig(ModelConfig=None, load_dir=None)
+        cVAEConfig(Architecture=None, load_dir=None)
 
 
 def test_config_default_weight():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     assert cfg.combined_CGCN_weight == 0
 
 
 def test_config_weight_bounds():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=2)
+        cVAEConfig(Architecture=DummySelector(), combined_CGCN_weight=2)
 
 
 def test_config_negative_cgcn_weight():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=-0.1)
+        cVAEConfig(Architecture=DummySelector(), combined_CGCN_weight=-0.1)
 
 
 def test_config_build():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     assert isinstance(cfg.build(np.array([1])), cVAE)
 
@@ -182,18 +182,18 @@ def test_module_build_basic():
     m = make_module()
 
     assert isinstance(m, cVAE)
-    assert m.model is not None
+    assert m.arch is not None
 
 
 def test_build_without_output_shape():
     m = make_module(input_shape=np.array([1]))
 
-    assert np.array_equal(m.model.build_kwargs["input_shape"], np.array([1]))
-    assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([1]))
+    assert np.array_equal(m.arch.build_kwargs["input_shape"], np.array([1]))
+    assert np.array_equal(m.arch.build_kwargs["output_shape"], np.array([1]))
 
 
 def test_build_with_explicit_output_shape():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     m = make_module(
         cfg,
@@ -201,12 +201,12 @@ def test_build_with_explicit_output_shape():
         output_shape=np.array([2]),
     )
 
-    assert np.array_equal(m.model.build_kwargs["input_shape"], np.array([1]))
-    assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([2]))
+    assert np.array_equal(m.arch.build_kwargs["input_shape"], np.array([1]))
+    assert np.array_equal(m.arch.build_kwargs["output_shape"], np.array([2]))
 
 
 def test_build_shape_mismatch(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
     cfg.checkpoint_config = DummyCheckpointConfig(
         checkpoint_input_shape=np.array([1]),
@@ -229,12 +229,12 @@ class ConditionalModel(DummyModel):
 
 
 class ConditionalSelector:
-    def get_model_config(self):
+    def get_architecture_config(self):
         return ConditionalModel()
 
 
 def test_conditional_flow_branch():
-    cfg = cVAEConfig(ModelConfig=ConditionalSelector(), prior_flow_config=DummyFlow())
+    cfg = cVAEConfig(Architecture=ConditionalSelector(), prior_flow_config=DummyFlow())
 
     m = make_module(cfg)
 
@@ -244,7 +244,7 @@ def test_conditional_flow_branch():
 
 
 def test_prior_flow_build():
-    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
+    cfg = cVAEConfig(Architecture=DummySelector(), prior_flow_config=DummyFlow())
 
     m = make_module(cfg)
 
@@ -254,7 +254,7 @@ def test_prior_flow_build():
 
 
 def test_flow_without_condition():
-    cfg = cVAEConfig(ModelConfig=NoCondSelector(), prior_flow_config=DummyFlow())
+    cfg = cVAEConfig(Architecture=NoCondSelector(), prior_flow_config=DummyFlow())
 
     m = make_module(cfg)
 
@@ -271,7 +271,7 @@ def test_init_loss_function_basic():
 
 
 def test_init_loss_with_flow_requires_sum():
-    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
+    cfg = cVAEConfig(Architecture=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
 
     with pytest.raises(RuntimeError):
@@ -279,7 +279,7 @@ def test_init_loss_with_flow_requires_sum():
 
 
 def test_flow_loss_valid_sum():
-    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
+    cfg = cVAEConfig(Architecture=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
 
     m.init_loss_function(SumLoss())
@@ -309,7 +309,7 @@ def test_forward_with_added_features():
 
 
 def test_predict_with_sample_size_and_prior_flow():
-    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
+    cfg = cVAEConfig(Architecture=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
 
     out = m.predict(DummyBatch(), 3)
@@ -318,7 +318,7 @@ def test_predict_with_sample_size_and_prior_flow():
 
 
 def test_forward_with_sample_size_explicit():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     m = make_module(cfg)
 
     out = m.forward(DummyBatch(), 5)
@@ -359,11 +359,11 @@ def test_kld_cond_shape_mismatch():
             )
 
     class Sel:
-        def get_model_config(self):
+        def get_architecture_config(self):
             return WeirdModel()
 
     module = make_module(
-        cVAEConfig(ModelConfig=Sel()),
+        cVAEConfig(Architecture=Sel()),
     )
     module.init_loss_function(DummyLoss())
 
@@ -377,7 +377,7 @@ def test_kld_cond_shape_mismatch():
 
 
 def test_load_checkpoint_missing():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     with pytest.raises(FileNotFoundError):
         cfg._load_from_checkpoint("missing.pt")
@@ -385,7 +385,7 @@ def test_load_checkpoint_missing():
 
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
-        self.ModelConfig = DummySelector()
+        self.Architecture = DummySelector()
         self.checkpoint_config = DummyCheckpointConfig(
             checkpoint_input_shape=np.array([1]),
             checkpoint_output_shape=np.array([1]),
@@ -400,15 +400,15 @@ def test_config_load_dir_branch_success(monkeypatch):
     with pytest.warns(UserWarning):
         cfg = cVAEConfig(load_dir="fake_checkpoint.pt")
 
-    assert isinstance(cfg.ModelConfig, DummySelector)
+    assert isinstance(cfg.Architecture, DummySelector)
     assert cfg.min_posterior_variance == 0.25
     assert cfg.combined_CGCN_weight == 0.4
-    assert cfg.model_config is not None
+    assert cfg.architecture_config is not None
 
 
 def test_config_load_dir_branch_with_none_combined_sets_default(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
-        self.ModelConfig = DummySelector()
+        self.Architecture = DummySelector()
         self.checkpoint_config = DummyCheckpointConfig(
             checkpoint_input_shape=np.array([1]),
             checkpoint_output_shape=np.array([1]),
@@ -432,7 +432,7 @@ def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path
 
     fake_checkpoint = {
         "module_config": {
-            "ModelConfig": {"dummy": True},
+            "Architecture": {"dummy": True},
             "prior_flow_config": {"dummy": True},
             "posterior_variance_limits": (0.33, None),
             "combined_CGCN_weight": 0.66,
@@ -445,7 +445,7 @@ def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path
         return fake_checkpoint
 
     def fake_from_dict(data_class, data, config):
-        if data_class.__name__ == "cVAEModelSelector":
+        if data_class.__name__ == "cVAEArchSelector":
             return DummySelector()
         if data_class.__name__ == "NormalizedFlowConfig":
             return DummyFlow()
@@ -454,14 +454,14 @@ def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path
     monkeypatch.setattr(mod.torch, "load", fake_torch_load)
     monkeypatch.setattr(mod.dacite, "from_dict", fake_from_dict)
 
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.posterior_variance_limits = None
     cfg.combined_CGCN_weight = None
 
     out = cfg._load_from_checkpoint(path)
 
     assert out is cfg
-    assert isinstance(cfg.ModelConfig, DummySelector)
+    assert isinstance(cfg.Architecture, DummySelector)
     assert isinstance(cfg.prior_flow_config, DummyFlow)
     assert cfg.posterior_variance_limits == (0.33, None)
     assert cfg.combined_CGCN_weight == 0.66
@@ -478,7 +478,7 @@ def test_load_from_checkpoint_does_not_override_existing_values(monkeypatch, tmp
 
     fake_checkpoint = {
         "module_config": {
-            "ModelConfig": {"dummy": True},
+            "Architecture": {"dummy": True},
             "prior_flow_config": {"dummy": True},
             "posterior_variance_limits": (0.33, None),
             "combined_CGCN_weight": 0.66,
@@ -491,7 +491,7 @@ def test_load_from_checkpoint_does_not_override_existing_values(monkeypatch, tmp
         return fake_checkpoint
 
     def fake_from_dict(data_class, data, config):
-        if data_class.__name__ == "cVAEModelSelector":
+        if data_class.__name__ == "cVAEArchSelector":
             return DummySelector()
         if data_class.__name__ == "NormalizedFlowConfig":
             return DummyFlow()
@@ -501,7 +501,7 @@ def test_load_from_checkpoint_does_not_override_existing_values(monkeypatch, tmp
     monkeypatch.setattr(mod.dacite, "from_dict", fake_from_dict)
 
     cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
+        Architecture=DummySelector(),
         posterior_variance_limits=(0.9, None),
         combined_CGCN_weight=0.1,
     )
@@ -524,14 +524,14 @@ def test_load_from_checkpoint_missing_module_config(monkeypatch, tmp_path):
 
     monkeypatch.setattr(mod.torch, "load", fake_torch_load)
 
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     with pytest.raises((AttributeError, KeyError)):
         cfg._load_from_checkpoint(path)
 
 
 def test_build_load_dir_success_path(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
     cfg.checkpoint_config = DummyCheckpointConfig(
         checkpoint_input_shape=np.array([1]),
@@ -552,7 +552,7 @@ def test_build_load_dir_success_path(monkeypatch):
 
 
 def test_build_load_dir_output_shape_mismatch(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
     cfg.checkpoint_config = DummyCheckpointConfig(
         checkpoint_input_shape=np.array([1]),
@@ -570,7 +570,7 @@ def test_build_load_dir_output_shape_mismatch(monkeypatch):
 
 
 def test_build_load_dir_input_shape_success_output_shape_success(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
     cfg.checkpoint_config = DummyCheckpointConfig(
         checkpoint_input_shape=np.array([1]),
@@ -595,7 +595,7 @@ class NoCondFlowModel(DummyModel):
 
 
 class NoCondSelector:
-    def get_model_config(self):
+    def get_architecture_config(self):
         return NoCondFlowModel()
 
 
@@ -620,7 +620,7 @@ def test_predict_uses_default_sample_size():
 
 def test_prior_flow_receives_condition_when_enabled():
     cfg = cVAEConfig(
-        ModelConfig=ConditionalSelector(),
+        Architecture=ConditionalSelector(),
         prior_flow_config=DummyFlow(),
     )
 
@@ -632,7 +632,7 @@ def test_prior_flow_receives_condition_when_enabled():
 
 def test_prior_flow_without_condition_path():
     cfg = cVAEConfig(
-        ModelConfig=NoCondSelector(),
+        Architecture=NoCondSelector(),
         prior_flow_config=DummyFlow(),
     )
 
@@ -642,7 +642,7 @@ def test_prior_flow_without_condition_path():
 
 
 def test_build_preserves_added_features_dim():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     m = make_module(
         cfg,
@@ -651,11 +651,11 @@ def test_build_preserves_added_features_dim():
         added_features_dim=7,
     )
 
-    assert m.model.build_kwargs["added_features_dim"] == 7
+    assert m.arch.build_kwargs["added_features_dim"] == 7
 
 
 def test_model_build_receives_correct_shapes():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     input_shape = np.array([3])
     output_shape = np.array([5])
@@ -667,18 +667,18 @@ def test_model_build_receives_correct_shapes():
     )
 
     assert np.array_equal(
-        m.model.build_kwargs["input_shape"],
+        m.arch.build_kwargs["input_shape"],
         input_shape,
     )
 
     assert np.array_equal(
-        m.model.build_kwargs["output_shape"],
+        m.arch.build_kwargs["output_shape"],
         output_shape,
     )
 
 
 def test_build_load_dir_calls_load_state_dict_once(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
 
     cfg.load_dir = "fake_checkpoint.pt"
 
@@ -734,10 +734,10 @@ class RecordingModel(DummyModel):
 
 class RecordingSelector:
     def __init__(self):
-        self.model_config = RecordingModel()
+        self.architecture_config = RecordingModel()
 
-    def get_model_config(self):
-        return self.model_config
+    def get_architecture_config(self):
+        return self.architecture_config
 
 
 class DummyGenerator:
@@ -751,10 +751,10 @@ class GeneratorModel(RecordingModel):
 
 class GeneratorSelector:
     def __init__(self):
-        self.model_config = GeneratorModel()
+        self.architecture_config = GeneratorModel()
 
-    def get_model_config(self):
-        return self.model_config
+    def get_architecture_config(self):
+        return self.architecture_config
 
 
 class RecordingLoss:
@@ -819,13 +819,13 @@ class ConstantKLD(torch.nn.Module):
 def test_forward_eval_uses_validation_noise_sample_count():
     selector = GeneratorSelector()
     module = make_module(
-        cVAEConfig(ModelConfig=selector),
+        cVAEConfig(Architecture=selector),
     )
     module.eval()
 
     module.forward(DummyBatch())
 
-    request = selector.model_config.forward_request
+    request = selector.architecture_config.forward_request
 
     assert request.output_sample_size == 11
 
@@ -833,7 +833,7 @@ def test_forward_eval_uses_validation_noise_sample_count():
 def test_predict_training_uses_training_noise_sample_count():
     selector = GeneratorSelector()
     module = make_module(
-        cVAEConfig(ModelConfig=selector),
+        cVAEConfig(Architecture=selector),
     )
     module.train()
 
@@ -842,7 +842,7 @@ def test_predict_training_uses_training_noise_sample_count():
         output_sample_size=3,
     )
 
-    request = selector.model_config.predict_request
+    request = selector.architecture_config.predict_request
 
     assert request.output_sample_size == 7
 
@@ -850,7 +850,7 @@ def test_predict_training_uses_training_noise_sample_count():
 def test_predict_eval_preserves_explicit_output_sample_size():
     selector = GeneratorSelector()
     module = make_module(
-        cVAEConfig(ModelConfig=selector),
+        cVAEConfig(Architecture=selector),
     )
     module.eval()
 
@@ -859,7 +859,7 @@ def test_predict_eval_preserves_explicit_output_sample_size():
         output_sample_size=13,
     )
 
-    request = selector.model_config.predict_request
+    request = selector.architecture_config.predict_request
 
     assert request.output_sample_size == 13
 
@@ -914,7 +914,7 @@ def test_compute_loss_accepts_none_target_mask():
 
 def test_compute_loss_passes_prior_flow_to_kld():
     cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
+        Architecture=DummySelector(),
         prior_flow_config=DummyFlow(),
     )
     module = make_module(cfg)
@@ -963,7 +963,7 @@ def test_compute_loss_applies_beta_to_kld():
 
 def test_compute_loss_combines_cgcn_reconstruction_loss(monkeypatch):
     cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
+        Architecture=DummySelector(),
         combined_CGCN_weight=0.25,
     )
     module = make_module(cfg)
@@ -1058,7 +1058,7 @@ def test_build_load_dir_rejects_input_metadata_mismatch(
         "variable": "target",
     }
 
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
     cfg.checkpoint_config = DummyCheckpointConfig(
         checkpoint_input_shape=np.array([1]),
@@ -1098,7 +1098,7 @@ def test_build_load_dir_rejects_output_metadata_mismatch(
         "variable": "current",
     }
 
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
     cfg.checkpoint_config = DummyCheckpointConfig(
         checkpoint_input_shape=np.array([1]),
@@ -1141,7 +1141,7 @@ def test_build_load_dir_accepts_matching_metadata(
     RuntimeContext.INPUT_VAR_METADATA = input_metadata
     RuntimeContext.TARGET_VAR_METADATA = output_metadata
 
-    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg = cVAEConfig(Architecture=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
     cfg.checkpoint_config = DummyCheckpointConfig(
         checkpoint_input_shape=np.array([1]),
@@ -1172,17 +1172,17 @@ def test_conditional_flow_resolves_model_flow_settings():
     selector = ConditionalSelector()
 
     cfg = cVAEConfig(
-        ModelConfig=selector,
+        Architecture=selector,
         prior_flow_config=DummyFlow(),
     )
 
     assert cfg.condition_dependant_flow is True
-    assert cfg.model_config.condition_dependant_flow is True
+    assert cfg.architecture_config.condition_dependant_flow is True
 
 
 def test_nonconditional_flow_does_not_set_condition_size():
     cfg = cVAEConfig(
-        ModelConfig=NoCondSelector(),
+        Architecture=NoCondSelector(),
         prior_flow_config=DummyFlow(),
     )
 

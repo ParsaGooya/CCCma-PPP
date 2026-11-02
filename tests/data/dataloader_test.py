@@ -76,14 +76,17 @@ class ConcreteDataloaderConfig(DataloaderConfigABC):
         prefetch_factor=2,
         pin_memory=True,
         reduce_spatial_mask=False,
+        share_spatial_mask=False,
         drop_last=False,
     ):
-        self.dataset_config = MagicMock()
+        self.dataset = MagicMock()
         self.num_data_workers = num_data_workers
         self.batch_size = batch_size
         self.prefetch_factor = prefetch_factor
         self.pin_memory = pin_memory
         self.reduce_spatial_mask = reduce_spatial_mask
+        self.share_spatial_mask = share_spatial_mask
+        self.share_spatial_mask = share_spatial_mask
         self.drop_last = drop_last
         self.return_spatial_mask = False
         self.time_features = None
@@ -146,6 +149,7 @@ def collate_batch(
     batch,
     *,
     return_spatial_mask=False,
+    share_spatial_mask=False,
     reduce_spatial_mask=False,
 ):
     return {
@@ -153,6 +157,7 @@ def collate_batch(
         "input": torch.stack([item["input"] for item in batch]),
         "target": torch.stack([item["target"] for item in batch]),
         "return_spatial_mask": return_spatial_mask,
+        "share_spatial_mask": share_spatial_mask,
         "reduce_spatial_mask": reduce_spatial_mask,
     }
 
@@ -543,7 +548,7 @@ class TestDataloader:
     def test_collate_receives_spatial_mask_arguments(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
-            reduce_spatial_mask=True,
+            share_spatial_mask=True,
         )
         dataset = DummyDataset(
             size=2,
@@ -560,7 +565,7 @@ class TestDataloader:
         batch = next(iter(loader))
 
         assert batch["return_spatial_mask"] is True
-        assert batch["reduce_spatial_mask"] is True
+        assert batch["share_spatial_mask"] is True
 
     def test_iteration(self):
         config = ConcreteDataloaderConfig(
@@ -1347,7 +1352,7 @@ def test_dataloader_forwards_zero_worker_options():
     )
 
     with patch(
-        "S2D4P.data_modules.dataloader.DataLoader",
+        "S2D4P.data.dataloader.DataLoader",
     ) as constructor:
         Dataloader(
             config=config,
@@ -1373,7 +1378,7 @@ def test_dataloader_forwards_nonzero_worker_options():
     )
 
     with patch(
-        "S2D4P.data_modules.dataloader.DataLoader",
+        "S2D4P.data.dataloader.DataLoader",
     ) as constructor:
         Dataloader(
             config=config,
@@ -1393,11 +1398,11 @@ def test_dataloader_forwards_nonzero_worker_options():
 
 def test_dataloader_wraps_collate_function_with_mask_options():
     config = ConcreteDataloaderConfig(
-        reduce_spatial_mask=True,
+        share_spatial_mask=True,
     )
 
     with patch(
-        "S2D4P.data_modules.dataloader.DataLoader",
+        "S2D4P.data.dataloader.DataLoader",
     ) as constructor:
         Dataloader(
             config=config,
@@ -1420,7 +1425,7 @@ def test_dataloader_wraps_collate_function_with_mask_options():
     )
 
     assert result["return_spatial_mask"] is True
-    assert result["reduce_spatial_mask"] is True
+    assert result["share_spatial_mask"] is True
 
 
 def test_dataloader_forwards_drop_last_to_distributed_sampler():

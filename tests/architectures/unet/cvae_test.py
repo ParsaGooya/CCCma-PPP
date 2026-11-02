@@ -284,7 +284,7 @@ class TestCVAEUNetConfig:
         selector = SimpleNamespace(
             checkpoint_config=SimpleNamespace(freeze_weights=False),
             share_output_block=False,
-            get_model_config=Mock(
+            get_architecture_config=Mock(
                 return_value=resolved,
             ),
         )
@@ -311,7 +311,7 @@ class TestCVAEUNetConfig:
         selector = SimpleNamespace(
             checkpoint_config=SimpleNamespace(freeze_weights=False),
             share_output_block=False,
-            get_model_config=Mock(
+            get_architecture_config=Mock(
                 return_value=resolved,
             ),
         )
@@ -355,7 +355,7 @@ class TestCVAEUNetConfig:
         selector = SimpleNamespace(
             checkpoint_config=SimpleNamespace(freeze_weights=False),
             share_output_block=True,
-            get_model_config=Mock(
+            get_architecture_config=Mock(
                 return_value=resolved,
             ),
         )
@@ -382,7 +382,7 @@ class TestCVAEUNetConfig:
         selector = SimpleNamespace(
             checkpoint_config=SimpleNamespace(freeze_weights=False),
             share_output_block=True,
-            get_model_config=Mock(
+            get_architecture_config=Mock(
                 return_value=resolved,
             ),
         )
@@ -1743,7 +1743,7 @@ class TestAdditionalCVAEUNetConfig:
             chunk_size=None,
             checkpoint_config=SimpleNamespace(chunk_size=None, freeze_weights=False),
             share_output_block=False,
-            get_model_config=Mock(
+            get_architecture_config=Mock(
                 return_value=resolved,
             ),
         )
@@ -2123,7 +2123,7 @@ def make_deterministic_selector(
             freeze_weights=freeze_weights,
         ),
         share_output_block=share_output_block,
-        get_model_config=Mock(
+        get_architecture_config=Mock(
             return_value=resolved,
         ),
     )

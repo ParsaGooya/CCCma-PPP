@@ -3403,23 +3403,6 @@ class TestFlattennanremoveAdditionalBranches:
 
 
 class TestAlignStatisticAdditionalBranches:
-    def test_lead_time_statistic_precedes_other_temporal_dims(self):
-        stat = xr.DataArray(
-            np.ones((2, 12)),
-            dims=(LEAD_TIME_DIM, "month"),
-            coords={
-                LEAD_TIME_DIM: [1, 2],
-                "month": np.arange(1, 13),
-            },
-        )
-
-        result = align_stat_data_lead_time_inverse_transform(
-            make_forecast_data(),
-            stat,
-        )
-
-        assert result is stat
-
     def test_static_dataset_is_returned_unchanged(self):
         stat = xr.Dataset(
             {

@@ -72,7 +72,7 @@ def patch_data_source(info=None):
         info = DummyInfo()
 
     return patch.multiple(
-        DataConfigABC,
+        "S2D4P.data.data_configs.data_configs_abc",
         _resolve_data=lambda self: None,
         _get_ds_info=lambda self: info,
     )
@@ -175,7 +175,7 @@ def test_forecast_passes_max_lead_time_to_builder():
     )
 
     with patch(
-        "S2D4P.data.data_configs.build_time_range",
+        "S2D4P.data.data_configs.data_configs.build_time_range",
         return_value=np.array(["2000-01-01"], dtype="datetime64[ns]"),
     ) as mock_build:
         build_forecast(info)
@@ -193,7 +193,7 @@ def test_forecast_passes_exact_time_range_arguments():
     expected = object()
 
     with patch(
-        "S2D4P.data.data_configs.build_time_range",
+        "S2D4P.data.data_configs.data_configs.build_time_range",
         return_value=expected,
     ) as build:
         cfg = build_forecast(info)
@@ -216,11 +216,8 @@ def test_forecast_resolve_and_info_are_called():
         called["info"] = True
         return DummyInfo()
 
-    with patch.multiple(
-        DataConfigABC,
-        _resolve_data=fake_resolve,
-        _get_ds_info=fake_info,
-    ):
+    with patch("S2D4P.data.data_configs.data_configs_abc._resolve_data", fake_resolve), \
+         patch("S2D4P.data.data_configs.data_configs_abc._get_ds_info", fake_info):
         ForecastDataConfig(paths="x", names=["var"])
 
     assert called == {"resolve": True, "info": True}
@@ -281,7 +278,7 @@ def test_reference_passes_exact_time_range_arguments():
     expected = object()
 
     with patch(
-        "S2D4P.data.data_configs.build_time_range",
+        "S2D4P.data.data_configs.data_configs.build_time_range",
         return_value=expected,
     ) as build:
         cfg = build_reference(info)
@@ -370,7 +367,7 @@ def test_condition_passes_max_lead_time_to_builder():
     info = DummyInfo(lead_times=make_lead_times([1, 6, 12]))
 
     with patch(
-        "S2D4P.data.data_configs.build_time_range",
+        "S2D4P.data.data_configs.data_configs.build_time_range",
         return_value=np.array(["2000-01-01"], dtype="datetime64[ns]"),
     ) as mock_build:
         build_condition(info)
@@ -407,7 +404,7 @@ def test_condition_incomplete_bounds_set_time_range_to_none(start_time, final_ti
 def test_condition_incomplete_bounds_skip_time_range_builder(start_time, final_time):
     info = DummyInfo(start_time=start_time, final_time=final_time)
 
-    with patch("S2D4P.data.data_configs.build_time_range") as build:
+    with patch("S2D4P.data.data_configs.data_configs.build_time_range") as build:
         build_condition(info)
 
     build.assert_not_called()
@@ -422,7 +419,7 @@ def test_condition_complete_bounds_build_time_range():
     expected = object()
 
     with patch(
-        "S2D4P.data.data_configs.build_time_range",
+        "S2D4P.data.data_configs.data_configs.build_time_range",
         return_value=expected,
     ) as build:
         cfg = build_condition(info)
@@ -445,11 +442,8 @@ def test_condition_resolve_and_info_are_called():
         called["info"] = True
         return DummyInfo()
 
-    with patch.multiple(
-        DataConfigABC,
-        _resolve_data=fake_resolve,
-        _get_ds_info=fake_info,
-    ):
+    with patch("S2D4P.data.data_configs.data_configs_abc._resolve_data", fake_resolve), \
+         patch("S2D4P.data.data_configs.data_configs_abc._get_ds_info", fake_info):
         ConditionDataConfig(paths="x", names=["var"])
 
     assert called == {"resolve": True, "info": True}
@@ -799,7 +793,7 @@ def test_build_time_range_calls_xarray_date_range_twice_for_monthly():
     real_date_range = xr.date_range
 
     with patch(
-        "S2D4P.data.data_configs.xr.date_range",
+        "S2D4P.data.data_configs.data_configs.xr.date_range",
         side_effect=real_date_range,
     ) as date_range:
         build_time_range(
@@ -830,7 +824,7 @@ def test_build_time_range_uses_daily_frequency_code():
     real_date_range = xr.date_range
 
     with patch(
-        "S2D4P.data.data_configs.xr.date_range",
+        "S2D4P.data.data_configs.data_configs.xr.date_range",
         side_effect=real_date_range,
     ) as date_range:
         build_time_range(
@@ -853,7 +847,7 @@ def test_build_time_range_uses_cftime_calendar_in_both_calls():
     real_date_range = xr.date_range
 
     with patch(
-        "S2D4P.data.data_configs.xr.date_range",
+        "S2D4P.data.data_configs.data_configs.xr.date_range",
         side_effect=real_date_range,
     ) as date_range:
         build_time_range(

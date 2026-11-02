@@ -157,17 +157,17 @@ class DummyDatasetConfig:
     def __init__(
         self,
         *,
-        model=None,
-        observation=None,
+        forecast=None,
+        reference=None,
         condition=None,
         condition_method=None,
         using_model_as_condition=False,
     ):
-        self.model = model
-        self.observation = observation
+        self.forecast = forecast
+        self.reference = reference
         self.effective_condition = condition
         self.condition_method = condition_method
-        self._using_model_data_as_condition = using_model_as_condition
+        self._using_forecast_data_as_condition = using_model_as_condition
 
         self.available_times = AVAILABLE_TIMES
         self._fitted_preprocessors = False
@@ -205,32 +205,32 @@ class TestConfigObservation:
     def test_returns_observation_when_present(self):
         observation = make_data_config()
         config = DummyDatasetConfig(
-            observation=observation,
+            reference=observation,
         )
 
         operator = DatasetOperator(config)
 
-        assert operator.config_observation is observation
+        assert operator.config_reference is observation
 
     def test_returns_none_when_attribute_is_absent(self):
         config = SimpleNamespace()
         operator = DatasetOperator(config)
 
-        assert operator.config_observation is None
+        assert operator.config_reference is None
 
     def test_returns_none_when_observation_is_none(self):
         config = DummyDatasetConfig(
-            observation=None,
+            reference=None,
         )
         operator = DatasetOperator(config)
 
-        assert operator.config_observation is None
+        assert operator.config_reference is None
 
 
 class LegacyFitPreprocessors:
     def test_rejects_unavailable_train_times(self):
         config = DummyDatasetConfig(
-            model=make_data_config(),
+            forecast=make_data_config(),
         )
         operator = DatasetOperator(config)
 
@@ -248,13 +248,13 @@ class LegacyFitPreprocessors:
 
     def test_validates_time_sequence(self):
         config = DummyDatasetConfig(
-            model=make_data_config(),
+            forecast=make_data_config(),
         )
         operator = DatasetOperator(config)
         train_times = make_train_times()
 
         with patch(
-            "S2D4P.data_modules.dataset.operator._validate_time_sequence"
+            "S2D4P.data.dataset.operator._validate_time_sequence"
         ) as mock_validate:
             operator.fit_preprocessors(train_times)
 
@@ -263,7 +263,7 @@ class LegacyFitPreprocessors:
     def test_fits_model_preprocessor(self):
         model = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         train_times = make_train_times()
@@ -294,7 +294,7 @@ class LegacyFitPreprocessors:
             ]
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -309,7 +309,7 @@ class LegacyFitPreprocessors:
             realizations=None,
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -322,7 +322,7 @@ class LegacyFitPreprocessors:
     def test_fits_observation_preprocessor(self):
         observation = make_data_config()
         config = DummyDatasetConfig(
-            observation=observation,
+            reference=observation,
         )
         operator = DatasetOperator(config)
         train_times = make_train_times()
@@ -351,7 +351,7 @@ class LegacyFitPreprocessors:
             ]
         )
         config = DummyDatasetConfig(
-            observation=observation,
+            reference=observation,
         )
         operator = DatasetOperator(config)
         train_times = make_train_times()
@@ -434,7 +434,7 @@ class LegacyFitPreprocessors:
         model = make_data_config()
         condition = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
             condition=condition,
             condition_method="ensemble_mean",
         )
@@ -463,8 +463,8 @@ class LegacyFitPreprocessors:
 
     def test_skips_missing_sources(self):
         config = DummyDatasetConfig(
-            model=None,
-            observation=None,
+            forecast=None,
+            reference=None,
             condition=None,
         )
         operator = DatasetOperator(config)
@@ -475,7 +475,7 @@ class LegacyFitPreprocessors:
 
     def test_sets_fitted_preprocessors_flag(self):
         config = DummyDatasetConfig(
-            model=make_data_config(),
+            forecast=make_data_config(),
         )
         operator = DatasetOperator(config)
 
@@ -493,8 +493,8 @@ class LegacyLoadFittedPreprocessors:
         condition = make_data_config()
 
         config = DummyDatasetConfig(
-            model=model,
-            observation=observation,
+            forecast=model,
+            reference=observation,
             condition=condition,
             condition_method="ensemble_mean",
         )
@@ -519,7 +519,7 @@ class LegacyLoadFittedPreprocessors:
     def test_forwards_none_load_directory(self):
         model = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -531,7 +531,7 @@ class LegacyLoadFittedPreprocessors:
 class TestAddFittedPreprocessor:
     def test_rejects_wrong_type(self):
         config = DummyDatasetConfig(
-            model=make_data_config(),
+            forecast=make_data_config(),
         )
         operator = DatasetOperator(config)
 
@@ -543,7 +543,7 @@ class TestAddFittedPreprocessor:
 
     def test_rejects_unfitted_preprocessor(self):
         config = DummyDatasetConfig(
-            model=make_data_config(),
+            forecast=make_data_config(),
         )
         operator = DatasetOperator(config)
         preprocessor = DummyPreprocessor(
@@ -562,8 +562,8 @@ class TestAddFittedPreprocessor:
         condition = make_data_config()
 
         config = DummyDatasetConfig(
-            model=model,
-            observation=observation,
+            forecast=model,
+            reference=observation,
             condition=condition,
             condition_method="ensemble_mean",
         )
@@ -592,7 +592,7 @@ class TestAddFittedPreprocessor:
     def test_skips_missing_sources(self):
         model = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         preprocessor = DummyPreprocessor(
@@ -633,8 +633,8 @@ class TestGetWeights:
         )
 
         config = DummyDatasetConfig(
-            model=model,
-            observation=observation,
+            forecast=model,
+            reference=observation,
         )
         operator = DatasetOperator(config)
 
@@ -678,8 +678,8 @@ class TestGetWeights:
         )
 
         config = DummyDatasetConfig(
-            model=model,
-            observation=None,
+            forecast=model,
+            reference=None,
         )
         operator = DatasetOperator(config)
 
@@ -708,7 +708,7 @@ class TestGetWeights:
 
         with pytest.raises(
             ValueError,
-            match="No model or observation data",
+            match="No forecast or reference data",
         ):
             operator.get_weights(config=MagicMock())
 
@@ -722,7 +722,7 @@ class TestGetWeights:
             }
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -755,7 +755,7 @@ class TestGetWeights:
             }
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         model.preprocessing_pipeline.get_flattener.return_value = None
@@ -803,7 +803,7 @@ class TestGetWeights:
             },
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -837,7 +837,7 @@ class TestGetWeights:
             },
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         operator.ref = model
@@ -884,7 +884,7 @@ class TestGetWeights:
             ],
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         operator.ref = model
@@ -941,7 +941,7 @@ class TestInputMetadata:
         ]
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -987,7 +987,7 @@ class TestInputMetadata:
         )
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
             condition=condition,
             condition_method="ensemble_mean",
             using_model_as_condition=False,
@@ -1021,7 +1021,7 @@ class TestInputMetadata:
         )
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
             condition=effective_condition,
             condition_method="ensemble_mean",
             using_model_as_condition=True,
@@ -1054,7 +1054,7 @@ class TestInputMetadata:
         ]
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1084,8 +1084,8 @@ class TestTargetMetadata:
         )
 
         config = DummyDatasetConfig(
-            model=model,
-            observation=observation,
+            forecast=model,
+            reference=observation,
         )
         operator = DatasetOperator(config)
 
@@ -1111,8 +1111,8 @@ class TestTargetMetadata:
         )
 
         config = DummyDatasetConfig(
-            model=model,
-            observation=None,
+            forecast=model,
+            reference=None,
         )
         operator = DatasetOperator(config)
 
@@ -1155,7 +1155,7 @@ class TestUpdateMetadata:
 
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=source,
+                forecast=source,
             )
         )
 
@@ -1189,7 +1189,7 @@ class TestUpdateMetadata:
 
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=source,
+                forecast=source,
             )
         )
 
@@ -1310,7 +1310,7 @@ class TestAdditionalFitPreprocessors:
     def test_rejects_unavailable_training_time(self):
         model = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1331,13 +1331,13 @@ class TestAdditionalFitPreprocessors:
     def test_validates_times_before_fitting_sources(self):
         model = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         error = ValueError("invalid time sequence")
 
         with patch(
-            "S2D4P.data_modules.dataset.operator._validate_time_sequence",
+            "S2D4P.data.dataset.operator._validate_time_sequence",
             side_effect=error,
         ) as validate:
             with pytest.raises(
@@ -1352,7 +1352,7 @@ class TestAdditionalFitPreprocessors:
     def test_model_fit_forwards_default_save_arguments(self):
         model = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         train_times = make_train_times()
@@ -1378,7 +1378,7 @@ class TestAdditionalFitPreprocessors:
             ],
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1391,7 +1391,7 @@ class TestAdditionalFitPreprocessors:
     def test_observation_fit_does_not_request_mask(self):
         observation = make_data_config()
         config = DummyDatasetConfig(
-            observation=observation,
+            reference=observation,
         )
         operator = DatasetOperator(config)
         train_times = make_train_times()
@@ -1415,7 +1415,7 @@ class TestAdditionalFitPreprocessors:
             ],
         )
         config = DummyDatasetConfig(
-            observation=observation,
+            reference=observation,
         )
         operator = DatasetOperator(config)
         train_times = make_train_times()
@@ -1490,7 +1490,7 @@ class TestAdditionalFitPreprocessors:
         model = make_data_config()
         condition = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
             condition=condition,
             condition_method="ensemble_mean",
         )
@@ -1539,8 +1539,8 @@ class TestAdditionalFitPreprocessors:
             pipeline=observation_pipeline,
         )
         config = DummyDatasetConfig(
-            model=model,
-            observation=observation,
+            forecast=model,
+            reference=observation,
         )
         operator = DatasetOperator(config)
 
@@ -1560,8 +1560,8 @@ class TestAdditionalLoadFittedPreprocessors:
         condition.preprocessing_pipeline.fitted = True
 
         config = DummyDatasetConfig(
-            model=model,
-            observation=observation,
+            forecast=model,
+            reference=observation,
             condition=condition,
             condition_method="ensemble_mean",
         )
@@ -1581,7 +1581,7 @@ class TestAdditionalLoadFittedPreprocessors:
         model = make_data_config()
         model.preprocessing_pipeline.fitted = True
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1607,7 +1607,7 @@ class TestAdditionalLoadFittedPreprocessors:
         condition.preprocessing_pipeline.fitted = False
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
             condition=condition,
             condition_method="ensemble_mean",
         )
@@ -1622,7 +1622,7 @@ class TestAdditionalAddFittedPreprocessor:
     def test_default_index_is_zero(self):
         model = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
         preprocessor = DummyPreprocessor(
@@ -1641,7 +1641,7 @@ class TestAdditionalAddFittedPreprocessor:
     def test_only_observation_pipeline_is_updated(self):
         observation = make_data_config()
         config = DummyDatasetConfig(
-            observation=observation,
+            reference=observation,
         )
         operator = DatasetOperator(config)
         preprocessor = DummyPreprocessor(
@@ -1688,8 +1688,8 @@ class TestAdditionalAddFittedPreprocessor:
         observation = make_data_config()
         condition = make_data_config()
         config = DummyDatasetConfig(
-            model=model,
-            observation=observation,
+            forecast=model,
+            reference=observation,
             condition=condition,
             condition_method="ensemble_mean",
         )
@@ -1728,7 +1728,7 @@ class TestAdditionalGetWeights:
         model.preprocessing_pipeline.has_flattener = False
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1743,7 +1743,7 @@ class TestAdditionalGetWeights:
         )
 
         monkeypatch.setattr(
-            "S2D4P.data_modules.dataset.operator.WeightsConfig",
+            "S2D4P.data.dataset.operator.WeightsConfig",
             constructor,
         )
 
@@ -1760,7 +1760,7 @@ class TestAdditionalGetWeights:
         model.preprocessing_pipeline.has_flattener = False
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1794,7 +1794,7 @@ class TestAdditionalGetWeights:
         model.preprocessing_pipeline.has_flattener = False
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1828,7 +1828,7 @@ class TestAdditionalGetWeights:
         model.preprocessing_pipeline.get_flattener.reset_mock()
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1863,7 +1863,7 @@ class TestAdditionalGetWeights:
             },
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1892,7 +1892,7 @@ class TestAdditionalGetWeights:
         )
         model.preprocessing_pipeline.has_flattener = False
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1931,7 +1931,7 @@ class TestAdditionalGetWeights:
         )
         model.preprocessing_pipeline.has_flattener = False
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -1964,7 +1964,7 @@ class TestAdditionalInputMetadata:
             },
         )
         config = DummyDatasetConfig(
-            model=None,
+            forecast=None,
             condition=condition,
             condition_method="ensemble_mean",
             using_model_as_condition=True,
@@ -2003,7 +2003,7 @@ class TestAdditionalInputMetadata:
             },
         )
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
             condition=condition,
             condition_method="ensemble_mean",
             using_model_as_condition=False,
@@ -2034,7 +2034,7 @@ class TestAdditionalInputMetadata:
         ]
 
         config = DummyDatasetConfig(
-            model=model,
+            forecast=model,
         )
         operator = DatasetOperator(config)
 
@@ -2070,12 +2070,12 @@ class TestAdditionalTargetMetadata:
         ]
 
         config = DummyDatasetConfig(
-            model=make_data_config(
+            forecast=make_data_config(
                 names=[
                     "model",
                 ],
             ),
-            observation=observation,
+            reference=observation,
         )
         operator = DatasetOperator(config)
 
@@ -2110,7 +2110,7 @@ class TestAdditionalTargetMetadata:
             },
         )
         config = DummyDatasetConfig(
-            observation=observation,
+            reference=observation,
         )
         operator = DatasetOperator(config)
 
@@ -2149,7 +2149,7 @@ class TestAdditionalMetadataUpdate:
         }
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=source,
+                forecast=source,
             )
         )
 
@@ -2188,7 +2188,7 @@ class TestAdditionalMetadataUpdate:
         ]
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=source,
+                forecast=source,
             )
         )
 
@@ -2220,7 +2220,7 @@ class TestAdditionalFittedPreprocessorsProperty:
 
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=model,
+                forecast=model,
             )
         )
 
@@ -2232,7 +2232,7 @@ class TestAdditionalFittedPreprocessorsProperty:
 
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=model,
+                forecast=model,
             )
         )
 
@@ -2249,8 +2249,8 @@ class TestAdditionalFittedPreprocessorsProperty:
 
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=model,
-                observation=observation,
+                forecast=model,
+                reference=observation,
                 condition=condition,
                 condition_method="ensemble_mean",
             )
@@ -2269,8 +2269,8 @@ class TestAdditionalFittedPreprocessorsProperty:
 
         operator = DatasetOperator(
             DummyDatasetConfig(
-                model=model,
-                observation=observation,
+                forecast=model,
+                reference=observation,
                 condition=condition,
                 condition_method="ensemble_mean",
             )

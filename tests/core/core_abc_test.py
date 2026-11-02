@@ -293,15 +293,15 @@ def test_generative_context_without_module_uses_false_defaults():
 
 
 def test_generative_context_detects_generator():
-    class ModelConfig:
+    class Architecture:
         GENERATOR = object()
 
     class Model:
         generative_modeling = False
 
     class Module:
-        model_config = ModelConfig()
-        model = Model()
+        architecture_config = Architecture()
+        arch = Model()
 
     context = GenerativeContext(Module())
 
@@ -310,15 +310,15 @@ def test_generative_context_detects_generator():
 
 
 def test_generative_context_without_generator():
-    class ModelConfig:
+    class Architecture:
         GENERATOR = None
 
     class Model:
         generative_modeling = True
 
     class Module:
-        model_config = ModelConfig()
-        model = Model()
+        architecture_config = Architecture()
+        arch = Model()
 
     context = GenerativeContext(Module())
 
@@ -327,15 +327,15 @@ def test_generative_context_without_generator():
 
 
 def test_generative_context_defaults_missing_generator_to_none():
-    class ModelConfig:
+    class Architecture:
         pass
 
     class Model:
         generative_modeling = True
 
     class Module:
-        model_config = ModelConfig()
-        model = Model()
+        architecture_config = Architecture()
+        arch = Model()
 
     context = GenerativeContext(Module())
 
@@ -344,15 +344,15 @@ def test_generative_context_defaults_missing_generator_to_none():
 
 
 def test_generative_context_defaults_missing_generative_modeling_to_false():
-    class ModelConfig:
+    class Architecture:
         GENERATOR = object()
 
     class Model:
         pass
 
     class Module:
-        model_config = ModelConfig()
-        model = Model()
+        architecture_config = Architecture()
+        arch = Model()
 
     context = GenerativeContext(Module())
 
@@ -361,15 +361,15 @@ def test_generative_context_defaults_missing_generative_modeling_to_false():
 
 
 def test_generative_context_treats_false_generator_as_present():
-    class ModelConfig:
+    class Architecture:
         GENERATOR = False
 
     class Model:
         generative_modeling = False
 
     class Module:
-        model_config = ModelConfig()
-        model = Model()
+        architecture_config = Architecture()
+        arch = Model()
 
     context = GenerativeContext(Module())
 
@@ -380,15 +380,15 @@ def test_generative_context_treats_false_generator_as_present():
 def test_generative_context_preserves_truthy_generative_modeling_value():
     marker = object()
 
-    class ModelConfig:
+    class Architecture:
         GENERATOR = None
 
     class Model:
         generative_modeling = marker
 
     class Module:
-        model_config = ModelConfig()
-        model = Model()
+        architecture_config = Architecture()
+        arch = Model()
 
     context = GenerativeContext(Module())
 

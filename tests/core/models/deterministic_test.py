@@ -10,7 +10,7 @@ from S2D4P.core.models.deterministic import (
 
 
 def make_config():
-    return deterministicConfig(ModelConfig=DummySelector())
+    return deterministicConfig(Architecture=DummySelector())
 
 
 def make_module(
@@ -36,19 +36,19 @@ def test_raw_deterministic_can_be_constructed():
     module = deterministic(cfg, input_shape=np.array([1]))
 
     assert isinstance(module, deterministic)
-    assert module.model is not None
+    assert module.arch is not None
 
 
 def test_config_requires_model_or_load():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        deterministicConfig(ModelConfig=None, load_dir=None)
+        deterministicConfig(Architecture=None, load_dir=None)
 
 
 def test_config_basic_initialization():
     cfg = make_config()
 
-    assert cfg.ModelConfig is not None
-    assert cfg.model_config is not None
+    assert cfg.Architecture is not None
+    assert cfg.architecture_config is not None
 
 
 def test_config_build_returns_built_module(monkeypatch):
@@ -60,10 +60,10 @@ def test_config_build_returns_built_module(monkeypatch):
     module = cfg.build(input_shape=np.array([1]))
 
     assert isinstance(module, ConcreteDeterministic)
-    assert module.model is not None
-    assert module.model.was_built is True
-    assert (module.model.last_build_kwargs["input_shape"] == np.array([1])).all()
-    assert (module.model.last_build_kwargs["output_shape"] == np.array([1])).all()
+    assert module.arch is not None
+    assert module.arch.was_built is True
+    assert (module.arch.last_build_kwargs["input_shape"] == np.array([1])).all()
+    assert (module.arch.last_build_kwargs["output_shape"] == np.array([1])).all()
 
 
 def test_load_checkpoint_missing_file():
@@ -80,7 +80,7 @@ def test_load_checkpoint_success(monkeypatch, tmp_path):
 
     torch.save(
         {
-            "module_config": {"ModelConfig": {}},
+            "module_config": {"Architecture": {}},
             "model_input_shape": np.array([1]),
             "model_output_shape": np.array([2]),
         },
@@ -97,8 +97,8 @@ def test_load_checkpoint_success(monkeypatch, tmp_path):
     out = cfg._load_from_checkpoint(ckpt_path)
 
     assert out is cfg
-    assert isinstance(cfg.ModelConfig, DummySelector)
-    assert cfg.model_config is not None
+    assert isinstance(cfg.Architecture, DummySelector)
+    assert cfg.architecture_config is not None
 
 
 def test_load_checkpoint_missing_module_config(tmp_path):
@@ -123,8 +123,8 @@ def test_config_load_dir_warns_and_uses_loaded_config(monkeypatch, tmp_path):
     ckpt_path.write_bytes(b"placeholder")
 
     def fake_load_from_checkpoint(self, load_path):
-        self.ModelConfig = DummySelector()
-        self.model_config = self.ModelConfig.get_model_config()
+        self.Architecture = DummySelector()
+        self.architecture_config = self.Architecture.get_architecture_config()
         self.checkpoint_config = DummyCheckpointConfig(
             input_shape=np.array([1]),
             output_shape=np.array([1]),
@@ -140,8 +140,8 @@ def test_config_load_dir_warns_and_uses_loaded_config(monkeypatch, tmp_path):
     with pytest.warns(UserWarning):
         cfg = deterministicConfig(load_dir=str(ckpt_path))
 
-    assert isinstance(cfg.ModelConfig, DummySelector)
-    assert cfg.model_config is not None
+    assert isinstance(cfg.Architecture, DummySelector)
+    assert cfg.architecture_config is not None
     assert cfg.checkpoint_config is not None
 
 
@@ -149,17 +149,17 @@ def test_module_initial_state():
     module = make_module()
 
     assert module.criterion is None
-    assert module.model is not None
-    assert module.model.was_built is True
+    assert module.arch is not None
+    assert module.arch.was_built is True
 
 
 def test_constructor_builds_basic():
     module = make_module(input_shape=np.array([1]))
 
-    assert module.model is not None
-    assert module.model.was_built is True
-    assert (module.model.last_build_kwargs["input_shape"] == np.array([1])).all()
-    assert (module.model.last_build_kwargs["output_shape"] == np.array([1])).all()
+    assert module.arch is not None
+    assert module.arch.was_built is True
+    assert (module.arch.last_build_kwargs["input_shape"] == np.array([1])).all()
+    assert (module.arch.last_build_kwargs["output_shape"] == np.array([1])).all()
 
 
 def test_constructor_default_output_shape_copies_input_shape():
@@ -167,7 +167,7 @@ def test_constructor_default_output_shape_copies_input_shape():
 
     module = make_module(input_shape=input_shape)
 
-    output_shape = module.model.last_build_kwargs["output_shape"]
+    output_shape = module.arch.last_build_kwargs["output_shape"]
 
     assert (output_shape == input_shape).all()
     assert output_shape is not input_shape
@@ -179,8 +179,8 @@ def test_constructor_explicit_output_shape():
         output_shape=np.array([2]),
     )
 
-    assert (module.model.last_build_kwargs["input_shape"] == np.array([1])).all()
-    assert (module.model.last_build_kwargs["output_shape"] == np.array([2])).all()
+    assert (module.arch.last_build_kwargs["input_shape"] == np.array([1])).all()
+    assert (module.arch.last_build_kwargs["output_shape"] == np.array([2])).all()
 
 
 def test_constructor_passes_added_features_dim_to_model():
@@ -190,7 +190,7 @@ def test_constructor_passes_added_features_dim_to_model():
         added_features_dim=5,
     )
 
-    assert module.model.last_build_kwargs["added_features_dim"] == 5
+    assert module.arch.last_build_kwargs["added_features_dim"] == 5
 
 
 def test_constructor_passes_shapes_to_model():
@@ -200,9 +200,9 @@ def test_constructor_passes_shapes_to_model():
         added_features_dim=3,
     )
 
-    assert (module.model.last_build_kwargs["input_shape"] == np.array([1])).all()
-    assert (module.model.last_build_kwargs["output_shape"] == np.array([2])).all()
-    assert module.model.last_build_kwargs["added_features_dim"] == 3
+    assert (module.arch.last_build_kwargs["input_shape"] == np.array([1])).all()
+    assert (module.arch.last_build_kwargs["output_shape"] == np.array([2])).all()
+    assert module.arch.last_build_kwargs["added_features_dim"] == 3
 
 
 def test_load_dir_input_metadata_mismatch(monkeypatch):
@@ -312,8 +312,8 @@ def test_load_dir_success_calls_load_state_dict(monkeypatch):
 
     module = ConcreteDeterministic(cfg, input_shape=np.array([1]))
 
-    assert module.model is not None
-    assert module.model.was_built is True
+    assert module.arch is not None
+    assert module.arch.was_built is True
     assert called["load"] is True
 
 
@@ -342,8 +342,8 @@ def test_load_dir_success_with_explicit_output_shape(monkeypatch):
         output_shape=np.array([2]),
     )
 
-    assert module.model is not None
-    assert module.model.was_built is True
+    assert module.arch is not None
+    assert module.arch.was_built is True
 
 
 def test_init_loss_function_sets_criterion():
@@ -374,7 +374,7 @@ def test_forward_passes_added_features():
     out = module.forward(batch)
 
     assert isinstance(out, deterministicOutput)
-    assert module.model.last_call_kwargs["added_features"] is batch.added_features
+    assert module.arch.last_call_kwargs["added_features"] is batch.added_features
 
 
 def test_predict_calls_forward():
@@ -539,7 +539,7 @@ class DummySelector:
     def __init__(self):
         self.last_build_kwargs = None
 
-    def get_model_config(self):
+    def get_architecture_config(self):
         return self
 
     def build(self, **kwargs):
