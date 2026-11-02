@@ -1,7 +1,7 @@
 Further Development
 ============
 
-Thank you for contributing to CCCma-PPP. This guide covers how to set up a development environment, how the package is organized, how to add new components, and what we expect in a pull request.
+Thank you for contributing to S2D4P. This guide covers how to set up a development environment, how the package is organized, how to add new components, and what we expect in a pull request.
 
 Development setup
 -----------------

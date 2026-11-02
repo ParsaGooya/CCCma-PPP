@@ -30,7 +30,7 @@ from S2D4P.generic.distributed import Distributed
 warnings.filterwarnings("ignore")
 
 MODE = "cvae"
-ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/scripts")
 BASE_TRAIN_CONFIG = f"scripts/module_integration_tests/{MODE}_config.yaml"
 
 OUTPUT_DIR = ROOT / "../../output" / f"data_modules_integration_test_results_{MODE}"

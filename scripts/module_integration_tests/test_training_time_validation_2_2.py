@@ -28,7 +28,7 @@ BASE_CONFIG = (
     "scripts/integration_suite_train_config.yaml"  # template YAML for all cases
 )
 CONFIGS_YAML = Path(
-    "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/configs/configs.yaml"
+    "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/configs/configs.yaml"
 )  # library config; its lead_time_resolution is overridden by the profile at runtime
 
 MODEL_VAR = "tas"  # model variable name; must match the YAML "names" entry

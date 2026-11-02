@@ -1,7 +1,7 @@
 ========================================
 Running project checks
 ========================================
-Working directory: /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P
+Working directory: /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P
 
 Running compilation check...
 Compilation check passed.
@@ -85,9 +85,9 @@ WARNING: Failed to import S2D4P.core.cVAE_module.
 Possible hints:
 * AttributeError: module 'S2D4P.core' has no attribute 'cVAE_module'
 * ModuleNotFoundError: No module named 'S2D4P.core.cVAE_module'
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
   import pynvml  # type: ignore[import]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
   warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
 WARNING: Failed to import S2D4P.core.deterministic_module.
 Possible hints:
@@ -196,117 +196,117 @@ reading sources... [100%] start_here/usage
 
 WARNING: autodoc: failed to import 'cVAE_module' from module 'S2D4P.core'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.core.cVAE_module'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'deterministic_module' from module 'S2D4P.core'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.core.deterministic_module'
  [autodoc.import_object]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:42: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:50: WARNING: Inline emphasis start-string without end-string. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.wrapattr:3: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:42: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:50: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.wrapattr:3: ERROR: Unexpected indentation. [docutils]
 WARNING: autodoc: failed to import 'config_abc' from module 'S2D4P.data_modules.dataset'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.data_modules.dataset.config_abc'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'registry_imports' from module 'S2D4P.inference'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.inference.registry_imports'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'train' from module 'S2D4P.inference'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.inference.train'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'models' from module 'S2D4P'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.models'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'models.mlp_models' from module 'S2D4P'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.models'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'models.models_abc' from module 'S2D4P'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.models'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'models.normalized_flows' from module 'S2D4P'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.models'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'monitoring' from module 'S2D4P'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.monitoring'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'datasets' from module 'S2D4P.train'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.train.datasets'
  [autodoc.import_object]
 WARNING: autodoc: failed to import 'registry_imports' from module 'S2D4P.train'; the following exception was raised:
 Traceback (most recent call last):
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
     module = _import_module(module_name, try_reload=True)
-  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+  File "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
     raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'S2D4P.train.registry_imports'
@@ -317,10 +317,10 @@ checking consistency... done
 preparing documents... done
 copying assets... 
 copying static files... 
-Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/documentation_options.js
-Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/basic.css
-Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/language_data.js
-Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/_static/js/versions.js
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/_build/html/_static/documentation_options.js
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/_build/html/_static/basic.css
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/_build/html/_static/language_data.js
+Writing evaluated template result to /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/_build/html/_static/js/versions.js
 copying static files: done
 copying extra files... 
 copying extra files: done
@@ -433,7 +433,7 @@ build succeeded, 33 warnings.
 The HTML pages are in docs/_build/html.
 
 HTML:
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/_build/html/index.html
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/_build/html/index.html
 
 Warnings: 33
 WARNING: Failed to import S2D4P.core.cVAE_module.
@@ -450,12 +450,12 @@ WARNING: Failed to import S2D4P.models.
 WARNING: Failed to import S2D4P.train.registry_imports.
 WARNING: autodoc: failed to import 'cVAE_module' from module 'S2D4P.core'; the following exception was raised:
 WARNING: autodoc: failed to import 'deterministic_module' from module 'S2D4P.core'; the following exception was raised:
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
 ... and 13 more
 
 Documentation build completed. Server disabled.
@@ -477,15 +477,15 @@ Marking failed unit tests...
 ...........                                                              [100%]
 =============================== warnings summary ===============================
 .venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
     import pynvml  # type: ignore[import]
 
 tests/core/optimization_test.py::test_scheduler_does_not_increment_after_final_step_when_holding_minimum
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/optimization.py:420: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/optimization.py:420: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
     self.scheduler.step()
 
 tests/core/trainer_test.py: 15 warnings
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/trainer.py:251: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/trainer.py:251: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
     self.scaler = GradScaler(enabled=self.config.mixed_precision)
 
 tests/core/trainer_test.py::test_train_on_batch_with_beta
@@ -494,26 +494,26 @@ tests/core/trainer_test.py::test_train_loop_final_leftover_optimizer_step_no_val
 tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
 tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
 tests/core/trainer_test.py::test_train_loop_no_validation_no_plot_when_non_root
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/trainer.py:485: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/trainer.py:485: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
     with torch.cuda.amp.autocast(
 
 tests/core/trainer_test.py::test_train_loop_distributed_stop_broadcast
 tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
 tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/trainer.py:548: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/trainer.py:548: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
     with torch.cuda.amp.autocast(
 
 tests/core/writer_test.py::test_aggregate_predictions_postprocessor_branch
   <frozen importlib._bootstrap>:488: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
 
 tests/generic/aggregator_test.py::test_state_dict_roundtrip
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/generic/aggregator.py:260: UserWarning: 
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/generic/aggregator.py:260: UserWarning: 
    you are resetting batch losses before submitting any epochs. 
   
     warnings.warn(
 
 tests/generic/aggregator_test.py::test_plot_skips_empty_epoch_times
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/generic/aggregator.py:447: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/generic/aggregator.py:447: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
     ax.legend()
 
 tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_requires_variables
@@ -521,7 +521,7 @@ tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_pads_variab
 tests/inference/predictors/cvae_test.py::test_infer_on_batch_save_latent_requires_target
 tests/inference/predictors/cvae_test.py::test_infer_on_batch_training_stats_takes_precedence_over_save_latent
 tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_padding_uses_negative_infinity
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/inference/predictors/cvae.py:65: UserWarning: 
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/inference/predictors/cvae.py:65: UserWarning: 
   ===================================================
   save_latent is True. No predictions will be saved! 
   ===================================================
@@ -533,7 +533,7 @@ tests/train/train_test.py::test_train_module_main_guard
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 947 passed, 35 warnings in 15.13s
-Removed pytest cache: /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.pytest_cache
+Removed pytest cache: /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.pytest_cache
 
 Running the complete pytest suite from scratch...
 
@@ -548,7 +548,7 @@ Unit test check passed.
 Checking unit test suite coverage...
 ============================= test session starts ==============================
 platform linux -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0
-rootdir: /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP
+rootdir: /fs/site7/eccc/crd/cccma/users/rna002/S2D4P
 configfile: pyproject.toml
 plugins: hydra-core-1.3.2, anyio-4.13.0, cov-7.1.0
 collected 3540 items
@@ -611,15 +611,15 @@ tests/train/train_test.py ....                                           [100%]
 
 =============================== warnings summary ===============================
 .venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/.venv/lib/python3.13/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
     import pynvml  # type: ignore[import]
 
 tests/core/optimization_test.py::test_scheduler_does_not_increment_after_final_step_when_holding_minimum
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/optimization.py:420: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/optimization.py:420: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
     self.scheduler.step()
 
 tests/core/trainer_test.py: 15 warnings
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/trainer.py:251: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/trainer.py:251: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
     self.scaler = GradScaler(enabled=self.config.mixed_precision)
 
 tests/core/trainer_test.py::test_train_on_batch_with_beta
@@ -628,26 +628,26 @@ tests/core/trainer_test.py::test_train_loop_final_leftover_optimizer_step_no_val
 tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
 tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
 tests/core/trainer_test.py::test_train_loop_no_validation_no_plot_when_non_root
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/trainer.py:485: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/trainer.py:485: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
     with torch.cuda.amp.autocast(
 
 tests/core/trainer_test.py::test_train_loop_distributed_stop_broadcast
 tests/core/trainer_test.py::test_train_loop_final_leftover_validation_improved
 tests/core/trainer_test.py::test_train_loop_leftover_skipped_due_to_early_stop
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/core/trainer.py:548: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/core/trainer.py:548: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
     with torch.cuda.amp.autocast(
 
 tests/core/writer_test.py::test_aggregate_predictions_postprocessor_branch
   <frozen importlib._bootstrap>:488: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
 
 tests/generic/aggregator_test.py::test_state_dict_roundtrip
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/generic/aggregator.py:260: UserWarning: 
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/generic/aggregator.py:260: UserWarning: 
    you are resetting batch losses before submitting any epochs. 
   
     warnings.warn(
 
 tests/generic/aggregator_test.py::test_plot_skips_empty_epoch_times
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/generic/aggregator.py:447: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/generic/aggregator.py:447: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
     ax.legend()
 
 tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_requires_variables
@@ -655,7 +655,7 @@ tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_pads_variab
 tests/inference/predictors/cvae_test.py::test_infer_on_batch_save_latent_requires_target
 tests/inference/predictors/cvae_test.py::test_infer_on_batch_training_stats_takes_precedence_over_save_latent
 tests/inference/predictors/cvae_test.py::test_batch_to_netcdf_latent_padding_uses_negative_infinity
-  /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/inference/predictors/cvae.py:65: UserWarning: 
+  /fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/inference/predictors/cvae.py:65: UserWarning: 
   ===================================================
   save_latent is True. No predictions will be saved! 
   ===================================================
@@ -755,5 +755,5 @@ Coverage checks passed
 Unit test coverage check passed.
 
 Running integration test subset...
-python3: can't open file '/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/../scripts/run_integration_tests.py': [Errno 2] No such file or directory
+python3: can't open file '/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/../scripts/run_integration_tests.py': [Errno 2] No such file or directory
 Integration test subset failed.

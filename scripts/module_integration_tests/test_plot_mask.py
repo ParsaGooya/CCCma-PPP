@@ -25,7 +25,7 @@ from S2D4P.generic.distributed import Distributed
 
 warnings.filterwarnings("ignore")
 
-ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/scripts")
 BASE_CONFIG_FILE = ROOT / "module_integration_tests/deterministic_config.yaml"
 OUTPUT_DIR = ROOT / "../../output" / "plot_mask_test_results"
 CONFIG_DIR = OUTPUT_DIR / "plot_test_configs"

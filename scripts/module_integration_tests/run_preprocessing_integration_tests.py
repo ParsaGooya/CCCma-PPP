@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore")
 logging.raiseExceptions = False
 
 
-ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/scripts")
 BASE_TRAIN_CONFIG = ROOT / "integration_suite_train_config.yaml"
 OUTPUT_DIR = ROOT / "../../output" / "preprocessing_integration_test_results"
 CASES_DIR = OUTPUT_DIR / "cases"

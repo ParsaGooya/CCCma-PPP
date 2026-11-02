@@ -242,7 +242,7 @@ def run_test_case(
 
 def main() -> None:
     """Run static condition cases from existing config files"""
-    root = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+    root = Path("/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/scripts")
 
     # Single shared output directory for both modes
     output_dir = root / "../../output" / "data_modules_model_condition_static"

@@ -24,7 +24,7 @@ dependencies = [
     "netcdf4>=1.7.4",
     "dask>=2026.6.0",
 ]
-name = "cccma-ppp"
+name = "S2D4P"
 dynamic = ["version"]
 requires-python = ">= 3.11"
 
