@@ -194,6 +194,7 @@ def test_missing_preprocessing_pipeline_raises():
         BadConfig()
 
 
+@pytest.mark.pruned
 def test_initialization_sets_pipeline_name_and_state():
     pipeline = Mock()
     expected_info = infoclass(
@@ -233,6 +234,7 @@ def test_initialization_sets_pipeline_name_and_state():
     get_info.assert_called_once_with(config)
 
 
+@pytest.mark.pruned
 def test_initialization_enables_ensemble_check_when_realizations_given():
     class EnsembleConfig(DummyDataConfig):
         def __init__(self, paths):
@@ -256,12 +258,14 @@ def test_initialization_enables_ensemble_check_when_realizations_given():
     assert config._check_ensemble is True
 
 
+@pytest.mark.pruned
 def test_data_config_class_dimensions():
     assert DummyDataConfig.init_time_dim == INIT_TIME_DIM
     assert DummyDataConfig.lead_time_dim == LEAD_TIME_DIM
     assert DummyDataConfig.realization_dim == REALIZATION_DIM
 
 
+@pytest.mark.pruned
 def test_resolve_data_missing_path_raises(tmp_path):
     config = DummyDataConfig(tmp_path / "missing")
 
@@ -277,6 +281,7 @@ def test_resolve_data_missing_path_error_names_the_path(tmp_path):
         _resolve_data(config)
 
 
+@pytest.mark.pruned
 def test_resolve_data_empty_directory_raises(tmp_path):
     config = DummyDataConfig(tmp_path)
 
@@ -285,6 +290,7 @@ def test_resolve_data_empty_directory_raises(tmp_path):
             _resolve_data(config)
 
 
+@pytest.mark.pruned
 def test_resolve_data_valid_file_sets_list_paths(tmp_path):
     config = DummyDataConfig(tmp_path)
 
@@ -306,6 +312,7 @@ def test_resolve_data_skip_checks_only_discovers_files(tmp_path):
     open_dataset.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_resolve_data_uses_configured_file_pattern(tmp_path):
     config = DummyDataConfig(tmp_path, file_type="*.zarr")
 
@@ -318,6 +325,7 @@ def test_resolve_data_uses_configured_file_pattern(tmp_path):
     glob_mock.assert_called_once_with(str(tmp_path / "*.zarr"))
 
 
+@pytest.mark.pruned
 def test_resolve_data_opens_each_file_as_path(tmp_path):
     config = DummyDataConfig(tmp_path)
 
@@ -336,6 +344,7 @@ def test_resolve_data_opens_each_file_as_path(tmp_path):
     ]
 
 
+@pytest.mark.pruned
 def test_resolve_data_accepts_multiple_valid_files(tmp_path):
     config = DummyDataConfig(tmp_path)
 
@@ -348,6 +357,7 @@ def test_resolve_data_accepts_multiple_valid_files(tmp_path):
     assert config.list_paths == ["a.nc", "b.nc"]
 
 
+@pytest.mark.pruned
 def test_resolve_data_rejects_missing_required_dims(tmp_path):
     config = DummyDataConfig(tmp_path)
 
@@ -355,6 +365,7 @@ def test_resolve_data_rejects_missing_required_dims(tmp_path):
         run_resolve(config, make_static_ds())
 
 
+@pytest.mark.pruned
 def test_resolve_data_rejects_scalar_init_time_coordinate(tmp_path):
     # Init time as a scalar coordinate is not a dimension, so the required
     # init-time dimension is missing and validation must fail.
@@ -395,6 +406,7 @@ def test_resolve_data_rejects_invalid_dims(tmp_path):
         run_resolve(config, ds)
 
 
+@pytest.mark.pruned
 def test_resolve_data_rejects_missing_variable(tmp_path):
     ds = make_valid_ds().rename_vars({"var": "other"})
     config = DummyDataConfig(tmp_path)
@@ -403,6 +415,7 @@ def test_resolve_data_rejects_missing_variable(tmp_path):
         run_resolve(config, ds)
 
 
+@pytest.mark.pruned
 def test_resolve_data_reports_all_missing_variables(tmp_path):
     config = DummyDataConfig(tmp_path, names=["missing_a", "missing_b"])
 
@@ -410,6 +423,7 @@ def test_resolve_data_reports_all_missing_variables(tmp_path):
         run_resolve(config, make_valid_ds())
 
 
+@pytest.mark.pruned
 def test_resolve_data_rejects_missing_coordinates(tmp_path):
     ds = xr.Dataset(
         {"var": ((INIT_TIME_DIM, LEAD_TIME_DIM, NN_DIM), np.zeros((2, 2, 2)))}
@@ -420,6 +434,7 @@ def test_resolve_data_rejects_missing_coordinates(tmp_path):
         run_resolve(config, ds)
 
 
+@pytest.mark.pruned
 def test_resolve_data_rejects_non_datetime_init_time(tmp_path):
     ds = make_valid_ds().assign_coords({INIT_TIME_DIM: [2000, 2001]})
     config = DummyDataConfig(tmp_path)
@@ -459,6 +474,7 @@ def test_resolve_data_accepts_realization_list_with_realization_dim(tmp_path):
     assert config.list_paths == ["x.nc"]
 
 
+@pytest.mark.pruned
 def test_resolve_data_applies_rename_dict(tmp_path):
     ds = make_valid_ds().rename({INIT_TIME_DIM: "old_time"})
     config = DummyDataConfig(tmp_path, rename_dict={"old_time": INIT_TIME_DIM})
@@ -488,6 +504,7 @@ def test_resolve_data_applies_drop_vars_before_validation(tmp_path):
     assert config.list_paths == ["data.nc"]
 
 
+@pytest.mark.pruned
 def test_resolve_data_ignores_missing_drop_variable(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.drop_vars_list = ["not_present"]
@@ -528,6 +545,7 @@ def test_resolve_data_rejects_missing_dim_that_is_not_the_concat_dim(tmp_path):
         run_resolve(config, dataset, files=("data.nc",))
 
 
+@pytest.mark.pruned
 def test_resolve_data_rejects_dimension_without_coordinate(tmp_path):
     dataset = xr.Dataset(
         {"var": ((INIT_TIME_DIM, LEAD_TIME_DIM, NN_DIM), np.ones((2, 2, 2)))},
@@ -560,6 +578,7 @@ def test_resolve_data_rejects_concat_dim_dimension_without_coordinate(tmp_path):
         run_resolve(config, dataset, files=("data.nc",))
 
 
+@pytest.mark.pruned
 def test_resolve_data_skips_time_validation_without_time_coordinate(tmp_path):
     class StaticConfig(DummyDataConfig):
         @classmethod
@@ -579,6 +598,7 @@ def test_resolve_data_skips_time_validation_without_time_coordinate(tmp_path):
     assert config.list_paths == ["static.nc"]
 
 
+@pytest.mark.pruned
 def test_resolve_data_validates_time_sequence_of_init_time(tmp_path):
     dataset = make_valid_ds()
     config = DummyDataConfig(tmp_path)
@@ -597,6 +617,7 @@ def test_resolve_data_validates_time_sequence_of_init_time(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_resolve_data_does_not_run_garbage_collection(tmp_path):
     config = DummyDataConfig(tmp_path)
 
@@ -613,6 +634,7 @@ def test_resolve_data_does_not_run_garbage_collection(tmp_path):
     collect.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_resolve_data_failure_does_not_assign_list_paths(tmp_path):
     config = DummyDataConfig(tmp_path, names=["missing"])
 
@@ -622,6 +644,7 @@ def test_resolve_data_failure_does_not_assign_list_paths(tmp_path):
     assert config.list_paths is None
 
 
+@pytest.mark.pruned
 def test_get_ds_info_returns_infoclass():
     config = DummyDataConfig(Path("."))
 
@@ -631,6 +654,7 @@ def test_get_ds_info_returns_infoclass():
     assert isinstance(info, infoclass)
 
 
+@pytest.mark.pruned
 def test_get_ds_info_start_time_is_minimum_init_time():
     config = DummyDataConfig(Path("."))
 
@@ -640,6 +664,7 @@ def test_get_ds_info_start_time_is_minimum_init_time():
     assert info.start_time == np.datetime64("2000-01-01T00:00:00.000000000")
 
 
+@pytest.mark.pruned
 def test_get_ds_info_final_time_is_maximum_init_time():
     config = DummyDataConfig(Path("."))
 
@@ -649,6 +674,7 @@ def test_get_ds_info_final_time_is_maximum_init_time():
     assert info.final_time == np.datetime64("2001-01-01T00:00:00.000000000")
 
 
+@pytest.mark.pruned
 def test_get_ds_info_start_and_end_use_min_and_max_of_unsorted_times():
     dataset = make_valid_ds().assign_coords(
         {
@@ -666,6 +692,7 @@ def test_get_ds_info_start_and_end_use_min_and_max_of_unsorted_times():
     assert info.final_time == np.datetime64("2002-01-01T00:00:00.000000000")
 
 
+@pytest.mark.pruned
 def test_get_ds_info_sizes_include_init_and_lead_dims_only():
     config = DummyDataConfig(Path("."))
 
@@ -677,6 +704,7 @@ def test_get_ds_info_sizes_include_init_and_lead_dims_only():
     assert NN_DIM not in info.sizes
 
 
+@pytest.mark.pruned
 def test_get_ds_info_sizes_include_realization_without_selection():
     config = DummyDataConfig(Path("."))
 
@@ -699,6 +727,7 @@ def test_get_ds_info_sizes_none_when_no_relevant_dims():
     assert info.sizes is None
 
 
+@pytest.mark.pruned
 def test_get_ds_info_sizes_only_init_when_lead_dim_is_removed():
     ds = (
         make_valid_ds()
@@ -719,6 +748,7 @@ def test_get_ds_info_sizes_only_init_when_lead_dim_is_removed():
     assert info.sizes == {INIT_TIME_DIM: 2}
 
 
+@pytest.mark.pruned
 def test_get_ds_info_coords_contain_all_dataset_coords():
     config = DummyDataConfig(Path("."))
 
@@ -729,6 +759,7 @@ def test_get_ds_info_coords_contain_all_dataset_coords():
     assert info.coords[NN_DIM] is not None
 
 
+@pytest.mark.pruned
 def test_get_ds_info_coords_preserve_dataarrays():
     dataset = make_valid_ds()
     config = DummyDataConfig(Path("."))
@@ -740,6 +771,7 @@ def test_get_ds_info_coords_preserve_dataarrays():
         xr.testing.assert_identical(info.coords[dim], dataset.coords[dim])
 
 
+@pytest.mark.pruned
 def test_get_ds_info_dims_match_dataset_dims():
     dataset = make_valid_ds()
     config = DummyDataConfig(Path("."))
@@ -750,6 +782,7 @@ def test_get_ds_info_dims_match_dataset_dims():
     assert info.dims == dataset.dims
 
 
+@pytest.mark.pruned
 def test_get_ds_info_time_metadata_comes_from_helpers():
     config = DummyDataConfig(Path("."))
     expected_type = object()
@@ -774,6 +807,7 @@ def test_get_ds_info_time_metadata_comes_from_helpers():
     resolution.assert_called_once()
 
 
+@pytest.mark.pruned
 def test_get_ds_info_static_dataset_has_no_temporal_metadata():
     config = DummyDataConfig(Path("."))
 
@@ -792,6 +826,7 @@ def test_get_ds_info_static_dataset_has_no_temporal_metadata():
     resolution.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_get_ds_info_applies_realization_selection():
     config = DummyDataConfig(Path("."), realization_list=[1])
 
@@ -802,6 +837,7 @@ def test_get_ds_info_applies_realization_selection():
     assert info.coords[REALIZATION_DIM].values.tolist() == [1]
 
 
+@pytest.mark.pruned
 def test_get_ds_info_keeps_multiple_selected_realizations():
     config = DummyDataConfig(Path("."), realization_list=[0, 1])
 
@@ -825,6 +861,7 @@ def test_get_ds_info_passes_realization_selection_to_loader():
     assert load_data.call_args.kwargs["selection"] == {REALIZATION_DIM: [1]}
 
 
+@pytest.mark.pruned
 def test_get_ds_info_without_realization_passes_no_selection():
     config = DummyDataConfig(Path("."))
     config.list_paths = ["data.nc"]
@@ -843,6 +880,7 @@ def test_get_ds_info_without_realization_passes_no_selection():
     )
 
 
+@pytest.mark.pruned
 def test_get_ds_info_uses_existing_list_paths():
     config = DummyDataConfig(Path("."))
     config.list_paths = ["already_set.nc"]
@@ -857,6 +895,7 @@ def test_get_ds_info_uses_existing_list_paths():
     assert load_data.call_args.args[0] == ["already_set.nc"]
 
 
+@pytest.mark.pruned
 def test_get_ds_info_discovers_paths_when_not_set():
     config = DummyDataConfig(Path("."))
     config.list_paths = None
@@ -871,6 +910,7 @@ def test_get_ds_info_discovers_paths_when_not_set():
     assert load_data.call_args.args[0] == ["resolved.nc"]
 
 
+@pytest.mark.pruned
 def test_fit_passes_selection_and_no_mask(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["x.nc"]
@@ -896,6 +936,7 @@ def test_fit_passes_selection_and_no_mask(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_fit_with_mask_forwards_mask_and_save_arguments(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["x.nc"]
@@ -930,6 +971,7 @@ def test_fit_with_mask_forwards_mask_and_save_arguments(tmp_path):
     assert kwargs["save_name"] == "pipeline.joblib"
 
 
+@pytest.mark.pruned
 def test_fit_mask_builder_receives_time_coordinates(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -945,6 +987,7 @@ def test_fit_mask_builder_receives_time_coordinates(tmp_path):
     xr.testing.assert_identical(create_mask.call_args.args[1], base[LEAD_TIME_DIM])
 
 
+@pytest.mark.pruned
 def test_fit_skips_mask_builder_when_mask_disabled(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -958,6 +1001,7 @@ def test_fit_skips_mask_builder_when_mask_disabled(tmp_path):
     create_mask.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_fit_skips_mask_when_init_dim_is_absent(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["static.nc"]
@@ -972,6 +1016,7 @@ def test_fit_skips_mask_when_init_dim_is_absent(tmp_path):
     assert config.preprocessing_pipeline.fit_kwargs["mask"] is None
 
 
+@pytest.mark.pruned
 def test_fit_defaults_save_path_and_name_to_none(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -985,6 +1030,7 @@ def test_fit_defaults_save_path_and_name_to_none(tmp_path):
     assert kwargs["save_name"] is None
 
 
+@pytest.mark.pruned
 def test_fit_forwards_drop_variables_to_loader(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -996,6 +1042,7 @@ def test_fit_forwards_drop_variables_to_loader(tmp_path):
     assert load_data.call_args.kwargs["drop_vars_list"] == ["unused"]
 
 
+@pytest.mark.pruned
 def test_fit_loads_base_data_before_passing_to_pipeline(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -1010,6 +1057,7 @@ def test_fit_loads_base_data_before_passing_to_pipeline(tmp_path):
     assert config.preprocessing_pipeline.fit_kwargs["base_data"] is loaded_base
 
 
+@pytest.mark.pruned
 def test_fit_closes_base_dataset(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -1022,6 +1070,7 @@ def test_fit_closes_base_dataset(tmp_path):
     base.close.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_fit_runs_garbage_collection(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -1037,6 +1086,7 @@ def test_fit_runs_garbage_collection(tmp_path):
     collect.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_load_preprocessor_pipeline_uses_custom_directory(tmp_path):
     config = DummyDataConfig(tmp_path)
 
@@ -1076,6 +1126,7 @@ def test_load_preprocessor_pipeline_defaults_to_experiment_directory(
     )
 
 
+@pytest.mark.pruned
 def test_load_preprocessor_pipeline_accepts_fitted_pipeline(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.preprocessing_pipeline.fitted = True
@@ -1084,6 +1135,7 @@ def test_load_preprocessor_pipeline_accepts_fitted_pipeline(tmp_path):
     config.load_preprocessor_pipeline(tmp_path)
 
 
+@pytest.mark.pruned
 def test_coords_sizes_dims_delegate_to_info(tmp_path):
     config = DummyDataConfig(tmp_path)
     coords = {INIT_TIME_DIM: make_valid_ds()[INIT_TIME_DIM]}
@@ -1096,6 +1148,7 @@ def test_coords_sizes_dims_delegate_to_info(tmp_path):
     assert config.dims is dims
 
 
+@pytest.mark.pruned
 def test_init_time_frequency_delegates_to_info(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.info = Mock(init_time_freq="year")
@@ -1103,6 +1156,7 @@ def test_init_time_frequency_delegates_to_info(tmp_path):
     assert config.init_time_frequency == "year"
 
 
+@pytest.mark.pruned
 def test_isel_requires_opened_data(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.data = None
@@ -1111,6 +1165,7 @@ def test_isel_requires_opened_data(tmp_path):
         config.isel({INIT_TIME_DIM: 0})
 
 
+@pytest.mark.pruned
 def test_isel_forwards_selection_to_pipeline(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.data = make_valid_ds()
@@ -1127,6 +1182,7 @@ def test_isel_forwards_selection_to_pipeline(tmp_path):
     assert result is transformed
 
 
+@pytest.mark.pruned
 def test_isel_accepts_keyword_indexers(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.data = make_valid_ds()
@@ -1140,6 +1196,7 @@ def test_isel_accepts_keyword_indexers(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_isel_accepts_none_mapping_with_keyword_indexer(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.data = make_valid_ds()
@@ -1209,6 +1266,7 @@ def test_open_xarray_data_forwards_all_configuration(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_open_xarray_data_passes_no_selection_without_realization_coord(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -1235,6 +1293,7 @@ def test_open_xarray_data_skips_time_validation_for_static_data(tmp_path):
     validate.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_reopening_replaces_dataset_without_closing_old_one(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.list_paths = ["data.nc"]
@@ -1250,6 +1309,7 @@ def test_reopening_replaces_dataset_without_closing_old_one(tmp_path):
     old_data.close.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_close_data_closes_dataset_and_clears_reference(tmp_path):
     config = DummyDataConfig(tmp_path)
     data = Mock()
@@ -1262,6 +1322,7 @@ def test_close_data_closes_dataset_and_clears_reference(tmp_path):
     assert config.data is None
 
 
+@pytest.mark.pruned
 def test_close_data_is_safe_when_nothing_is_open(tmp_path):
     config = DummyDataConfig(tmp_path)
     config.data = None
@@ -1270,6 +1331,7 @@ def test_close_data_is_safe_when_nothing_is_open(tmp_path):
     assert config.data is None
 
 
+@pytest.mark.pruned
 def test_close_data_can_be_called_twice(tmp_path):
     config = DummyDataConfig(tmp_path)
     data = Mock()
@@ -1282,6 +1344,7 @@ def test_close_data_can_be_called_twice(tmp_path):
     assert config.data is None
 
 
+@pytest.mark.pruned
 def test_destructor_closes_open_data(tmp_path):
     config = DummyDataConfig(tmp_path)
     data = Mock()
@@ -1293,6 +1356,7 @@ def test_destructor_closes_open_data(tmp_path):
     assert config.data is None
 
 
+@pytest.mark.pruned
 def test_infoclass_instances_with_equal_fields_are_equal():
     fields = dict(
         sizes={INIT_TIME_DIM: 2},
@@ -1307,6 +1371,7 @@ def test_infoclass_instances_with_equal_fields_are_equal():
     assert infoclass(**fields) == infoclass(**fields)
 
 
+@pytest.mark.pruned
 def test_infoclass_accepts_missing_temporal_metadata():
     info = infoclass(
         sizes=None,

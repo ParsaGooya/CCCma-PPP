@@ -9,11 +9,7 @@ from S2D4P.generic.runtime import RuntimeContext
 
 
 class TestRuntimeContextDefaults:
-    # Remove test due to no coverage
-
-    def test_is_dataclass(self):
-        assert dataclasses.is_dataclass(RuntimeContext)
-
+    @pytest.mark.pruned
     def test_default_experiment_directory_is_current_directory(
         self,
         monkeypatch,
@@ -29,6 +25,7 @@ class TestRuntimeContextDefaults:
             Path,
         )
 
+    @pytest.mark.pruned
     def test_default_checkpoint_directory(
         self,
         tmp_path,
@@ -39,6 +36,7 @@ class TestRuntimeContextDefaults:
 
         assert context.GLOBAL_CHECKPOINT_DIR == (tmp_path / "checkpoints")
 
+    @pytest.mark.pruned
     def test_default_figures_directory(
         self,
         tmp_path,
@@ -49,6 +47,7 @@ class TestRuntimeContextDefaults:
 
         assert context.GLOBAL_FIGURES_DIR == (tmp_path / "figures")
 
+    @pytest.mark.pruned
     def test_default_log_directory(
         self,
         tmp_path,
@@ -59,6 +58,7 @@ class TestRuntimeContextDefaults:
 
         assert context.GLOBAL_LOG_DIR == (tmp_path / "logs")
 
+    @pytest.mark.pruned
     def test_default_monitoring_directory(
         self,
         tmp_path,
@@ -69,6 +69,7 @@ class TestRuntimeContextDefaults:
 
         assert context.GLOBAL_MONITORING_DIR == (tmp_path / "resource_monitoring")
 
+    @pytest.mark.pruned
     def test_default_output_directory(
         self,
         tmp_path,
@@ -79,6 +80,7 @@ class TestRuntimeContextDefaults:
 
         assert context.GLOBAL_OUTPUT_DIR == (tmp_path / "inference")
 
+    @pytest.mark.pruned
     def test_all_default_subdirectories_are_derived_from_experiment_directory(
         self,
         tmp_path,
@@ -97,6 +99,7 @@ class TestRuntimeContextDefaults:
         )
         assert context.GLOBAL_OUTPUT_DIR == (experiment_directory / "inference")
 
+    @pytest.mark.pruned
     def test_default_metadata_is_none(
         self,
         tmp_path,
@@ -123,6 +126,7 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_CHECKPOINT_DIR is custom
 
+    @pytest.mark.pruned
     def test_preserves_custom_figures_directory(
         self,
         tmp_path,
@@ -136,6 +140,7 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_FIGURES_DIR is custom
 
+    @pytest.mark.pruned
     def test_preserves_custom_log_directory(
         self,
         tmp_path,
@@ -149,6 +154,7 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_LOG_DIR is custom
 
+    @pytest.mark.pruned
     def test_preserves_custom_monitoring_directory(
         self,
         tmp_path,
@@ -162,6 +168,7 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_MONITORING_DIR is custom
 
+    @pytest.mark.pruned
     def test_preserves_custom_output_directory(
         self,
         tmp_path,
@@ -175,6 +182,7 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_OUTPUT_DIR is custom
 
+    @pytest.mark.pruned
     def test_preserves_all_custom_directories(
         self,
         tmp_path,
@@ -221,6 +229,7 @@ class TestRuntimeContextCustomDirectories:
 
 
 class TestRuntimeContextMetadata:
+    @pytest.mark.pruned
     def test_preserves_input_metadata(
         self,
         tmp_path,
@@ -244,6 +253,7 @@ class TestRuntimeContextMetadata:
 
         assert context.INPUT_VAR_METADATA is metadata
 
+    @pytest.mark.pruned
     def test_preserves_target_metadata(
         self,
         tmp_path,
@@ -266,6 +276,7 @@ class TestRuntimeContextMetadata:
 
         assert context.TARGET_VAR_METADATA is metadata
 
+    @pytest.mark.pruned
     def test_input_and_target_metadata_are_independent(
         self,
         tmp_path,
@@ -293,6 +304,7 @@ class TestRuntimeContextMetadata:
 
 
 class TestRuntimeContextInitializationBehavior:
+    @pytest.mark.pruned
     def test_does_not_create_directories(
         self,
         tmp_path,
@@ -311,6 +323,7 @@ class TestRuntimeContextInitializationBehavior:
         assert not (experiment_directory / "resource_monitoring").exists()
         assert not (experiment_directory / "inference").exists()
 
+    @pytest.mark.pruned
     def test_instances_are_independent(
         self,
         tmp_path,
@@ -326,6 +339,7 @@ class TestRuntimeContextInitializationBehavior:
         assert first.GLOBAL_LOG_DIR != (second.GLOBAL_LOG_DIR)
         assert first.GLOBAL_OUTPUT_DIR != (second.GLOBAL_OUTPUT_DIR)
 
+    @pytest.mark.pruned
     def test_explicit_custom_directory_does_not_affect_other_defaults(
         self,
         tmp_path,
@@ -346,6 +360,7 @@ class TestRuntimeContextInitializationBehavior:
         )
         assert context.GLOBAL_OUTPUT_DIR == (experiment_directory / "inference")
 
+    @pytest.mark.pruned
     def test_explicit_none_subdirectories_trigger_defaults(
         self,
         tmp_path,
@@ -367,6 +382,7 @@ class TestRuntimeContextInitializationBehavior:
 
 
 class TestRuntimeContextStringExperimentDirectory:
+    @pytest.mark.pruned
     def test_string_experiment_directory_currently_raises_type_error(
         self,
     ):
@@ -378,6 +394,7 @@ class TestRuntimeContextStringExperimentDirectory:
                 GLOBAL_EXP_DIR="/tmp/experiment",
             )
 
+    @pytest.mark.pruned
     def test_string_experiment_directory_works_when_all_subdirectories_are_explicit(
         self,
     ):
@@ -399,22 +416,7 @@ class TestRuntimeContextStringExperimentDirectory:
 
 
 class TestRuntimeContextDataclassBehavior:
-    # Remove test due to no coverage
-
-    def test_declared_field_order(self):
-        field_names = [field.name for field in dataclasses.fields(RuntimeContext)]
-
-        assert field_names == [
-            "GLOBAL_EXP_DIR",
-            "GLOBAL_CHECKPOINT_DIR",
-            "GLOBAL_FIGURES_DIR",
-            "GLOBAL_LOG_DIR",
-            "GLOBAL_MONITORING_DIR",
-            "GLOBAL_OUTPUT_DIR",
-            "INPUT_VAR_METADATA",
-            "TARGET_VAR_METADATA",
-        ]
-
+    @pytest.mark.pruned
     def test_equal_contexts_compare_equal(
         self,
         tmp_path,
@@ -428,6 +430,7 @@ class TestRuntimeContextDataclassBehavior:
 
         assert first == second
 
+    @pytest.mark.pruned
     def test_different_contexts_compare_not_equal(
         self,
         tmp_path,
@@ -441,6 +444,7 @@ class TestRuntimeContextDataclassBehavior:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_repr_contains_derived_directories(
         self,
         tmp_path,

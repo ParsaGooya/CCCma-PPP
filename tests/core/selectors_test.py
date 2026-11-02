@@ -117,6 +117,7 @@ def patch_checkpoint_loader(
     return sentinel
 
 
+@pytest.mark.pruned
 def test_module_selector_build_without_output_shape():
     name = unique_name("module_no_output")
     ModuleSelector.register(name)(DummyModuleConfig)
@@ -129,11 +130,13 @@ def test_module_selector_build_without_output_shape():
     assert built.output_shape is None
 
 
+@pytest.mark.pruned
 def test_module_selector_unregistered_type_raises():
     with pytest.raises(Exception):
         ModuleSelector(type=unique_name("missing_module"), config={})
 
 
+@pytest.mark.pruned
 def test_module_selector_register_lowercases_name():
     name = unique_name("mixed_module")
     ModuleSelector.register(name.upper())(DummyModuleConfig)
@@ -145,6 +148,7 @@ def test_module_selector_register_lowercases_name():
     assert isinstance(selector._module_config, DummyModuleConfig)
 
 
+@pytest.mark.pruned
 def test_module_selector_build_passes_all_shapes():
     name = unique_name("module")
     ModuleSelector.register(name)(DummyModuleConfig)
@@ -185,6 +189,7 @@ def test_arch_selector_register_and_get_architecture_config():
     assert name in LocalArchSelector.available()
 
 
+@pytest.mark.pruned
 def test_arch_selector_register_lowercase_lookup():
     name = unique_name("case_arch")
     LocalArchSelector.register(name.upper())(DummyArchConfig)
@@ -196,6 +201,7 @@ def test_arch_selector_register_lowercase_lookup():
     assert arch_config.value == 3
 
 
+@pytest.mark.pruned
 def test_arch_selector_unregistered_raises():
     selector = LocalArchSelector(type=unique_name("missing_arch"), config={})
 
@@ -225,6 +231,7 @@ def test_arch_selector_checkpoint_load_overwrites_config(monkeypatch, tmp_path):
     assert arch_config.checkpoint_config is fake_checkpoint_config
 
 
+@pytest.mark.pruned
 def test_arch_selector_load_dir_type_mismatch_raises(monkeypatch, tmp_path):
     patch_checkpoint_loader(monkeypatch, "different_type", {})
 
@@ -255,6 +262,7 @@ def test_arch_selector_freeze_weights_emits_both_warnings(monkeypatch, tmp_path)
     assert any("freeze" in msg.lower() for msg in messages)
 
 
+@pytest.mark.pruned
 def test_arch_selector_load_dir_without_freeze_warns_once(monkeypatch, tmp_path):
     name = unique_name("nofreeze_arch")
     LocalArchSelector.register(name)(DummyArchConfig)
@@ -272,6 +280,7 @@ def test_arch_selector_load_dir_without_freeze_warns_once(monkeypatch, tmp_path)
     assert "overwritten" in str(record[0].message)
 
 
+@pytest.mark.pruned
 def test_cvae_arch_selector_has_registry():
     name = unique_name("cvae_arch")
     cVAEArchSelector.register(name)(DummyArchConfig)
@@ -284,6 +293,7 @@ def test_cvae_arch_selector_has_registry():
     assert name in cVAEArchSelector.available()
 
 
+@pytest.mark.pruned
 def test_deterministic_arch_selector_has_registry():
     name = unique_name("det_arch")
     deterministicArchSelector.register(name)(DummyArchConfig)
@@ -296,6 +306,7 @@ def test_deterministic_arch_selector_has_registry():
     assert name in deterministicArchSelector.available()
 
 
+@pytest.mark.pruned
 def test_flow_selector_register_available_and_get_flow():
     name = unique_name("flow")
     FlowSelector.register(name)(DummyFlow)
@@ -308,6 +319,7 @@ def test_flow_selector_register_available_and_get_flow():
     assert name in FlowSelector.available()
 
 
+@pytest.mark.pruned
 def test_flow_selector_unregistered_raises():
     selector = FlowSelector(type=unique_name("missing_flow"), args={})
 
@@ -315,6 +327,7 @@ def test_flow_selector_unregistered_raises():
         selector.get_flow()
 
 
+@pytest.mark.pruned
 def test_flow_selector_case_insensitive_lookup():
     name = unique_name("flow_case")
     FlowSelector.register(name.upper())(DummyFlow)
@@ -326,11 +339,13 @@ def test_flow_selector_case_insensitive_lookup():
     assert flow.scale == 8
 
 
+@pytest.mark.pruned
 def test_load_config_from_checkpoint_missing_file_raises():
     with pytest.raises(FileNotFoundError, match="Checkpoint not found"):
         _load_config_from_checkpoint("missing_checkpoint.pt")
 
 
+@pytest.mark.pruned
 def test_load_config_from_checkpoint_returns_module_and_config(tmp_path):
     path = tmp_path / "checkpoint.pt"
     make_checkpoint(
@@ -350,6 +365,7 @@ def test_load_config_from_checkpoint_returns_module_and_config(tmp_path):
     assert checkpoint_config.strict is True
 
 
+@pytest.mark.pruned
 def test_load_config_from_checkpoint_forwards_strict_flag(tmp_path):
     path = tmp_path / "checkpoint.pt"
     make_checkpoint(path, architecture_type="abc")
@@ -363,6 +379,7 @@ def test_load_config_from_checkpoint_forwards_strict_flag(tmp_path):
     assert checkpoint_config.strict is False
 
 
+@pytest.mark.pruned
 def test_load_config_from_checkpoint_without_module_config_returns_none(tmp_path):
     path = tmp_path / "bad_checkpoint.pt"
     torch.save(
@@ -379,6 +396,7 @@ def test_load_config_from_checkpoint_without_module_config_returns_none(tmp_path
     assert checkpoint_config.load_path == path
 
 
+@pytest.mark.pruned
 def test_load_config_from_checkpoint_allows_missing_shapes(tmp_path):
     path = tmp_path / "checkpoint.pt"
     torch.save(

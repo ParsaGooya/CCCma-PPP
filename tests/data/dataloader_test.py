@@ -163,6 +163,7 @@ def collate_batch(
 
 
 class TestBatchDataABC:
+    @pytest.mark.pruned
     def test_to_device_moves_tensors(self):
         batch = ConcreteBatchData(
             input=torch.tensor(
@@ -190,6 +191,7 @@ class TestBatchDataABC:
         assert batch.target.device.type == "cpu"
         assert batch.added_features.device.type == "cpu"
 
+    @pytest.mark.pruned
     def test_to_device_handles_optional_values(self):
         batch = ConcreteBatchData(
             input=torch.tensor(
@@ -207,6 +209,7 @@ class TestBatchDataABC:
         assert batch.target is None
         assert batch.added_features is None
 
+    @pytest.mark.pruned
     def test_metadata_is_preserved(self):
         metadata = [
             {
@@ -237,6 +240,7 @@ class TestDataloaderConfigABC:
 
         assert config.pin_memory is False
 
+    @pytest.mark.pruned
     def test_zero_workers_disables_prefetch_factor(self):
         config = ConcreteDataloaderConfig(
             num_data_workers=0,
@@ -245,6 +249,7 @@ class TestDataloaderConfigABC:
 
         assert config.prefetch_factor is None
 
+    @pytest.mark.pruned
     def test_nonzero_workers_preserves_prefetch_factor(self):
         config = ConcreteDataloaderConfig(
             num_data_workers=2,
@@ -253,6 +258,7 @@ class TestDataloaderConfigABC:
 
         assert config.prefetch_factor == 4
 
+    @pytest.mark.pruned
     def test_setup_distributed(self):
         config = ConcreteDataloaderConfig()
 
@@ -261,6 +267,7 @@ class TestDataloaderConfigABC:
         assert result is config
         assert config._setup is True
 
+    @pytest.mark.pruned
     def test_select_requested_times_from_data_array(self):
         config = ConcreteDataloaderConfig()
 
@@ -311,6 +318,7 @@ class TestDataloaderConfigABC:
             ),
         )
 
+    @pytest.mark.pruned
     def test_select_requested_times_sorts_available_times(self):
         available = make_available_times().isel(
             {
@@ -353,6 +361,7 @@ class TestDataloaderConfigABC:
                 )
             )
 
+    @pytest.mark.pruned
     def test_select_requested_times_rejects_late_stop(self):
         config = ConcreteDataloaderConfig()
 
@@ -367,6 +376,7 @@ class TestDataloaderConfigABC:
                 )
             )
 
+    @pytest.mark.pruned
     def test_select_requested_times_rejects_empty_selection(self):
         available = xr.DataArray(
             np.array(
@@ -403,6 +413,7 @@ class TestDataloaderConfigABC:
                 )
             )
 
+    @pytest.mark.pruned
     def test_select_requested_times_full_available_range(self):
         config = ConcreteDataloaderConfig()
 
@@ -418,6 +429,7 @@ class TestDataloaderConfigABC:
             make_available_times().values,
         )
 
+    @pytest.mark.pruned
     def test_select_requested_times_single_year(self):
         config = ConcreteDataloaderConfig()
 
@@ -433,6 +445,7 @@ class TestDataloaderConfigABC:
 
 
 class TestDataloader:
+    @pytest.mark.pruned
     def test_creates_torch_dataloader(self):
         config = ConcreteDataloaderConfig(
             num_data_workers=0,
@@ -455,6 +468,7 @@ class TestDataloader:
         assert loader._torch_loader.persistent_workers is False
         assert loader._torch_loader.timeout == 0
 
+    @pytest.mark.pruned
     def test_local_loader_has_no_sampler(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset()
@@ -469,6 +483,7 @@ class TestDataloader:
 
         assert loader.sampler is None
 
+    @pytest.mark.pruned
     def test_distributed_loader_uses_distributed_sampler(self):
         config = ConcreteDataloaderConfig(
             drop_last=True,
@@ -495,6 +510,7 @@ class TestDataloader:
         assert loader.sampler.shuffle is False
         assert loader.sampler.drop_last is True
 
+    @pytest.mark.pruned
     def test_distributed_sampler_defaults_to_shuffle(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset(
@@ -516,6 +532,7 @@ class TestDataloader:
         )
         assert loader.sampler.shuffle is True
 
+    @pytest.mark.pruned
     def test_explicit_shuffle_is_used_for_local_loader(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset()
@@ -531,6 +548,7 @@ class TestDataloader:
 
         assert type(loader._torch_loader.sampler).__name__ == "SequentialSampler"
 
+    @pytest.mark.pruned
     def test_default_local_shuffle_is_true(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset()
@@ -545,6 +563,7 @@ class TestDataloader:
 
         assert type(loader._torch_loader.sampler).__name__ == "RandomSampler"
 
+    @pytest.mark.pruned
     def test_collate_receives_spatial_mask_arguments(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -567,6 +586,7 @@ class TestDataloader:
         assert batch["return_spatial_mask"] is True
         assert batch["share_spatial_mask"] is True
 
+    @pytest.mark.pruned
     def test_iteration(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -594,6 +614,7 @@ class TestDataloader:
             3,
         ]
 
+    @pytest.mark.pruned
     def test_length_with_complete_batches(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -612,6 +633,7 @@ class TestDataloader:
 
         assert len(loader) == 3
 
+    @pytest.mark.pruned
     def test_length_includes_partial_batch(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -630,6 +652,7 @@ class TestDataloader:
 
         assert len(loader) == 3
 
+    @pytest.mark.pruned
     def test_input_shape_delegates_to_dataset(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset(
@@ -653,6 +676,7 @@ class TestDataloader:
             32,
         )
 
+    @pytest.mark.pruned
     def test_target_shape_delegates_to_dataset(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset(
@@ -676,6 +700,7 @@ class TestDataloader:
             32,
         )
 
+    @pytest.mark.pruned
     def test_added_features_dim_delegates_to_dataset(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset(
@@ -727,6 +752,7 @@ class TestDataloader:
 
         assert result is loader
 
+    @pytest.mark.pruned
     def test_subset_loader_skips_batches(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -758,6 +784,7 @@ class TestDataloader:
             5,
         ]
 
+    @pytest.mark.pruned
     def test_subset_loader_from_zero_returns_every_batch(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -784,6 +811,7 @@ class TestDataloader:
             == 2
         )
 
+    @pytest.mark.pruned
     def test_subset_loader_past_end_is_empty(self):
         config = ConcreteDataloaderConfig(
             batch_size=2,
@@ -808,6 +836,7 @@ class TestDataloader:
             == []
         )
 
+    @pytest.mark.pruned
     def test_get_sampler_accepts_additional_arguments(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset(
@@ -837,21 +866,25 @@ class TestDataloader:
 from unittest.mock import Mock, patch
 
 
+@pytest.mark.pruned
 def test_batch_data_abc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         BatchDataABC()
 
 
+@pytest.mark.pruned
 def test_dataloader_config_abc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         DataloaderConfigABC()
 
 
+@pytest.mark.pruned
 def test_batch_data_shared_masks_default_to_none():
     assert BatchDataABC._shared_input_mask is None
     assert BatchDataABC._shared_target_mask is None
 
 
+@pytest.mark.pruned
 def test_batch_data_shared_masks_are_visible_to_subclasses():
     input_mask = torch.ones(
         1,
@@ -884,11 +917,13 @@ def test_batch_data_shared_masks_are_visible_to_subclasses():
         BatchDataABC._shared_target_mask = previous_target_mask
 
 
+@pytest.mark.pruned
 def test_config_class_dimension_names():
     assert DataloaderConfigABC.init_time_dim == INIT_TIME_DIM
     assert DataloaderConfigABC.lead_time_dim == LEAD_TIME_DIM
 
 
+@pytest.mark.pruned
 def test_config_initialization_always_disables_pin_memory():
     config = ConcreteDataloaderConfig(
         pin_memory=True,
@@ -897,6 +932,7 @@ def test_config_initialization_always_disables_pin_memory():
     assert config.pin_memory is False
 
 
+@pytest.mark.pruned
 def test_zero_workers_replace_none_prefetch_with_none():
     config = ConcreteDataloaderConfig(
         num_data_workers=0,
@@ -936,6 +972,7 @@ def test_nonzero_workers_reject_invalid_prefetch_factor(
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "prefetch_factor",
     [
@@ -996,6 +1033,7 @@ def test_parse_year_bound_accepts_supported_values(
     assert config._parse_year_bound(bound) == expected
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "bound",
     [
@@ -1060,6 +1098,7 @@ def test_select_requested_times_accepts_integer_bounds():
     )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_preserves_dimension_name():
     config = ConcreteDataloaderConfig()
 
@@ -1074,6 +1113,7 @@ def test_select_requested_times_preserves_dimension_name():
     assert INIT_TIME_DIM in result.coords
 
 
+@pytest.mark.pruned
 def test_select_requested_times_does_not_mutate_original_order():
     available = make_available_times().isel(
         {
@@ -1106,6 +1146,7 @@ def test_select_requested_times_does_not_mutate_original_order():
     )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_rejects_invalid_start_string():
     config = ConcreteDataloaderConfig()
 
@@ -1121,6 +1162,7 @@ def test_select_requested_times_rejects_invalid_start_string():
         )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_rejects_invalid_stop_string():
     config = ConcreteDataloaderConfig()
 
@@ -1136,6 +1178,7 @@ def test_select_requested_times_rejects_invalid_stop_string():
         )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_rejects_invalid_start_type():
     config = ConcreteDataloaderConfig()
 
@@ -1151,6 +1194,7 @@ def test_select_requested_times_rejects_invalid_start_type():
         )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_rejects_invalid_stop_type():
     config = ConcreteDataloaderConfig()
 
@@ -1166,6 +1210,7 @@ def test_select_requested_times_rejects_invalid_stop_type():
         )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_checks_start_before_stop():
     config = ConcreteDataloaderConfig()
 
@@ -1181,6 +1226,7 @@ def test_select_requested_times_checks_start_before_stop():
         )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_error_reports_requested_start():
     config = ConcreteDataloaderConfig()
 
@@ -1196,6 +1242,7 @@ def test_select_requested_times_error_reports_requested_start():
         )
 
 
+@pytest.mark.pruned
 def test_select_requested_times_error_reports_requested_stop():
     config = ConcreteDataloaderConfig()
 
@@ -1211,6 +1258,7 @@ def test_select_requested_times_error_reports_requested_stop():
         )
 
 
+@pytest.mark.pruned
 def test_local_sampler_method_returns_none():
     config = ConcreteDataloaderConfig()
     loader = Dataloader(
@@ -1265,6 +1313,7 @@ def test_distributed_loader_rejects_invalid_rank(
         )
 
 
+@pytest.mark.pruned
 def test_distributed_sampler_accepts_last_valid_rank():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(),
@@ -1281,6 +1330,7 @@ def test_distributed_sampler_accepts_last_valid_rank():
     assert loader.sampler.num_replicas == 4
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "shuffle",
     [
@@ -1305,6 +1355,7 @@ def test_distributed_sampler_preserves_explicit_shuffle(
     assert loader.sampler.shuffle is shuffle
 
 
+@pytest.mark.pruned
 def test_distributed_torch_loader_disables_shuffle():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(),
@@ -1323,6 +1374,7 @@ def test_distributed_torch_loader_disables_shuffle():
     )
 
 
+@pytest.mark.pruned
 def test_get_sampler_forwards_keyword_arguments():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(),
@@ -1344,6 +1396,7 @@ def test_get_sampler_forwards_keyword_arguments():
     assert sampler.rank == 0
 
 
+@pytest.mark.pruned
 def test_dataloader_forwards_zero_worker_options():
     config = ConcreteDataloaderConfig(
         num_data_workers=0,
@@ -1370,6 +1423,7 @@ def test_dataloader_forwards_zero_worker_options():
     assert kwargs["timeout"] == 0
 
 
+@pytest.mark.pruned
 def test_dataloader_forwards_nonzero_worker_options():
     config = ConcreteDataloaderConfig(
         num_data_workers=2,
@@ -1396,6 +1450,7 @@ def test_dataloader_forwards_nonzero_worker_options():
     assert kwargs["timeout"] == 60
 
 
+@pytest.mark.pruned
 def test_dataloader_wraps_collate_function_with_mask_options():
     config = ConcreteDataloaderConfig(
         share_spatial_mask=True,
@@ -1428,6 +1483,7 @@ def test_dataloader_wraps_collate_function_with_mask_options():
     assert result["share_spatial_mask"] is True
 
 
+@pytest.mark.pruned
 def test_dataloader_forwards_drop_last_to_distributed_sampler():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(
@@ -1445,6 +1501,7 @@ def test_dataloader_forwards_drop_last_to_distributed_sampler():
     assert loader.sampler.drop_last is True
 
 
+@pytest.mark.pruned
 def test_set_epoch_delegates_exact_epoch_to_sampler():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(),
@@ -1468,6 +1525,7 @@ def test_set_epoch_delegates_exact_epoch_to_sampler():
     assert result is loader
 
 
+@pytest.mark.pruned
 def test_set_epoch_local_loader_does_not_fail_for_none_epoch():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(),
@@ -1534,6 +1592,7 @@ def test_subset_loader_rejects_non_integer_start(
         )
 
 
+@pytest.mark.pruned
 def test_subset_loader_returns_iterator():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(
@@ -1553,6 +1612,7 @@ def test_subset_loader_returns_iterator():
     assert iter(subset) is subset
 
 
+@pytest.mark.pruned
 def test_subset_loader_is_lazy():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(
@@ -1579,6 +1639,7 @@ def test_subset_loader_is_lazy():
     assert next(subset) == "second"
 
 
+@pytest.mark.pruned
 def test_empty_dataset_has_zero_batches():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(
@@ -1595,6 +1656,7 @@ def test_empty_dataset_has_zero_batches():
     assert list(loader) == []
 
 
+@pytest.mark.pruned
 def test_partial_batch_contains_remaining_item():
     loader = Dataloader(
         config=ConcreteDataloaderConfig(
@@ -1615,6 +1677,7 @@ def test_partial_batch_contains_remaining_item():
     ]
 
 
+@pytest.mark.pruned
 def test_loader_properties_reflect_updated_dataset_values():
     dataset = DummyDataset()
     loader = Dataloader(

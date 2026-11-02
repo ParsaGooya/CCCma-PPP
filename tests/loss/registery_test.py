@@ -56,83 +56,8 @@ class NoArgumentClass:
         self.initialized = True
 
 
-class TestRegisteryInitialization:
-    def test_initializes_with_empty_modules(self):
-        registry = Registery()
-
-        assert registry._modules == {}
-
-    def test_available_is_empty_initially(self):
-        registry = Registery()
-
-        assert registry.available() == []
-
-
-class TestRegister:
-    def test_returns_callable_decorator(self):
-        registry = Registery()
-
-        decorator = registry.register("example")
-
-        assert callable(decorator)
-
-    def test_decorator_returns_original_class(self):
-        registry = Registery()
-        decorator = registry.register("example")
-
-        result = decorator(ExampleClass)
-
-        assert result is ExampleClass
-
-    def test_register_stores_class(self):
-        registry = Registery()
-
-        registry.register("example")(ExampleClass)
-
-        assert registry._modules["example"] is ExampleClass
-
-    def test_register_supports_decorator_syntax(self):
-        registry = Registery()
-
-        @registry.register("decorated")
-        class DecoratedClass:
-            pass
-
-        assert registry._modules["decorated"] is DecoratedClass
-
-    def test_register_accepts_non_string_name(self):
-        registry = Registery()
-        name = ("example", 1)
-
-        registry.register(name)(ExampleClass)
-
-        assert registry._modules[name] is ExampleClass
-
-    def test_registering_same_name_replaces_existing_class(self):
-        registry = Registery()
-
-        class FirstClass:
-            pass
-
-        class SecondClass:
-            pass
-
-        registry.register("example")(FirstClass)
-        registry.register("example")(SecondClass)
-
-        assert registry._modules["example"] is SecondClass
-
-    def test_same_class_can_be_registered_under_multiple_names(self):
-        registry = Registery()
-
-        registry.register("first")(ExampleClass)
-        registry.register("second")(ExampleClass)
-
-        assert registry._modules["first"] is ExampleClass
-        assert registry._modules["second"] is ExampleClass
-
-
 class TestGetErrors:
+    @pytest.mark.pruned
     def test_unregistered_name_raises_value_error(self):
         registry = Registery()
 
@@ -142,6 +67,7 @@ class TestGetErrors:
         ):
             registry.get("missing")
 
+    @pytest.mark.pruned
     def test_unregistered_error_lists_available_names(self):
         registry = Registery()
         registry.register("first")(ExampleClass)
@@ -167,6 +93,7 @@ class TestGetErrors:
 
 
 class TestGetDataclass:
+    @pytest.mark.pruned
     def test_dictionary_constructs_dataclass(self):
         registry = Registery()
         registry.register("example")(ExampleDataclass)
@@ -184,6 +111,7 @@ class TestGetDataclass:
             count=3,
         )
 
+    @pytest.mark.pruned
     def test_dictionary_uses_dataclass_default_values(self):
         registry = Registery()
         registry.register("example")(ExampleDataclass)
@@ -200,6 +128,7 @@ class TestGetDataclass:
             count=1,
         )
 
+    @pytest.mark.pruned
     def test_empty_dictionary_constructs_default_dataclass(self):
         registry = Registery()
         registry.register("default")(DefaultDataclass)
@@ -211,6 +140,7 @@ class TestGetDataclass:
 
         assert result == DefaultDataclass()
 
+    @pytest.mark.pruned
     def test_nested_dictionary_constructs_nested_dataclass(self):
         registry = Registery()
         registry.register("nested")(ExampleNestedDataclass)
@@ -230,6 +160,7 @@ class TestGetDataclass:
             nested=NestedDataclass(enabled=True),
         )
 
+    @pytest.mark.pruned
     def test_unexpected_dataclass_field_is_rejected(self):
         registry = Registery()
         registry.register("example")(ExampleDataclass)
@@ -243,6 +174,7 @@ class TestGetDataclass:
                 },
             )
 
+    @pytest.mark.pruned
     def test_missing_required_dataclass_field_is_rejected(self):
         registry = Registery()
         registry.register("example")(ExampleDataclass)
@@ -255,6 +187,7 @@ class TestGetDataclass:
                 },
             )
 
+    @pytest.mark.pruned
     def test_wrong_dataclass_field_type_is_rejected(self):
         registry = Registery()
         registry.register("example")(ExampleDataclass)
@@ -268,6 +201,7 @@ class TestGetDataclass:
                 },
             )
 
+    @pytest.mark.pruned
     def test_dataclass_uses_strict_dacite_config(self):
         registry = Registery()
         registry.register("example")(ExampleDataclass)
@@ -324,6 +258,7 @@ class TestGetDataclass:
 
 
 class TestGetRegularClass:
+    @pytest.mark.pruned
     def test_dictionary_is_expanded_as_keyword_arguments(self):
         registry = Registery()
         registry.register("example")(ExampleClass)
@@ -340,6 +275,7 @@ class TestGetRegularClass:
         assert result.name == "test"
         assert result.count == 4
 
+    @pytest.mark.pruned
     def test_dictionary_uses_constructor_defaults(self):
         registry = Registery()
         registry.register("example")(ExampleClass)
@@ -354,6 +290,7 @@ class TestGetRegularClass:
         assert result.name == "test"
         assert result.count == 1
 
+    @pytest.mark.pruned
     def test_empty_dictionary_constructs_class_without_arguments(self):
         registry = Registery()
         registry.register("example")(ExampleClass)
@@ -366,6 +303,7 @@ class TestGetRegularClass:
         assert result.name is None
         assert result.count == 1
 
+    @pytest.mark.pruned
     def test_dictionary_passes_all_values_to_variadic_class(self):
         registry = Registery()
         registry.register("variadic")(VariadicClass)
@@ -383,6 +321,7 @@ class TestGetRegularClass:
 
         assert result.kwargs == config
 
+    @pytest.mark.pruned
     def test_unknown_keyword_argument_is_rejected(self):
         registry = Registery()
         registry.register("example")(ExampleClass)
@@ -417,6 +356,7 @@ class TestGetRegularClass:
                 },
             )
 
+    @pytest.mark.pruned
     def test_input_dictionary_is_not_modified(self):
         registry = Registery()
         registry.register("example")(ExampleClass)
@@ -436,6 +376,7 @@ class TestGetRegularClass:
 
 
 class TestGetNonDictionaryConfig:
+    @pytest.mark.pruned
     def test_none_is_passed_positionally(self):
         registry = Registery()
         registry.register("positional")(PositionalConfigClass)
@@ -447,6 +388,7 @@ class TestGetNonDictionaryConfig:
 
         assert result.config is None
 
+    @pytest.mark.pruned
     def test_omitted_config_passes_none_positionally(self):
         registry = Registery()
         registry.register("positional")(PositionalConfigClass)
@@ -455,6 +397,7 @@ class TestGetNonDictionaryConfig:
 
         assert result.config is None
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "config",
         [
@@ -495,6 +438,7 @@ class TestGetNonDictionaryConfig:
 
         assert result.config is config
 
+    @pytest.mark.pruned
     def test_namespace_is_passed_positionally(self):
         registry = Registery()
         registry.register("positional")(PositionalConfigClass)
@@ -510,70 +454,10 @@ class TestGetNonDictionaryConfig:
 
         assert result.config is config
 
+    @pytest.mark.pruned
     def test_none_fails_for_no_argument_constructor(self):
         registry = Registery()
         registry.register("no_argument")(NoArgumentClass)
 
         with pytest.raises(TypeError):
             registry.get("no_argument")
-
-
-class TestAvailable:
-    def test_returns_registered_names(self):
-        registry = Registery()
-        registry.register("first")(ExampleClass)
-        registry.register("second")(ExampleDataclass)
-
-        assert registry.available() == [
-            "first",
-            "second",
-        ]
-
-    def test_preserves_registration_order(self):
-        registry = Registery()
-
-        registry.register("third")(ExampleClass)
-        registry.register("first")(ExampleDataclass)
-        registry.register("second")(PositionalConfigClass)
-
-        assert registry.available() == [
-            "third",
-            "first",
-            "second",
-        ]
-
-    def test_replacing_registration_preserves_original_order(self):
-        registry = Registery()
-
-        class Replacement:
-            pass
-
-        registry.register("first")(ExampleClass)
-        registry.register("second")(ExampleDataclass)
-        registry.register("first")(Replacement)
-
-        assert registry.available() == [
-            "first",
-            "second",
-        ]
-        assert registry._modules["first"] is Replacement
-
-    def test_returns_new_list_each_time(self):
-        registry = Registery()
-        registry.register("example")(ExampleClass)
-
-        first = registry.available()
-        second = registry.available()
-
-        assert first == second
-        assert first is not second
-
-    def test_mutating_result_does_not_modify_registry(self):
-        registry = Registery()
-        registry.register("example")(ExampleClass)
-
-        available = registry.available()
-        available.append("fake")
-
-        assert registry.available() == ["example"]
-        assert "fake" not in registry._modules

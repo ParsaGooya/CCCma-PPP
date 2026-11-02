@@ -317,6 +317,7 @@ def test_days_in_year_for_supported_calendars(time, expected):
     assert AddedTimeFeatures._days_in_year(time) == expected
 
 
+@pytest.mark.pruned
 def test_lead_time_requires_list_or_end():
     with pytest.raises(ValueError, match="Provide a list"):
         lead_time_config()
@@ -327,22 +328,26 @@ def test_lead_time_rejects_none_list_and_none_end():
         lead_time_config(list_lead_times=None, end=None)
 
 
+@pytest.mark.pruned
 def test_lead_time_explicit_list_is_returned_unchanged():
     configured = (1, 3, 5)
 
     assert lead_time_config(list_lead_times=configured).build_lead_times() is configured
 
 
+@pytest.mark.pruned
 def test_lead_time_inclusive_range():
     np.testing.assert_array_equal(
         lead_time_config(start=2, end=5).build_lead_times(), [2, 3, 4, 5]
     )
 
 
+@pytest.mark.pruned
 def test_lead_time_default_start_is_one():
     np.testing.assert_array_equal(lead_time_config(end=3).build_lead_times(), [1, 2, 3])
 
 
+@pytest.mark.pruned
 def test_lead_time_list_takes_precedence_over_range():
     assert lead_time_config(
         list_lead_times=[10, 20], start=1, end=3
@@ -353,21 +358,25 @@ def test_lead_time_explicit_empty_list_is_preserved():
     assert lead_time_config(list_lead_times=[]).build_lead_times() == []
 
 
+@pytest.mark.pruned
 def test_lead_time_descending_range_is_empty():
     assert lead_time_config(start=5, end=2).build_lead_times().size == 0
 
 
+@pytest.mark.pruned
 def test_lead_time_equal_start_and_end_gives_single_value():
     np.testing.assert_array_equal(
         lead_time_config(start=4, end=4).build_lead_times(), [4]
     )
 
 
+@pytest.mark.pruned
 def test_dataset_config_abc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         DatasetConfigABC()
 
 
+@pytest.mark.pruned
 def test_dataset_config_abstract_members():
     assert DatasetConfigABC.available_times.__isabstractmethod__
     assert DatasetConfigABC.ds_operator.__isabstractmethod__
@@ -375,29 +384,34 @@ def test_dataset_config_abstract_members():
     assert DatasetConfigABC.build_dataset.__isabstractmethod__
 
 
+@pytest.mark.pruned
 def test_dataset_config_class_dimensions():
     assert DatasetConfigABC.init_time_dim == INIT_TIME_DIM
     assert DatasetConfigABC.lead_time_dim == LEAD_TIME_DIM
     assert DatasetConfigABC.realization_dim == REALIZATION_DIM
 
 
+@pytest.mark.pruned
 def test_valid_condition_methods_constant():
     assert DatasetConfigABC._VALID_CONDITION_METHODS == frozenset(
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
     )
 
 
+@pytest.mark.pruned
 def test_dataset_abc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         DatasetABC()
 
 
+@pytest.mark.pruned
 def test_dataset_abc_abstract_members():
     assert DatasetABC._load_forecast.__isabstractmethod__
     assert DatasetABC._write_condition_to_input.__isabstractmethod__
     assert DatasetABC._concat_condition_to_input.__isabstractmethod__
 
 
+@pytest.mark.pruned
 def test_concrete_dataset_is_a_torch_dataset():
     from torch.utils.data import Dataset
 
@@ -417,6 +431,7 @@ def test_valid_condition_methods_are_accepted(method):
     assert config._check_condition_method() is config
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize("method", ["", "mean", "dynamic", "unsupported"])
 def test_invalid_condition_methods_are_rejected(method):
     config = ConcreteDatasetConfig(forecast=make_data_config(), condition_method=method)
@@ -425,6 +440,7 @@ def test_invalid_condition_methods_are_rejected(method):
         config._check_condition_method()
 
 
+@pytest.mark.pruned
 def test_invalid_condition_method_message_lists_valid_values():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(), condition_method="bad_method"
@@ -439,6 +455,7 @@ def test_invalid_condition_method_message_lists_valid_values():
         assert valid in message
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "method,expected",
     [
@@ -454,6 +471,7 @@ def test_effective_condition_method_is_lowercase(method, expected):
     assert config.effective_condition_method == expected
 
 
+@pytest.mark.pruned
 def test_no_input_source_is_rejected():
     config = ConcreteDatasetConfig(forecast=None, condition=None)
 
@@ -466,6 +484,7 @@ def test_no_input_source_is_rejected():
     assert "condition" in message
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "forecast,condition",
     [
@@ -480,6 +499,7 @@ def test_any_input_source_is_accepted(forecast, condition):
     assert config._check_required_input_source() is config
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "method,expected",
     [
@@ -501,6 +521,7 @@ def test_forecast_reused_as_condition_without_explicit_condition(method, expecte
     assert config._using_forecast_data_as_condition is expected
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "condition_paths,condition_names,condition_members,expected",
     [
@@ -529,6 +550,7 @@ def test_explicit_condition_matches_forecast_only_when_all_fields_match(
     assert config._using_forecast_data_as_condition is expected
 
 
+@pytest.mark.pruned
 def test_condition_without_forecast_is_never_forecast_reuse():
     config = ConcreteDatasetConfig(
         forecast=None,
@@ -539,6 +561,7 @@ def test_condition_without_forecast_is_never_forecast_reuse():
     assert config._using_forecast_data_as_condition is False
 
 
+@pytest.mark.pruned
 def test_resolve_lead_times_builds_explicit_configuration():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(),
@@ -560,6 +583,7 @@ def test_resolve_lead_times_builds_range_configuration():
     np.testing.assert_array_equal(config.lead_times, [2, 3, 4])
 
 
+@pytest.mark.pruned
 def test_resolve_lead_times_leaves_plain_list_unchanged():
     lead_times = [1, 2]
     config = ConcreteDatasetConfig(forecast=make_data_config(), lead_times=lead_times)
@@ -569,6 +593,7 @@ def test_resolve_lead_times_leaves_plain_list_unchanged():
     assert config.lead_times is lead_times
 
 
+@pytest.mark.pruned
 def test_resolve_lead_times_leaves_array_unchanged():
     lead_times = np.asarray([1, 3])
     config = ConcreteDatasetConfig(forecast=make_data_config(), lead_times=lead_times)
@@ -578,12 +603,14 @@ def test_resolve_lead_times_leaves_array_unchanged():
     assert config.lead_times is lead_times
 
 
+@pytest.mark.pruned
 def test_input_lead_times_come_from_effective_input():
     config = ConcreteDatasetConfig(forecast=make_data_config(lead_times=[1, 2, 4]))
 
     np.testing.assert_array_equal(config.input_lead_times, [1, 2, 4])
 
 
+@pytest.mark.pruned
 def test_input_lead_times_prefer_effective_input_override():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(lead_times=[1, 2, 3]),
@@ -593,6 +620,7 @@ def test_input_lead_times_prefer_effective_input_override():
     np.testing.assert_array_equal(config.input_lead_times, [2, 4, 8])
 
 
+@pytest.mark.pruned
 def test_explicit_condition_takes_precedence_over_forecast_reuse():
     condition = make_data_config(name="condition")
     config = ConcreteDatasetConfig(
@@ -610,6 +638,7 @@ def test_explicit_condition_takes_precedence_over_forecast_reuse():
     builder.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_forecast_is_converted_to_condition_when_reused():
     converted = make_data_config(name="converted", ensemble_mean=True)
     config = ConcreteDatasetConfig(
@@ -626,6 +655,7 @@ def test_forecast_is_converted_to_condition_when_reused():
     builder.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_no_conditioning_resolves_to_none():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(), condition=None, condition_method="static"
@@ -638,6 +668,7 @@ def test_no_conditioning_resolves_to_none():
     assert config.effective_condition is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "method,expected_ensemble_mean",
     [
@@ -677,6 +708,7 @@ def test_forecast_as_condition_forwards_settings(method, expected_ensemble_mean)
     )
 
 
+@pytest.mark.pruned
 def test_check_forecast_without_forecast_returns_self():
     config = ConcreteDatasetConfig(
         forecast=None,
@@ -687,6 +719,7 @@ def test_check_forecast_without_forecast_returns_self():
     assert config._check_forecast() is config
 
 
+@pytest.mark.pruned
 def test_same_member_rejects_ensemble_mean_forecast():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(ensemble_mean=True), condition_method="same_member"
@@ -705,6 +738,7 @@ def test_same_member_accepts_member_forecast():
     assert config._check_forecast() is config
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize("method", [None, "ensemble_mean", "cross_ensemble", "static"])
 def test_other_methods_skip_forecast_ensemble_check(method):
     config = ConcreteDatasetConfig(
@@ -743,6 +777,7 @@ def test_member_methods_require_realization_coordinate(method):
         config_check(condition, method)._check_condition()
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize("method", ["cross_ensemble", "same_member"])
 def test_member_methods_accept_member_condition(method):
     condition = make_data_config(
@@ -761,6 +796,7 @@ def test_ensemble_mean_method_requires_literal_true(ensemble_mean):
         config_check(condition, "ensemble_mean")._check_condition()
 
 
+@pytest.mark.pruned
 def test_ensemble_mean_method_accepts_true():
     condition = make_data_config(name="condition", ensemble_mean=True)
     config = config_check(condition, "ensemble_mean")
@@ -788,6 +824,7 @@ def test_static_rejects_each_sampling_dimension(sampling_dimension):
         config_check(condition, "static")._check_condition()
 
 
+@pytest.mark.pruned
 def test_static_accepts_spatial_coordinates_only():
     condition = make_data_config(name="condition")
     condition.realization_list = None
@@ -814,6 +851,7 @@ def test_static_rejects_forecast_as_condition():
             config._check_condition()
 
 
+@pytest.mark.pruned
 def test_static_method_without_condition_is_rejected():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(), condition=None, condition_method="static"
@@ -833,12 +871,14 @@ def test_no_effective_condition_with_dynamic_method_passes():
     assert config._check_condition() is config
 
 
+@pytest.mark.pruned
 def test_compatibility_skipped_with_only_one_source():
     config = ConcreteDatasetConfig(forecast=make_data_config(), condition=None)
 
     assert config._check_forecast_vs_condition() is None
 
 
+@pytest.mark.pruned
 def test_compatibility_skipped_when_condition_is_forecast_reuse():
     with patch.object(
         ConcreteDatasetConfig,
@@ -868,6 +908,7 @@ def test_dynamic_condition_requires_forecast_dimensions(missing_dimension):
         check_pair(make_data_config(), condition)
 
 
+@pytest.mark.pruned
 def test_condition_time_superset_is_accepted():
     model = make_data_config(times=np.asarray(DATES_2, dtype="datetime64[ns]"))
     condition = make_data_config(
@@ -883,6 +924,7 @@ def test_condition_time_superset_is_accepted():
     assert check_pair(model, condition) is None
 
 
+@pytest.mark.pruned
 def test_condition_lead_time_superset_is_accepted():
     model = make_data_config(lead_times=[1, 2])
     condition = make_data_config(
@@ -895,6 +937,7 @@ def test_condition_lead_time_superset_is_accepted():
     assert check_pair(model, condition) is None
 
 
+@pytest.mark.pruned
 def test_missing_condition_time_value_is_rejected():
     model = make_data_config(times=np.asarray(DATES_2, dtype="datetime64[ns]"))
     condition = make_data_config(
@@ -1015,6 +1058,7 @@ def test_get_input_times_rejects_unavailable_times():
         config.get_input_times(requested)
 
 
+@pytest.mark.pruned
 def test_get_input_times_intersects_with_effective_input():
     model_times = np.asarray(["2000-01-01", "2000-03-01"], dtype="datetime64[ns]")
     available = pd.DatetimeIndex(["2000-01-01", "2000-02-01", "2000-03-01"])
@@ -1046,6 +1090,7 @@ def test_get_input_times_converts_plain_sequence():
     assert result.dims == (INIT_TIME_DIM,)
 
 
+@pytest.mark.pruned
 def test_get_input_times_removes_times_missing_from_input():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(
@@ -1125,6 +1170,7 @@ def test_constructor_accepts_static_condition_without_forecast():
     assert config.effective_condition is condition
 
 
+@pytest.mark.pruned
 def test_build_dataset_and_operator_accessors():
     config = ConcreteDatasetConfig(forecast=make_data_config())
 
@@ -1132,6 +1178,7 @@ def test_build_dataset_and_operator_accessors():
     assert config.ds_operator is config._operator
 
 
+@pytest.mark.pruned
 def test_available_times_accessor():
     expected = pd.DatetimeIndex(DATES_2)
     config = ConcreteDatasetConfig(
@@ -1141,6 +1188,7 @@ def test_available_times_accessor():
     assert config.available_times.equals(expected)
 
 
+@pytest.mark.pruned
 def test_effective_input_prefers_override_then_forecast_then_condition():
     model = make_data_config(name="model")
     override = make_data_config(name="override")
@@ -1160,6 +1208,7 @@ def test_effective_input_prefers_override_then_forecast_then_condition():
     )
 
 
+@pytest.mark.pruned
 def test_effective_condition_returns_internal_value():
     config = ConcreteDatasetConfig(forecast=make_data_config())
     marker = object()
@@ -1168,6 +1217,7 @@ def test_effective_condition_returns_internal_value():
     assert config.effective_condition is marker
 
 
+@pytest.mark.pruned
 def test_initial_state_of_added_time_features():
     reference = TimeFeatureReference()
     features = AddedTimeFeatures(reference, None)
@@ -1181,6 +1231,7 @@ def test_initial_state_of_added_time_features():
     assert features.lead_time_dim == LEAD_TIME_DIM
 
 
+@pytest.mark.pruned
 def test_reference_min_max_and_span():
     features = AddedTimeFeatures(TimeFeatureReference(), None)
 
@@ -1189,6 +1240,7 @@ def test_reference_min_max_and_span():
     assert features.time_span_ref == pd.Timedelta(days=366)
 
 
+@pytest.mark.pruned
 def test_feature_indices_are_stable():
     features = AddedTimeFeatures(TimeFeatureReference(), None)
 
@@ -1202,6 +1254,7 @@ def test_feature_indices_are_stable():
     }
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "selected",
     [
@@ -1219,6 +1272,7 @@ def test_single_feature_selection(selected):
     assert features.time_features == tuple(selected)
 
 
+@pytest.mark.pruned
 def test_features_are_reordered_to_canonical_order_and_deduplicated():
     features = AddedTimeFeatures(
         TimeFeatureReference(),
@@ -1243,6 +1297,7 @@ def test_features_are_reordered_to_canonical_order_and_deduplicated():
     )
 
 
+@pytest.mark.pruned
 def test_none_and_empty_feature_requests_are_equivalent():
     assert AddedTimeFeatures(TimeFeatureReference(), None).time_features == ()
     assert AddedTimeFeatures(TimeFeatureReference(), []).time_features == ()
@@ -1259,6 +1314,7 @@ def test_unsupported_features_are_reported_by_name():
     assert "month_sin" in message
 
 
+@pytest.mark.pruned
 def test_equal_configurations_compare_equal():
     first = AddedTimeFeatures(
         TimeFeatureReference(lead_times=[1, 2], common_times=DATES_2), [LEAD_TIME_DIM]
@@ -1297,6 +1353,7 @@ def test_different_configurations_compare_unequal(
     assert first != second
 
 
+@pytest.mark.pruned
 def test_different_reference_types_compare_unequal():
     class OtherReference(TimeFeatureReference):
         pass
@@ -1313,6 +1370,7 @@ def test_comparison_with_unrelated_object_is_not_implemented():
     assert features.__eq__(object()) is NotImplemented
 
 
+@pytest.mark.pruned
 def test_build_requires_both_dimensions_and_names_them():
     features = AddedTimeFeatures(TimeFeatureReference(), [LEAD_TIME_DIM])
 
@@ -1333,6 +1391,7 @@ def test_build_rejects_each_missing_dimension(missing):
         features.build_time_features(coords)
 
 
+@pytest.mark.pruned
 def test_build_without_features_returns_self_and_skips_lead_times():
     features = AddedTimeFeatures(TimeFeatureReference(), None)
 
@@ -1378,6 +1437,7 @@ def test_lead_time_maximum_zero_is_rejected():
             features.build_time_features(coords_for(["2000-01-01"], [0]))
 
 
+@pytest.mark.pruned
 def test_init_time_feature_is_normalised_against_reference_span():
     targets = ["2000-01-01", "2000-07-01"]
     features = AddedTimeFeatures(TimeFeatureReference(), [INIT_TIME_DIM])
@@ -1401,6 +1461,7 @@ def test_init_time_zero_span_is_rejected():
             features.build_time_features(coords_for(["2000-01-01"], [1]))
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "target,expected_sin,expected_cos",
     [
@@ -1421,6 +1482,7 @@ def test_month_features_follow_the_calendar_cycle(target, expected_sin, expected
     )
 
 
+@pytest.mark.pruned
 def test_day_features_use_days_in_year():
     features = AddedTimeFeatures(TimeFeatureReference(), ["day_sin", "day_cos"])
     target = "2000-07-01"
@@ -1449,6 +1511,7 @@ def test_all_features_have_expected_shape_and_dtype():
     assert features.time_features_array.dtype == np.float32
 
 
+@pytest.mark.pruned
 def test_second_build_replaces_previous_array():
     features = AddedTimeFeatures(
         TimeFeatureReference(lead_times=[1, 2]), [LEAD_TIME_DIM]
@@ -1492,6 +1555,7 @@ def test_call_rejects_out_of_bounds_index(index):
         features(index, xr.DataArray([1.0]))
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "index,expected", [(0, [0.25, 1.0]), (1, [0.5, 0.0]), (2, [1.0, -1.0])]
 )
@@ -1518,6 +1582,7 @@ def test_call_broadcasts_features_over_spatial_dimensions(shape, expected_shape)
     assert result.shape == expected_shape
 
 
+@pytest.mark.pruned
 def test_call_broadcasts_feature_values_across_space():
     features = make_called_features([[0.25, 1.0]])
     data = xr.DataArray(np.ones((2, 3, 4)), dims=("channels", "lat", "lon"))
@@ -1537,6 +1602,7 @@ def test_broadcast_result_is_a_writable_copy():
     assert features.time_features_array[0, 0] == pytest.approx(0.25)
 
 
+@pytest.mark.pruned
 def test_len_matches_selected_features():
     assert len(make_called_features([[0.0, 0.0]])) == 2
 
@@ -1557,6 +1623,7 @@ def make_check_dataset(*, requested=None, available=None, fitted=True):
     )
 
 
+@pytest.mark.pruned
 def test_check_init_validates_time_sequence_with_requested_times():
     dataset = make_check_dataset()
 
@@ -1566,6 +1633,7 @@ def test_check_init_validates_time_sequence_with_requested_times():
     assert validator.call_args.args[0] is dataset.requested_times
 
 
+@pytest.mark.pruned
 def test_check_init_propagates_time_sequence_errors():
     dataset = make_check_dataset()
 
@@ -1642,6 +1710,7 @@ def test_missing_mask_is_created_from_train_mask_and_is_all_false():
     assert not bool(dataset.mask.any())
 
 
+@pytest.mark.pruned
 def test_existing_mask_is_preserved():
     existing = mask_template()
     dataset = make_mask_dataset(mask=existing)
@@ -1664,6 +1733,7 @@ def test_mask_missing_time_dimensions_is_rejected(dims):
         dataset._resolve_mask()
 
 
+@pytest.mark.pruned
 def test_mask_with_extra_dimensions_is_allowed():
     mask = xr.DataArray(
         np.zeros((1, 1, 2), dtype=bool),
@@ -1679,6 +1749,7 @@ def test_mask_with_extra_dimensions_is_allowed():
     assert dataset._resolve_mask() is None
 
 
+@pytest.mark.pruned
 def test_sampling_selectors_use_input_times_and_configured_leads():
     config = ConcreteDatasetConfig(forecast=make_data_config(), lead_times=[1, 2])
     selected = xr.DataArray(
@@ -1694,6 +1765,7 @@ def test_sampling_selectors_use_input_times_and_configured_leads():
     assert selectors[LEAD_TIME_DIM] is config.lead_times
 
 
+@pytest.mark.pruned
 def test_sampling_selectors_pass_through_input_times_placeholder():
     config = ConcreteDatasetConfig(
         forecast=make_data_config(), lead_times=np.asarray([1, 3])
@@ -1738,12 +1810,14 @@ def test_prepare_sampling_mask_requires_both_selectors(selectors):
         dataset._prepare_sampling_mask(selectors)
 
 
+@pytest.mark.pruned
 def test_prepare_sampling_mask_returns_self():
     dataset = make_sampling_dataset()
 
     assert dataset._prepare_sampling_mask(full_selectors(dataset)) is dataset
 
 
+@pytest.mark.pruned
 def test_prepare_sampling_mask_selects_time_subset():
     dataset = make_sampling_dataset()
 
@@ -1755,6 +1829,7 @@ def test_prepare_sampling_mask_selects_time_subset():
     assert dataset.mask[INIT_TIME_DIM].values[0] == np.datetime64("2001-01-01", "ns")
 
 
+@pytest.mark.pruned
 def test_prepare_sampling_mask_selects_lead_subset():
     dataset = make_sampling_dataset()
 
@@ -1766,6 +1841,7 @@ def test_prepare_sampling_mask_selects_lead_subset():
     assert dataset.mask[LEAD_TIME_DIM].item() == 2
 
 
+@pytest.mark.pruned
 def test_prepare_sampling_mask_turns_masked_samples_into_nan():
     dataset = make_sampling_dataset()
 
@@ -1786,6 +1862,7 @@ def test_ensemble_mean_does_not_add_realization_dimension():
     assert REALIZATION_DIM not in dataset.mask.dims
 
 
+@pytest.mark.pruned
 def test_member_forecast_without_realization_coordinate_is_not_expanded():
     dataset = make_sampling_dataset(ensemble_mean=False, realizations=None)
 
@@ -1810,6 +1887,7 @@ def make_coord_dataset(mask):
     )
 
 
+@pytest.mark.pruned
 def test_all_valid_locations_are_returned():
     mask = make_mask(
         (INIT_TIME_DIM, LEAD_TIME_DIM),
@@ -1823,6 +1901,7 @@ def test_all_valid_locations_are_returned():
     assert len(result[LEAD_TIME_DIM]) == 4
 
 
+@pytest.mark.pruned
 def test_nan_locations_are_removed():
     mask = make_mask(
         (INIT_TIME_DIM, LEAD_TIME_DIM),
@@ -1836,6 +1915,7 @@ def test_nan_locations_are_removed():
     assert len(result[LEAD_TIME_DIM]) == 3
 
 
+@pytest.mark.pruned
 def test_all_nan_mask_gives_empty_coordinates():
     mask = make_mask(
         (INIT_TIME_DIM, LEAD_TIME_DIM), MASK_TEMPLATE_COORDS, np.full((2, 2), np.nan)
@@ -1847,6 +1927,7 @@ def test_all_nan_mask_gives_empty_coordinates():
     assert result[LEAD_TIME_DIM].size == 0
 
 
+@pytest.mark.pruned
 def test_sampling_coordinates_keep_realization_dimension_order():
     mask = make_mask(
         (REALIZATION_DIM, INIT_TIME_DIM, LEAD_TIME_DIM),
@@ -1878,10 +1959,12 @@ def test_forecast_indexes_are_none_when_forecast_not_loaded():
     assert make_forecast_dataset(load_forecast=False).get_forecast_indexes({}) is None
 
 
+@pytest.mark.pruned
 def test_forecast_indexes_for_empty_mapping_are_empty():
     assert make_forecast_dataset().get_forecast_indexes({}) == {}
 
 
+@pytest.mark.pruned
 def test_forecast_time_indexes_follow_requested_order():
     result = make_forecast_dataset().get_forecast_indexes(
         {
@@ -1894,6 +1977,7 @@ def test_forecast_time_indexes_follow_requested_order():
     np.testing.assert_array_equal(result[INIT_TIME_DIM], [1, 0])
 
 
+@pytest.mark.pruned
 def test_forecast_lead_indexes():
     result = make_forecast_dataset().get_forecast_indexes(
         {LEAD_TIME_DIM: np.asarray([2, 1])}
@@ -1902,6 +1986,7 @@ def test_forecast_lead_indexes():
     np.testing.assert_array_equal(result[LEAD_TIME_DIM], [1, 0])
 
 
+@pytest.mark.pruned
 def test_forecast_realization_indexes():
     result = make_forecast_dataset(realizations=[0, 1, 2]).get_forecast_indexes(
         {REALIZATION_DIM: np.asarray([2, 0])}
@@ -1938,6 +2023,7 @@ def test_missing_forecast_coordinate_is_reported(dimension, bad_value):
         dataset.get_forecast_indexes({dimension: np.asarray([bad_value])})
 
 
+@pytest.mark.pruned
 def test_multiple_missing_forecast_dimensions_are_all_reported():
     dataset = make_forecast_dataset(realizations=[0, 1])
 
@@ -1964,6 +2050,7 @@ def make_condition_dataset(method, condition):
     return ConcreteDataset(config=config)
 
 
+@pytest.mark.pruned
 def test_condition_indexes_are_none_without_condition():
     dataset = make_condition_dataset("ensemble_mean", None)
 
@@ -1977,6 +2064,7 @@ def test_condition_indexes_are_none_for_static_method(method):
     assert dataset.get_cond_indexes({}) is None
 
 
+@pytest.mark.pruned
 def test_condition_indexes_for_empty_mapping_are_empty():
     dataset = make_condition_dataset(
         "ensemble_mean", make_data_config(name="condition", ensemble_mean=True)
@@ -1985,6 +2073,7 @@ def test_condition_indexes_for_empty_mapping_are_empty():
     assert dataset.get_cond_indexes({}) == {}
 
 
+@pytest.mark.pruned
 def test_unknown_dimensions_are_ignored_for_condition_indexes():
     dataset = make_condition_dataset(
         "ensemble_mean", make_data_config(name="condition", ensemble_mean=True)
@@ -1995,6 +2084,7 @@ def test_unknown_dimensions_are_ignored_for_condition_indexes():
     assert "unknown" not in result
 
 
+@pytest.mark.pruned
 def test_time_and_lead_condition_indexes():
     dataset = make_condition_dataset(
         "ensemble_mean", make_data_config(name="condition", ensemble_mean=True)
@@ -2011,6 +2101,7 @@ def test_time_and_lead_condition_indexes():
     np.testing.assert_array_equal(result[LEAD_TIME_DIM], [1])
 
 
+@pytest.mark.pruned
 def test_cross_ensemble_condition_indexes_exclude_realization():
     condition = make_data_config(
         name="condition", ensemble_mean=False, realizations=[0, 1]
@@ -2028,6 +2119,7 @@ def test_cross_ensemble_condition_indexes_exclude_realization():
     assert REALIZATION_DIM not in result
 
 
+@pytest.mark.pruned
 def test_same_member_condition_indexes_require_realization():
     condition = make_data_config(
         name="condition", ensemble_mean=False, realizations=[0, 1]
@@ -2076,6 +2168,7 @@ def test_missing_condition_coordinates_are_reported(method, sample_coords):
         dataset.get_cond_indexes(sample_coords)
 
 
+@pytest.mark.pruned
 def test_multiple_missing_condition_coordinates_are_all_reported():
     condition = make_data_config(
         name="condition", ensemble_mean=False, realizations=[0, 1]
@@ -2110,6 +2203,7 @@ def model_dataset_with_values(values):
     return dataset, model
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize("sample_index,expected", [(0, 10.0), (1, 20.0)])
 def test_forecast_sample_selects_matching_time(sample_index, expected):
     dataset, model = model_dataset_with_values([10.0, 20.0])
@@ -2150,6 +2244,7 @@ def test_forecast_sample_converts_indexes_to_python_ints():
     assert result == "MODEL"
 
 
+@pytest.mark.pruned
 def test_forecast_sample_with_all_selection_dimensions():
     model = make_data_config(realizations=[0, 1])
     model.isel = Mock(return_value=model.data)
@@ -2172,6 +2267,7 @@ def test_forecast_sample_with_all_selection_dimensions():
     )
 
 
+@pytest.mark.pruned
 def test_forecast_sample_with_empty_mapping_calls_isel_without_arguments():
     model = make_data_config()
     model.isel = Mock(return_value=model.data)
@@ -2249,6 +2345,7 @@ def test_cross_ensemble_sample_draws_random_member():
     assert result == "CONDITION"
 
 
+@pytest.mark.pruned
 def test_input_shape_without_spatial_dimensions_counts_channels():
     model = make_data_config(
         names=["tas", "pr"], preprocessing_pipeline=make_pipeline()
@@ -2258,6 +2355,7 @@ def test_input_shape_without_spatial_dimensions_counts_channels():
     assert dataset.get_input_shape() == (2,)
 
 
+@pytest.mark.pruned
 def test_input_shape_uses_spatial_dimensions():
     model = make_data_config(
         names=["tas", "pr"],
@@ -2290,6 +2388,7 @@ def test_input_shape_uses_flattener_locations():
     pipeline.get_flattener.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_added_features_dimension_counts_selected_features():
     features = AddedTimeFeatures(
         TimeFeatureReference(), [LEAD_TIME_DIM, "month_sin", "month_cos"]
@@ -2299,6 +2398,7 @@ def test_added_features_dimension_counts_selected_features():
     assert dataset.get_added_features_dim() == 3
 
 
+@pytest.mark.pruned
 def test_added_features_dimension_is_zero_without_features():
     dataset = ConcreteDataset(
         config=ConcreteDatasetConfig(forecast=make_data_config()),
@@ -2308,10 +2408,12 @@ def test_added_features_dimension_is_zero_without_features():
     assert dataset.get_added_features_dim() == 0
 
 
+@pytest.mark.pruned
 def test_compute_with_no_arrays_returns_empty_tuple():
     assert ConcreteDataset._compute() == ()
 
 
+@pytest.mark.pruned
 def test_compute_preserves_argument_order_for_numpy_arrays():
     arrays = (np.asarray([1]), np.asarray([2]), np.asarray([3]))
 
@@ -2322,6 +2424,7 @@ def test_compute_preserves_argument_order_for_numpy_arrays():
         np.testing.assert_array_equal(actual, expected)
 
 
+@pytest.mark.pruned
 def test_compute_uses_synchronous_scheduler_and_suppresses_stderr():
     with (
         patch.object(module, "suppress_stderr", return_value=MagicMock()) as suppress,
@@ -2338,6 +2441,7 @@ def test_compute_uses_synchronous_scheduler_and_suppresses_stderr():
     assert result == ("FIRST", "SECOND")
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize("length", [0, 1, 2, 10])
 def test_len_uses_first_coordinate_length(length):
     dataset = ConcreteDataset(config=ConcreteDatasetConfig(forecast=make_data_config()))
@@ -2346,6 +2450,7 @@ def test_len_uses_first_coordinate_length(length):
     assert len(dataset) == length
 
 
+@pytest.mark.pruned
 def test_len_ignores_later_coordinate_lengths():
     dataset = ConcreteDataset(config=ConcreteDatasetConfig(forecast=make_data_config()))
     dataset.sample_coords = {"first": np.arange(3), "second": np.arange(100)}
@@ -2353,6 +2458,7 @@ def test_len_ignores_later_coordinate_lengths():
     assert len(dataset) == 3
 
 
+@pytest.mark.pruned
 def test_len_with_empty_mapping_raises_stop_iteration():
     dataset = ConcreteDataset(config=ConcreteDatasetConfig(forecast=make_data_config()))
     dataset.sample_coords = {}
@@ -2361,6 +2467,7 @@ def test_len_with_empty_mapping_raises_stop_iteration():
         len(dataset)
 
 
+@pytest.mark.pruned
 def test_getitem_returns_index():
     dataset = ConcreteDataset(config=ConcreteDatasetConfig(forecast=make_data_config()))
 
@@ -2389,6 +2496,7 @@ def test_initialisation_opens_forecast_with_time_features_enabled():
     )
 
 
+@pytest.mark.pruned
 def test_initialisation_skips_forecast_when_not_loaded():
     model = make_data_config()
     dataset = make_init_dataset_for_orchestration(forecast=model, load_forecast=False)
@@ -2399,6 +2507,7 @@ def test_initialisation_skips_forecast_when_not_loaded():
     assert dataset.forecast_indexes is None
 
 
+@pytest.mark.pruned
 def test_initialisation_opens_condition_with_time_features_enabled():
     condition = make_data_config(name="condition", ensemble_mean=True)
     dataset = make_init_dataset_for_orchestration(
@@ -2429,6 +2538,7 @@ def test_initialisation_disables_time_features_for_static_condition():
     )
 
 
+@pytest.mark.pruned
 def test_initialisation_without_condition_leaves_condition_indexes_empty():
     dataset = make_init_dataset_for_orchestration(
         forecast=make_data_config(), condition=None, method=None
@@ -2439,6 +2549,7 @@ def test_initialisation_without_condition_leaves_condition_indexes_empty():
     assert dataset.cond_indexes is None
 
 
+@pytest.mark.pruned
 def test_initialisation_copies_time_features():
     dataset = make_init_dataset_for_orchestration(forecast=make_data_config())
     original = dataset.time_features
@@ -2449,6 +2560,7 @@ def test_initialisation_copies_time_features():
     assert dataset.time_features == original
 
 
+@pytest.mark.pruned
 def test_initialisation_stores_sampling_coordinates():
     dataset = make_init_dataset_for_orchestration(forecast=make_data_config())
     expected = sample_coordinates()
@@ -2458,6 +2570,7 @@ def test_initialisation_stores_sampling_coordinates():
     assert dataset.sample_coords is expected
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "failing",
     [
@@ -2476,6 +2589,7 @@ def test_initialisation_propagates_stage_errors(failing):
         initialize_dataset(dataset, {failing: Mock(side_effect=RuntimeError(failing))})
 
 
+@pytest.mark.pruned
 def test_dataset_config_constructor_without_sources_fails_before_method_check():
     with pytest.raises(
         ValueError, match="either forecast or condition data must be provided"

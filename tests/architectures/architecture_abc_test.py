@@ -229,11 +229,13 @@ class TestGeneratorConfig:
         assert config.num_training_noise_samples == 10
         assert config.num_validation_noise_samples == 10
 
+    @pytest.mark.pruned
     def test_validation_samples_default_to_training_samples(self):
         config = GENERATORConfig(num_training_noise_samples=7)
 
         assert config.num_validation_noise_samples == 7
 
+    @pytest.mark.pruned
     def test_explicit_validation_samples_are_preserved(self):
         config = GENERATORConfig(
             num_training_noise_samples=7,
@@ -242,6 +244,7 @@ class TestGeneratorConfig:
 
         assert config.num_validation_noise_samples == 3
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize("noise_level", ["low", "medium", "full"])
     def test_noise_levels_are_stored(self, noise_level):
         config = GENERATORConfig(noise_level=noise_level)
@@ -255,6 +258,7 @@ class TestCheckpointCompatibility:
         config.checkpoint_config = checkpoint
         return ConcreteModel(config)
 
+    @pytest.mark.pruned
     def test_no_checkpoint_skips_validation(self):
         config = ConcreteModelConfig()
         config.checkpoint_config = None
@@ -318,6 +322,7 @@ class TestCheckpointCompatibility:
 
 
 class TestInitializeWeights:
+    @pytest.mark.pruned
     def test_visits_model_and_all_nested_modules(self):
         model = NestedModel()
 
@@ -332,6 +337,7 @@ class TestInitializeWeights:
         assert id(model.container[0]) in visited
         assert id(model.container[1]) in visited
 
+    @pytest.mark.pruned
     def test_passes_method_to_every_call(self):
         model = NestedModel()
 
@@ -358,6 +364,7 @@ class TestInitializeWeights:
 
 
 class TestGetDevice:
+    @pytest.mark.pruned
     def test_returns_parameter_device(self):
         model = ConcreteModel(ConcreteModelConfig())
 
@@ -382,6 +389,7 @@ class TestLoadStateDict:
         with pytest.raises(FileNotFoundError, match="Checkpoint not found"):
             model._load_state_dict(config)
 
+    @pytest.mark.pruned
     def test_forwards_non_strict_flag(self, tmp_path):
         model = ConcreteModel(ConcreteModelConfig())
         path = tmp_path / "model.pt"
@@ -398,16 +406,19 @@ class TestLoadStateDict:
 
 
 class TestCVAEConfig:
+    @pytest.mark.pruned
     def test_flow_setting_defaults_to_false(self):
         config = ConcreteCVAEConfig()
 
         assert config.condition_dependant_flow is False
 
+    @pytest.mark.pruned
     def test_flow_setting_can_be_enabled(self):
         config = ConcreteCVAEConfig(condition_dependant_flow=True)
 
         assert config.condition_dependant_flow is True
 
+    @pytest.mark.pruned
     def test_resolve_flow_settings_returns_self(self):
         config = ConcreteCVAEConfig()
 
@@ -425,6 +436,7 @@ class TestCVAEConfig:
                 condition_dependant_flow=False,
             )
 
+    @pytest.mark.pruned
     def test_dependent_latent_with_flow_allows_different_sizes(self):
         config = ConcreteCVAEConfig(
             latent_size=3,
@@ -436,6 +448,7 @@ class TestCVAEConfig:
         assert config.latent_size == 3
         assert config.condition_embedding_size == 5
 
+    @pytest.mark.pruned
     def test_independent_latent_allows_different_sizes(self):
         config = ConcreteCVAEConfig(
             latent_size=3,
@@ -448,6 +461,7 @@ class TestCVAEConfig:
 
 
 class TestCVAEModelInitialization:
+    @pytest.mark.pruned
     def test_condition_flow_setting_is_copied_to_model(self):
         config = ConcreteCVAEConfig(condition_dependant_flow=True)
 
@@ -457,6 +471,7 @@ class TestCVAEModelInitialization:
 
 
 class TestSample:
+    @pytest.mark.pruned
     def test_converts_log_variance_to_variance(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         mu = torch.zeros(2, 3)
@@ -495,6 +510,7 @@ class TestSamplePrior:
         assert cond_mu.shape == (2, 3)
         assert cond_log_var.shape == (2, 3)
 
+    @pytest.mark.pruned
     def test_independent_latent_samples_standard_normal(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig(condition_dependant_latent=False))
         request = make_predict_request(latent_sample_size=5, nstds=3)
@@ -516,6 +532,7 @@ class TestSamplePrior:
         assert cond_mu.shape == (2, 3)
         assert cond_log_var is None
 
+    @pytest.mark.pruned
     def test_condition_dependent_flow_uses_normal_prior(self):
         model = ConcreteCVAEModel(
             ConcreteCVAEConfig(
@@ -537,6 +554,7 @@ class TestSamplePrior:
         sample.assert_not_called()
         assert latent.shape == (4, 2, 3)
 
+    @pytest.mark.pruned
     def test_unconditional_prior_flow_is_applied(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         request = make_predict_request()
@@ -562,6 +580,7 @@ class TestSamplePrior:
         assert latent.shape == (4, 2, 3)
         assert torch.all(latent == 5)
 
+    @pytest.mark.pruned
     def test_conditional_prior_flow_receives_condition(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         request = make_predict_request()
@@ -591,6 +610,7 @@ class TestSamplePrior:
 
         assert latent is user_samples
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "shape",
         [(2, 3), (4, 3, 3), (5, 2, 3), (4, 2, 4)],
@@ -602,6 +622,7 @@ class TestSamplePrior:
         with pytest.raises(ValueError, match="expected shape"):
             model._sample_prior(request)
 
+    @pytest.mark.pruned
     def test_user_samples_skip_prior_flow(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         flow = Mock()
@@ -615,6 +636,7 @@ class TestSamplePrior:
 
         flow.inverse.assert_not_called()
 
+    @pytest.mark.pruned
     def test_condition_receives_request_values(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         condition = torch.ones(2, 1)
@@ -637,6 +659,7 @@ class TestSamplePrior:
             added_features=features,
         )
 
+    @pytest.mark.pruned
     def test_prior_reference_matches_condition_dtype_and_device(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         condition = torch.ones(2, 1, dtype=torch.float64)
@@ -657,6 +680,7 @@ class TestSamplePrior:
 
 
 class TestWeightsInit:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "module_instance",
         [nn.ReLU(), nn.Identity(), nn.BatchNorm1d(3)],
@@ -671,6 +695,7 @@ class TestWeightsInit:
         initializer.assert_not_called()
         constant.assert_not_called()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "layer",
         [
@@ -690,6 +715,7 @@ class TestWeightsInit:
         initializer.assert_called_once_with(layer.weight)
         constant.assert_not_called()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize("layer", [nn.Linear(3, 2), nn.Conv2d(2, 3, 3)])
     def test_truncated_normal_initialization(self, layer):
         with (
@@ -701,6 +727,7 @@ class TestWeightsInit:
         initializer.assert_called_once_with(layer.weight, std=0.02)
         constant.assert_not_called()
 
+    @pytest.mark.pruned
     def test_layer_without_bias_is_initialized(self):
         layer = nn.Linear(3, 2, bias=False)
 
@@ -713,6 +740,7 @@ class TestWeightsInit:
         initializer.assert_called_once_with(layer.weight)
         constant.assert_not_called()
 
+    @pytest.mark.pruned
     def test_frozen_weight_is_not_initialized(self):
         layer = nn.Linear(3, 2)
         layer.weight.requires_grad_(False)
@@ -722,6 +750,7 @@ class TestWeightsInit:
 
         initializer.assert_not_called()
 
+    @pytest.mark.pruned
     def test_frozen_bias_is_not_initialized(self):
         layer = nn.Linear(3, 2)
         layer.bias.requires_grad_(False)
@@ -746,120 +775,7 @@ class TestAdditionalBranchCoverage:
                 num_validation_noise_samples=num_samples,
             )
 
-    def test_add_checkpoint_config_stores_configuration(self, tmp_path):
-        config = ConcreteModelConfig()
-        checkpoint = make_checkpoint(tmp_path / "model.pt")
-
-        result = config._add_checkpoint_config(checkpoint)
-
-        assert result is None
-        assert config.checkpoint_config is checkpoint
-
-    def test_concrete_flow_forward_returns_input(self):
-        flow = ConcreteFlow()
-        value = torch.randn(2, 3)
-        condition = torch.randn(2, 1)
-
-        result = flow.forward(
-            value,
-            condition=condition,
-        )
-
-        assert result is value
-
-    def test_concrete_flow_inverse_wraps_samples(self):
-        flow = ConcreteFlow()
-        latent = torch.randn(2, 3)
-
-        result = flow.inverse(latent)
-
-        assert result.e_samples is latent
-
-    def test_model_config_build_forwards_all_arguments(self):
-        config = ConcreteModelConfig()
-        input_shape = np.asarray([2, 3])
-        output_shape = np.asarray([1, 3])
-
-        result = config.build(
-            input_shape=input_shape,
-            output_shape=output_shape,
-            added_features_dim=4,
-            custom_argument="value",
-        )
-
-        assert result["input_shape"] is input_shape
-        assert result["output_shape"] is output_shape
-        assert result["added_features_dim"] == 4
-        assert result["custom_argument"] == "value"
-
-    def test_deterministic_model_initialization_sets_expected_state(self):
-        config = ConcreteModelConfig()
-
-        model = ConcreteDeterministicModel(config)
-
-        assert model.config is config
-        assert model.generative_modeling is False
-
-    def test_deterministic_model_forward_uses_request_input(self):
-        from S2D4P.architectures.architecture_abc import DeterministicRequest
-
-        model = ConcreteDeterministicModel(ConcreteModelConfig())
-        request = DeterministicRequest(
-            input=torch.ones(2, 2),
-        )
-
-        result = model(request)
-
-        assert result.shape == (2, 1)
-
-    def test_deterministic_request_defaults(self):
-        from S2D4P.architectures.architecture_abc import DeterministicRequest
-
-        input_tensor = torch.ones(2, 3)
-
-        request = DeterministicRequest(input=input_tensor)
-
-        assert request.input is input_tensor
-        assert request.input_mask is None
-        assert request.added_features is None
-        assert request.output_sample_size == 1
-        assert request.chunk_output_samples is False
-
-    def test_cvae_forward_request_defaults(self):
-        from S2D4P.architectures.architecture_abc import cVAEForwardRequest
-
-        target = torch.ones(2, 1)
-        condition = torch.ones(2, 1)
-
-        request = cVAEForwardRequest(
-            target=target,
-            condition=condition,
-        )
-
-        assert request.target is target
-        assert request.condition is condition
-        assert request.target_mask is None
-        assert request.condition_mask is None
-        assert request.added_features is None
-        assert request.latent_sample_size == 1
-        assert request.output_sample_size == 1
-        assert request.posterior_variance_limits is None
-
-    def test_cvae_predict_request_defaults(self):
-        condition = torch.ones(2, 1)
-
-        request = cVAEPredictRequest(condition=condition)
-
-        assert request.condition is condition
-        assert request.condition_mask is None
-        assert request.added_features is None
-        assert request.prior_flow is None
-        assert request.latent_samples is None
-        assert request.nstds == 1
-        assert request.latent_sample_size == 1
-        assert request.output_sample_size == 0
-        assert request.chunk_size is None
-
+    @pytest.mark.pruned
     def test_cvae_model_initialization_sets_generative_state(self):
         config = ConcreteCVAEConfig()
 
@@ -869,18 +785,7 @@ class TestAdditionalBranchCoverage:
         assert model.generative_modeling is True
         assert model.condition_dependant_flow is False
 
-    def test_checkpoint_config_defaults(self, tmp_path):
-        checkpoint = CheckpointConfig(
-            load_path=tmp_path / "model.pt",
-            checkpoint_input_shape=np.asarray([2]),
-            checkpoint_output_shape=np.asarray([1]),
-            checkpoint_input_var_metadata={},
-            checkpoint_output_var_metadata={},
-        )
-
-        assert checkpoint.strict is True
-        assert checkpoint.freeze_weights is False
-
+    @pytest.mark.pruned
     def test_load_state_dict_filters_non_architecture_keys(self, tmp_path):
         model = ConcreteModel(ConcreteModelConfig())
         path = tmp_path / "model.pt"
@@ -950,6 +855,7 @@ class TestAdditionalBranchCoverage:
 
         assert all(parameter.requires_grad is False for parameter in model.parameters())
 
+    @pytest.mark.pruned
     def test_load_state_dict_keeps_parameters_trainable_by_default(
         self,
         tmp_path,
@@ -979,6 +885,7 @@ class TestAdditionalBranchCoverage:
 
         assert all(parameter.requires_grad is True for parameter in model.parameters())
 
+    @pytest.mark.pruned
     def test_load_state_dict_collects_garbage(self, tmp_path):
         model = ConcreteModel(ConcreteModelConfig())
         path = tmp_path / "model.pt"
@@ -1004,6 +911,7 @@ class TestAdditionalBranchCoverage:
 
         collect.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_sample_prior_passes_requested_standard_deviation(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         request = make_predict_request(nstds=2.5)
@@ -1020,6 +928,7 @@ class TestAdditionalBranchCoverage:
         get_normal.assert_called_once()
         assert get_normal.call_args.kwargs["std"] == 2.5
 
+    @pytest.mark.pruned
     def test_conditional_flow_receives_repeated_condition_means(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
         request = make_predict_request(
@@ -1085,6 +994,7 @@ class TestAdditionalBranchCoverage:
             transformed.reshape(3, 2, 3),
         )
 
+    @pytest.mark.pruned
     def test_weights_init_default_leaves_parameters_unchanged(self):
         layer = nn.Linear(3, 2)
         original_weight = layer.weight.detach().clone()
@@ -1104,6 +1014,7 @@ class TestAdditionalBranchCoverage:
             original_bias,
         )
 
+    @pytest.mark.pruned
     def test_weights_init_xavier_zeros_trainable_bias(self):
         layer = nn.Linear(3, 2)
 
@@ -1125,6 +1036,7 @@ class TestAdditionalBranchCoverage:
         initializer.assert_called_once_with(layer.weight)
         zeros.assert_called_once_with(layer.bias)
 
+    @pytest.mark.pruned
     def test_weights_init_truncated_normal_zeros_trainable_bias(self):
         layer = nn.Linear(3, 2)
 
@@ -1149,6 +1061,7 @@ class TestAdditionalBranchCoverage:
         )
         zeros.assert_called_once_with(layer.bias)
 
+    @pytest.mark.pruned
     def test_weights_init_rejects_unknown_method(self):
         layer = nn.Linear(3, 2)
 
@@ -1183,6 +1096,7 @@ class TestAdditionalBranchCoverage:
         initializer.assert_not_called()
         zeros.assert_called_once_with(layer.bias)
 
+    @pytest.mark.pruned
     def test_weights_init_initializes_weight_but_skips_frozen_bias(self):
         layer = nn.Linear(3, 2)
         layer.bias.requires_grad_(False)

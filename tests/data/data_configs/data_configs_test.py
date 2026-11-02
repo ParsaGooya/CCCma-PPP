@@ -109,6 +109,7 @@ def build_condition(info=None, **overrides):
         return ConditionDataConfig(**values)
 
 
+@pytest.mark.pruned
 def test_forecast_basic_fields():
     cfg = build_forecast()
 
@@ -116,22 +117,26 @@ def test_forecast_basic_fields():
     assert cfg.names == ["var"]
 
 
+@pytest.mark.pruned
 def test_forecast_type():
     assert build_forecast().TYPE == "forecast"
 
 
+@pytest.mark.pruned
 def test_forecast_realization_list_defaults_to_none():
     cfg = build_forecast()
 
     assert cfg.realization_list is None
 
 
+@pytest.mark.pruned
 def test_forecast_realization_list_is_stored():
     cfg = build_forecast(realization_list=[0])
 
     assert cfg.realization_list == [0]
 
 
+@pytest.mark.pruned
 def test_forecast_default_fields():
     cfg = build_forecast(paths="input/*.nc", names=["tas"])
 
@@ -143,6 +148,7 @@ def test_forecast_default_fields():
     assert cfg.drop_vars_list is None
 
 
+@pytest.mark.pruned
 def test_forecast_time_range_uses_max_lead_time():
     info = DummyInfo(
         init_times=make_init_times("2000-01-01", "2005-01-01"),
@@ -157,6 +163,7 @@ def test_forecast_time_range_uses_max_lead_time():
     )
 
 
+@pytest.mark.pruned
 def test_forecast_time_range_extends_with_longer_lead_time():
     info = DummyInfo(
         init_times=make_init_times("2000-01-01", "2005-01-01"),
@@ -168,6 +175,7 @@ def test_forecast_time_range_extends_with_longer_lead_time():
     assert cfg.time_range[-1] == np.datetime64("2006-12-01")
 
 
+@pytest.mark.pruned
 def test_forecast_passes_max_lead_time_to_builder():
     info = DummyInfo(
         init_times=make_init_times("2000-01-01", "2000-03-01"),
@@ -185,6 +193,7 @@ def test_forecast_passes_max_lead_time_to_builder():
     assert mock_build.call_args.kwargs["lead_time_resolution"] == lead_time_resolution
 
 
+@pytest.mark.pruned
 def test_forecast_passes_exact_time_range_arguments():
     info = DummyInfo(
         init_times=make_init_times("2001-01-01", "2002-01-01"),
@@ -206,6 +215,7 @@ def test_forecast_passes_exact_time_range_arguments():
     )
 
 
+@pytest.mark.pruned
 def test_forecast_resolve_and_info_are_called():
     called = {"resolve": False, "info": False}
 
@@ -223,6 +233,7 @@ def test_forecast_resolve_and_info_are_called():
     assert called == {"resolve": True, "info": True}
 
 
+@pytest.mark.pruned
 def test_forecast_instances_get_distinct_preprocessing_pipelines():
     first = build_forecast(paths="first", names=["tas"])
     second = build_forecast(paths="second", names=["pr"])
@@ -230,11 +241,13 @@ def test_forecast_instances_get_distinct_preprocessing_pipelines():
     assert first.preprocessing_pipeline is not second.preprocessing_pipeline
 
 
+@pytest.mark.pruned
 def test_forecast_dimension_sets_come_from_configs():
     assert ForecastDataConfig._allowed_dims() == forecast_data_allowed_dimensions
     assert ForecastDataConfig._required_dims() == forecast_data_required_dimensions
 
 
+@pytest.mark.pruned
 def test_reference_basic_fields():
     cfg = build_reference()
 
@@ -242,6 +255,7 @@ def test_reference_basic_fields():
     assert cfg.names == ["var"]
 
 
+@pytest.mark.pruned
 def test_reference_type():
     assert build_reference().TYPE == "reference"
 
@@ -252,6 +266,7 @@ def test_reference_realization_list_is_stored():
     assert cfg.realization_list == [0]
 
 
+@pytest.mark.pruned
 def test_reference_default_fields():
     cfg = build_reference(paths="observations/*.nc", names=["tas"])
 
@@ -262,6 +277,7 @@ def test_reference_default_fields():
     assert cfg.rename_dict is None
 
 
+@pytest.mark.pruned
 def test_reference_time_range_is_single_lead_step():
     info = DummyInfo(init_times=make_init_times("2000-01-01", "2005-01-01"))
 
@@ -273,6 +289,7 @@ def test_reference_time_range_is_single_lead_step():
     )
 
 
+@pytest.mark.pruned
 def test_reference_passes_exact_time_range_arguments():
     info = DummyInfo(init_times=make_init_times("2001-01-01", "2002-01-01"))
     expected = object()
@@ -290,6 +307,7 @@ def test_reference_passes_exact_time_range_arguments():
     )
 
 
+@pytest.mark.pruned
 def test_reference_rejects_frequency_mismatch():
     info = DummyInfo()
     info.init_time_freq = "day"
@@ -306,11 +324,13 @@ def test_reference_frequency_error_reports_both_values():
         build_reference(info)
 
 
+@pytest.mark.pruned
 def test_reference_dimension_sets_come_from_configs():
     assert RefDataConfig._allowed_dims() == reference_data_allowed_dimensions
     assert RefDataConfig._required_dims() == reference_data_required_dimensions
 
 
+@pytest.mark.pruned
 def test_condition_basic_fields():
     cfg = build_condition()
 
@@ -318,16 +338,19 @@ def test_condition_basic_fields():
     assert cfg.names == ["var"]
 
 
+@pytest.mark.pruned
 def test_condition_type():
     assert build_condition().TYPE == "condition"
 
 
+@pytest.mark.pruned
 def test_condition_realization_list_is_stored():
     cfg = build_condition(realization_list=[0])
 
     assert cfg.realization_list == [0]
 
 
+@pytest.mark.pruned
 def test_condition_default_fields():
     cfg = build_condition(paths="conditions/*.nc", names=["zg"])
 
@@ -338,6 +361,7 @@ def test_condition_default_fields():
     assert cfg.rename_dict is None
 
 
+@pytest.mark.pruned
 def test_condition_time_range_uses_max_lead_time():
     info = DummyInfo(
         init_times=make_init_times("2000-01-01", "2005-01-01"),
@@ -352,6 +376,7 @@ def test_condition_time_range_uses_max_lead_time():
     )
 
 
+@pytest.mark.pruned
 def test_condition_time_range_extends_with_longer_lead_time():
     info = DummyInfo(
         init_times=make_init_times("2000-01-01", "2005-01-01"),
@@ -363,6 +388,7 @@ def test_condition_time_range_extends_with_longer_lead_time():
     assert cfg.time_range[-1] == np.datetime64("2006-12-01")
 
 
+@pytest.mark.pruned
 def test_condition_passes_max_lead_time_to_builder():
     info = DummyInfo(lead_times=make_lead_times([1, 6, 12]))
 
@@ -393,6 +419,7 @@ def test_condition_incomplete_bounds_set_time_range_to_none(start_time, final_ti
     assert cfg.time_range is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("start_time", "final_time"),
     [
@@ -410,6 +437,7 @@ def test_condition_incomplete_bounds_skip_time_range_builder(start_time, final_t
     build.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_condition_complete_bounds_build_time_range():
     info = DummyInfo(
         start_time=np.datetime64("2000-01-01"),
@@ -432,6 +460,7 @@ def test_condition_complete_bounds_build_time_range():
     )
 
 
+@pytest.mark.pruned
 def test_condition_resolve_and_info_are_called():
     called = {"resolve": False, "info": False}
 
@@ -449,11 +478,13 @@ def test_condition_resolve_and_info_are_called():
     assert called == {"resolve": True, "info": True}
 
 
+@pytest.mark.pruned
 def test_condition_dimension_sets_come_from_configs():
     assert ConditionDataConfig._allowed_dims() == condition_data_allowed_dimensions
     assert ConditionDataConfig._required_dims() == condition_data_required_dimensions
 
 
+@pytest.mark.pruned
 def test_build_time_range_monthly_datetime64():
     init_time = xr.DataArray(
         np.array(["2000-01-01", "2000-03-01"], dtype="datetime64[ns]"),
@@ -470,6 +501,7 @@ def test_build_time_range_monthly_datetime64():
     np.testing.assert_array_equal(np.asarray(result), np.asarray(expected))
 
 
+@pytest.mark.pruned
 def test_build_time_range_daily_datetime64():
     init_time = xr.DataArray(
         np.array(["2000-01-01", "2000-01-03"], dtype="datetime64[ns]"),
@@ -492,6 +524,7 @@ def test_build_time_range_daily_datetime64():
     np.testing.assert_array_equal(np.asarray(result), np.asarray(expected))
 
 
+@pytest.mark.pruned
 def test_build_time_range_single_lead_time_ends_at_latest_init():
     init_time = xr.DataArray(
         np.array(["2000-01-01", "2000-03-01"], dtype="datetime64[ns]"),
@@ -508,6 +541,7 @@ def test_build_time_range_single_lead_time_ends_at_latest_init():
     np.testing.assert_array_equal(np.asarray(result), np.asarray(expected))
 
 
+@pytest.mark.pruned
 def test_build_time_range_monthly_result_is_inclusive():
     init_time = xr.DataArray(
         np.array(["2000-01-01", "2000-03-01"], dtype="datetime64[ns]"),
@@ -525,6 +559,7 @@ def test_build_time_range_monthly_result_is_inclusive():
     assert len(result) == 6
 
 
+@pytest.mark.pruned
 def test_build_time_range_daily_result_is_inclusive():
     init_time = xr.DataArray(
         np.array(["2000-01-01", "2000-01-03"], dtype="datetime64[ns]"),
@@ -542,6 +577,7 @@ def test_build_time_range_daily_result_is_inclusive():
     assert len(result) == 6
 
 
+@pytest.mark.pruned
 def test_build_time_range_uses_min_and_max_of_unsorted_init_times():
     init_time = xr.DataArray(
         np.array(
@@ -561,6 +597,7 @@ def test_build_time_range_uses_min_and_max_of_unsorted_init_times():
     np.testing.assert_array_equal(np.asarray(result), np.asarray(expected))
 
 
+@pytest.mark.pruned
 def test_build_time_range_does_not_mutate_input_order():
     values = np.array(
         ["2000-03-01", "2000-01-01", "2000-02-01"],
@@ -577,6 +614,7 @@ def test_build_time_range_does_not_mutate_input_order():
     np.testing.assert_array_equal(init_time.values, values)
 
 
+@pytest.mark.pruned
 def test_build_time_range_single_datetime64_value():
     init_time = xr.DataArray(
         np.array(["2000-01-01"], dtype="datetime64[ns]"),
@@ -596,6 +634,7 @@ def test_build_time_range_single_datetime64_value():
     np.testing.assert_array_equal(np.asarray(result), expected)
 
 
+@pytest.mark.pruned
 def test_build_time_range_cftime_monthly():
     init_time = xr.DataArray(
         [
@@ -616,6 +655,7 @@ def test_build_time_range_cftime_monthly():
     assert result[-1] == cftime.DatetimeNoLeap(2000, 5, 1)
 
 
+@pytest.mark.pruned
 def test_build_time_range_cftime_daily():
     init_time = xr.DataArray(
         [
@@ -636,6 +676,7 @@ def test_build_time_range_cftime_daily():
     assert result[-1] == cftime.DatetimeNoLeap(2001, 1, 5)
 
 
+@pytest.mark.pruned
 def test_build_time_range_preserves_noleap_calendar():
     init_time = xr.DataArray(
         [
@@ -655,6 +696,7 @@ def test_build_time_range_preserves_noleap_calendar():
     assert all(isinstance(value, cftime.DatetimeNoLeap) for value in result)
 
 
+@pytest.mark.pruned
 def test_build_time_range_supports_360_day_calendar():
     init_time = xr.DataArray(
         [
@@ -675,6 +717,7 @@ def test_build_time_range_supports_360_day_calendar():
     assert result[-1] == cftime.Datetime360Day(2000, 4, 1)
 
 
+@pytest.mark.pruned
 def test_build_time_range_single_cftime_value():
     init_time = xr.DataArray(
         [cftime.DatetimeNoLeap(2000, 1, 1)],
@@ -729,6 +772,7 @@ def test_build_time_range_rejects_integer_init_times():
         build_time_range(init_time=init_time)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "values",
     [
@@ -756,6 +800,7 @@ def test_build_time_range_rejects_unsupported_resolution(resolution):
         )
 
 
+@pytest.mark.pruned
 def test_build_time_range_resolution_error_lists_supported_values():
     with pytest.raises(ValueError, match=r"month.*day"):
         build_time_range(
@@ -764,6 +809,7 @@ def test_build_time_range_resolution_error_lists_supported_values():
         )
 
 
+@pytest.mark.pruned
 def test_build_time_range_validates_shape_before_type():
     init_time = xr.DataArray(np.ones((2, 2)), dims=("row", INIT_TIME_DIM))
 
@@ -771,6 +817,7 @@ def test_build_time_range_validates_shape_before_type():
         build_time_range(init_time=init_time)
 
 
+@pytest.mark.pruned
 def test_build_time_range_validates_lead_count_before_time_type():
     init_time = xr.DataArray([1, 2], dims=(INIT_TIME_DIM,))
 
@@ -778,6 +825,7 @@ def test_build_time_range_validates_lead_count_before_time_type():
         build_time_range(init_time=init_time, n_lead_times=0)
 
 
+@pytest.mark.pruned
 def test_build_time_range_validates_time_type_before_resolution():
     init_time = xr.DataArray([1, 2], dims=(INIT_TIME_DIM,))
 
@@ -785,6 +833,7 @@ def test_build_time_range_validates_time_type_before_resolution():
         build_time_range(init_time=init_time, lead_time_resolution="hour")
 
 
+@pytest.mark.pruned
 def test_build_time_range_calls_xarray_date_range_twice_for_monthly():
     init_time = xr.DataArray(
         np.array(["2000-01-01", "2000-03-01"], dtype="datetime64[ns]"),
@@ -816,6 +865,7 @@ def test_build_time_range_calls_xarray_date_range_twice_for_monthly():
     assert second_call.kwargs["use_cftime"] is False
 
 
+@pytest.mark.pruned
 def test_build_time_range_uses_daily_frequency_code():
     init_time = xr.DataArray(
         np.array(["2000-01-01", "2000-01-03"], dtype="datetime64[ns]"),
@@ -836,6 +886,7 @@ def test_build_time_range_uses_daily_frequency_code():
     assert all(call.kwargs["freq"] == "D" for call in date_range.call_args_list)
 
 
+@pytest.mark.pruned
 def test_build_time_range_uses_cftime_calendar_in_both_calls():
     init_time = xr.DataArray(
         [

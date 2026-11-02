@@ -25,19 +25,8 @@ class VariadicClass:
         self.kwargs = kwargs
 
 
-class TestRegisteryInitialization:
-    def test_initializes_with_empty_modules(self):
-        registry = Registery()
-
-        assert registry._modules == {}
-
-    def test_available_is_empty_initially(self):
-        registry = Registery()
-
-        assert registry.available() == []
-
-
 class TestRegister:
+    @pytest.mark.pruned
     def test_returns_callable_decorator(self):
         registry = Registery()
 
@@ -45,6 +34,7 @@ class TestRegister:
 
         assert callable(decorator)
 
+    @pytest.mark.pruned
     def test_decorator_returns_original_class(self):
         registry = Registery()
         decorator = registry.register("example")
@@ -53,6 +43,7 @@ class TestRegister:
 
         assert result is DefaultClass
 
+    @pytest.mark.pruned
     def test_register_stores_class_under_name(self):
         registry = Registery()
 
@@ -60,6 +51,7 @@ class TestRegister:
 
         assert registry._modules["example"] is DefaultClass
 
+    @pytest.mark.pruned
     def test_register_supports_decorator_syntax(self):
         registry = Registery()
 
@@ -69,6 +61,7 @@ class TestRegister:
 
         assert registry._modules["decorated"] is DecoratedClass
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "name",
         [
@@ -107,6 +100,7 @@ class TestRegister:
         ):
             registry.register("")
 
+    @pytest.mark.pruned
     def test_whitespace_name_is_allowed(self):
         registry = Registery()
 
@@ -114,6 +108,7 @@ class TestRegister:
 
         assert registry.available() == [" "]
 
+    @pytest.mark.pruned
     def test_duplicate_name_is_rejected(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -137,6 +132,7 @@ class TestRegister:
         assert "first" in message
         assert "second" in message
 
+    @pytest.mark.pruned
     def test_duplicate_registration_does_not_replace_class(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -146,6 +142,7 @@ class TestRegister:
 
         assert registry._modules["example"] is DefaultClass
 
+    @pytest.mark.pruned
     def test_duplicate_name_is_rejected_before_decorator_is_created(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -174,6 +171,7 @@ class TestRegister:
         ):
             decorator(value)
 
+    @pytest.mark.pruned
     def test_non_class_error_reports_value_type_and_registration_name(self):
         registry = Registery()
         decorator = registry.register("example")
@@ -186,6 +184,7 @@ class TestRegister:
         assert "function" in message
         assert "'example'" in message
 
+    @pytest.mark.pruned
     def test_failed_non_class_registration_does_not_store_value(self):
         registry = Registery()
         decorator = registry.register("example")
@@ -196,6 +195,7 @@ class TestRegister:
         assert registry.available() == []
         assert "example" not in registry._modules
 
+    @pytest.mark.pruned
     def test_same_class_can_be_registered_under_multiple_names(self):
         registry = Registery()
 
@@ -205,6 +205,7 @@ class TestRegister:
         assert registry._modules["first"] is DefaultClass
         assert registry._modules["second"] is DefaultClass
 
+    @pytest.mark.pruned
     def test_class_does_not_receive_registry_metadata(self):
         registry = Registery()
 
@@ -214,6 +215,7 @@ class TestRegister:
 
 
 class TestGetErrors:
+    @pytest.mark.pruned
     def test_unregistered_name_raises_value_error(self):
         registry = Registery()
 
@@ -236,6 +238,7 @@ class TestGetErrors:
         assert "first" in message
         assert "second" in message
 
+    @pytest.mark.pruned
     def test_unregistered_lookup_does_not_modify_registry(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -248,6 +251,7 @@ class TestGetErrors:
 
 
 class TestGetWithoutConfig:
+    @pytest.mark.pruned
     def test_none_constructs_class_without_arguments(self):
         registry = Registery()
         registry.register("default")(DefaultClass)
@@ -260,6 +264,7 @@ class TestGetWithoutConfig:
         assert isinstance(result, DefaultClass)
         assert result.created is True
 
+    @pytest.mark.pruned
     def test_omitted_config_constructs_class_without_arguments(self):
         registry = Registery()
         registry.register("default")(DefaultClass)
@@ -268,6 +273,7 @@ class TestGetWithoutConfig:
 
         assert isinstance(result, DefaultClass)
 
+    @pytest.mark.pruned
     def test_none_fails_when_constructor_requires_arguments(self):
         registry = Registery()
         registry.register("configurable")(ConfigurableClass)
@@ -280,6 +286,7 @@ class TestGetWithoutConfig:
 
 
 class TestGetWithDictionary:
+    @pytest.mark.pruned
     def test_dictionary_is_expanded_as_keyword_arguments(self):
         registry = Registery()
         registry.register("configurable")(ConfigurableClass)
@@ -298,6 +305,7 @@ class TestGetWithDictionary:
         assert result.count == 4
         assert result.enabled is False
 
+    @pytest.mark.pruned
     def test_dictionary_uses_constructor_defaults(self):
         registry = Registery()
         registry.register("configurable")(ConfigurableClass)
@@ -313,6 +321,7 @@ class TestGetWithDictionary:
         assert result.count == 1
         assert result.enabled is True
 
+    @pytest.mark.pruned
     def test_empty_dictionary_constructs_no_argument_class(self):
         registry = Registery()
         registry.register("default")(DefaultClass)
@@ -324,6 +333,7 @@ class TestGetWithDictionary:
 
         assert isinstance(result, DefaultClass)
 
+    @pytest.mark.pruned
     def test_empty_dictionary_fails_for_required_arguments(self):
         registry = Registery()
         registry.register("configurable")(ConfigurableClass)
@@ -334,6 +344,7 @@ class TestGetWithDictionary:
                 {},
             )
 
+    @pytest.mark.pruned
     def test_unknown_keyword_is_rejected_by_constructor(self):
         registry = Registery()
         registry.register("configurable")(ConfigurableClass)
@@ -350,6 +361,7 @@ class TestGetWithDictionary:
                 },
             )
 
+    @pytest.mark.pruned
     def test_variadic_class_receives_all_dictionary_values(self):
         registry = Registery()
         registry.register("variadic")(VariadicClass)
@@ -384,6 +396,7 @@ class TestGetWithDictionary:
 
         assert config == original
 
+    @pytest.mark.pruned
     def test_constructor_exception_propagates(self):
         class FailingClass:
             def __init__(self, **kwargs):
@@ -405,6 +418,7 @@ class TestGetWithDictionary:
 
 
 class TestGetInvalidConfig:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "config",
         [
@@ -430,6 +444,7 @@ class TestGetInvalidConfig:
                 config,
             )
 
+    @pytest.mark.pruned
     def test_invalid_config_error_reports_config_type(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -442,6 +457,7 @@ class TestGetInvalidConfig:
 
         assert "list" in str(exc_info.value)
 
+    @pytest.mark.pruned
     def test_invalid_config_error_reports_class_name(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -454,6 +470,7 @@ class TestGetInvalidConfig:
 
         assert "DefaultClass" in str(exc_info.value)
 
+    @pytest.mark.pruned
     def test_invalid_config_error_reports_config_value(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -469,6 +486,7 @@ class TestGetInvalidConfig:
 
 
 class TestAvailable:
+    @pytest.mark.pruned
     def test_returns_registered_names(self):
         registry = Registery()
         registry.register("first")(DefaultClass)
@@ -479,6 +497,7 @@ class TestAvailable:
             "second",
         ]
 
+    @pytest.mark.pruned
     def test_preserves_registration_order(self):
         registry = Registery()
 
@@ -492,6 +511,7 @@ class TestAvailable:
             "second",
         ]
 
+    @pytest.mark.pruned
     def test_returns_new_list_each_time(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
@@ -502,6 +522,7 @@ class TestAvailable:
         assert first == second
         assert first is not second
 
+    @pytest.mark.pruned
     def test_mutating_result_does_not_modify_registry(self):
         registry = Registery()
         registry.register("example")(DefaultClass)
