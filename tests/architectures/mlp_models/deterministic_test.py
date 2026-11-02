@@ -5,7 +5,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.architectures.mlp.deterministic import (
+from S2D4P.architectures.mlp.deterministic import (
     Autoencoder,
     AutoencoderConfig,
 )

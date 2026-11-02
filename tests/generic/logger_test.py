@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from cccma_ppp.generic.logger import setup_logger
+from S2D4P.generic.logger import setup_logger
 
 
 def clear_logger(name):

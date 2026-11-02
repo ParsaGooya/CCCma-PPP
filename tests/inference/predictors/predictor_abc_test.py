@@ -7,8 +7,8 @@ import pytest
 import torch
 import xarray as xr
 
-import cccma_ppp.inference.predictors.predictor_abc as module
-from cccma_ppp.inference.predictors.predictor_abc import (
+import S2D4P.inference.predictors.predictor_abc as module
+from S2D4P.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,
 )

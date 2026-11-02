@@ -2,7 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.architectures.normalized_flows import (
+from S2D4P.architectures.normalized_flows import (
     FCNN,
     MAF,
     NormalizedFlowConfig,
@@ -10,7 +10,7 @@ from cccma_ppp.architectures.normalized_flows import (
     RealNVP,
     flowOutput,
 )
-from cccma_ppp.core.selectors import FlowSelector
+from S2D4P.core.selectors import FlowSelector
 
 torch.manual_seed(0)
 

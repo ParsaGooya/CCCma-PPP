@@ -8,12 +8,12 @@ import pytest
 import torch
 import xarray as xr
 
-from cccma_ppp.core.writer import (
+from S2D4P.core.writer import (
     Writer,
     WriterConfig,
     aggregate_predictions,
 )
-from cccma_ppp.generic.runtime import RuntimeContext
+from S2D4P.generic.runtime import RuntimeContext
 
 
 class DummyBatch:
@@ -350,7 +350,7 @@ def test_predict_runs(
 
 @pytest.mark.pruned
 def test_build_train_loader_train(tmp_path):
-    from cccma_ppp.generic.runtime import RuntimeContext
+    from S2D4P.generic.runtime import RuntimeContext
 
     RuntimeContext.GLOBAL_EXP_DIR = tmp_path
     writer = object.__new__(Writer)

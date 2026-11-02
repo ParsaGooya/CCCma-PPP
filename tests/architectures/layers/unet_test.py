@@ -6,8 +6,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.architectures.layers.unet as module
-from cccma_ppp.architectures.layers.conv import (
+import S2D4P.architectures.layers.unet as module
+from S2D4P.architectures.layers.conv import (
     ConvBlock,
     ConvBlockConfig,
     ConvNeXtBlock,
@@ -17,9 +17,9 @@ from cccma_ppp.architectures.layers.conv import (
     PartialConvBlockConfig,
     TensorMask,
 )
-from cccma_ppp.architectures.layers.generic import LayerNorm2d
-from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
-from cccma_ppp.architectures.layers.unet import (
+from S2D4P.architectures.layers.generic import LayerNorm2d
+from S2D4P.architectures.layers.partialconv2d import PartialConv2d
+from S2D4P.architectures.layers.unet import (
     DownBlock,
     UNetOutput,
     UNetOutputSIC,

@@ -4,8 +4,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.architectures.layers.conv as module
-from cccma_ppp.architectures.layers.conv import (
+import S2D4P.architectures.layers.conv as module
+from S2D4P.architectures.layers.conv import (
     ConvBlock,
     ConvBlockConfig,
     ConvNeXtBlock,

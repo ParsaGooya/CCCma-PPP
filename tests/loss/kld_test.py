@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import pytest
 import torch
 
-from cccma_ppp.loss.kld import KLD, BetaAnnealing
+from S2D4P.loss.kld import KLD, BetaAnnealing
 
 
 @dataclass

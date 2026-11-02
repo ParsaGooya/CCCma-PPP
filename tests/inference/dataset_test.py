@@ -6,8 +6,8 @@ import pytest
 import torch
 import xarray as xr
 
-import cccma_ppp.inference.dataset as module
-from cccma_ppp.inference.dataset import (
+import S2D4P.inference.dataset as module
+from S2D4P.inference.dataset import (
     InferenceDataset,
     InferenceDatasetConfig,
     _from_train,

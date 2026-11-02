@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 import torch
 
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.inference.dataloader import (
+from S2D4P.generic.runtime import RuntimeContext
+from S2D4P.inference.dataloader import (
     BatchData,
     InferenceDataloaderConfig,
     collate_batch,

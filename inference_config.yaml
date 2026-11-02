@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_cVAEUnet_SIC_PreTrDetUnfrozen_Gen
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_Unet_SIC_k3_lrvar_pixelshuffle_Gen
 writer:
   predictor:
     num_latent_samples: 10
@@ -6,7 +6,6 @@ writer:
 
   num_output_sampling: 1
   # get_trained_model_stats_from_validation: true
-
 inference_loader:
   batch_size: 12
   inference_years_slice: [2020, 2024] #[2015,2020] #

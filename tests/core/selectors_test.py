@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 import torch
 
-import cccma_ppp.core.selectors as selectors_mod
-from cccma_ppp.core.selectors import (
+import S2D4P.core.selectors as selectors_mod
+from S2D4P.core.selectors import (
     FlowSelector,
     ModelSelector,
     ModuleSelector,

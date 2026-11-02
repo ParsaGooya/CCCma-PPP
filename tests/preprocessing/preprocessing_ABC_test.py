@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from cccma_ppp.preprocessing.preprocessing_ABC import (
+from S2D4P.preprocessing.preprocessing_ABC import (
     PreprocessModuleABC,
 )
 

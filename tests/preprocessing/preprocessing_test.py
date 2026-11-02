@@ -5,9 +5,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-import cccma_ppp.preprocessing.preprocessing as module
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+import S2D4P.preprocessing.preprocessing as module
+from S2D4P.generic.runtime import RuntimeContext
+from S2D4P.preprocessing.preprocessing import PreprocessingPipeline
 
 
 class AddPreprocessor:

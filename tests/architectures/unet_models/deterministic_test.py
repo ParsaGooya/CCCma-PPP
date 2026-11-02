@@ -6,17 +6,17 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.architectures.unet.deterministic as module
-from cccma_ppp.architectures.layers.conv import (
+import S2D4P.architectures.unet.deterministic as module
+from S2D4P.architectures.layers.conv import (
     ConvBlockConfig,
     ConvNeXtBlockConfig,
     PartialConvBlockConfig,
     TensorMask,
 )
-from cccma_ppp.architectures.layers.unet import (
+from S2D4P.architectures.layers.unet import (
     UNetOutputSIC,
 )
-from cccma_ppp.architectures.unet.deterministic import (
+from S2D4P.architectures.unet.deterministic import (
     UNet,
     UNetConfig,
     UNetSIC,

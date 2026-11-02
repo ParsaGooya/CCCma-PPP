@@ -2,7 +2,7 @@ import dataclasses
 
 import pytest
 
-from cccma_ppp.loss.registery import Registery
+from S2D4P.loss.registery import Registery
 
 
 @dataclasses.dataclass

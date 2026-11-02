@@ -4,8 +4,8 @@ from unittest.mock import Mock
 
 import pytest
 
-import cccma_ppp.train.train as train_mod
-from cccma_ppp.train.train import get_parser, main
+import S2D4P.train.train as train_mod
+from S2D4P.train.train import get_parser, main
 
 
 @pytest.mark.pruned
@@ -1569,9 +1569,9 @@ def test_module_main_guard_executes_cli(
     import argparse
     import runpy
 
-    import cccma_ppp.generic.logger as logger_module
-    import cccma_ppp.generic.monitoring as monitoring_module
-    import cccma_ppp.train.train_configs as train_configs_module
+    import S2D4P.generic.logger as logger_module
+    import S2D4P.generic.monitoring as monitoring_module
+    import S2D4P.train.train_configs as train_configs_module
 
     yaml_path = tmp_path / "training.yaml"
 

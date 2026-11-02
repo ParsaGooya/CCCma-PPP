@@ -6,7 +6,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.architectures.mlp.cvae import (
+from S2D4P.architectures.mlp.cvae import (
     cVAE_MLP,
     cVAE_MLPConfig,
 )

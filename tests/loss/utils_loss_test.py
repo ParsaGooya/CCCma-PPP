@@ -4,8 +4,8 @@ import torch
 import torch.nn.functional as F
 import xarray as xr
 
-from cccma_ppp.core.core_abc import GenerativeContext
-from cccma_ppp.loss.utils_loss import (
+from S2D4P.core.core_abc import GenerativeContext
+from S2D4P.loss.utils_loss import (
     Frobenius_norm,
     WeightedCRPS,
     WeightedMSE,
