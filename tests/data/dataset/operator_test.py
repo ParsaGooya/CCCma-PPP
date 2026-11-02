@@ -202,7 +202,6 @@ class DummyPreprocessor(PreprocessModuleABC):
 
 
 class TestConfigObservation:
-    @pytest.mark.pruned
     def test_returns_observation_when_present(self):
         observation = make_data_config()
         config = DummyDatasetConfig(
@@ -219,7 +218,6 @@ class TestConfigObservation:
 
         assert operator.config_observation is None
 
-    @pytest.mark.pruned
     def test_returns_none_when_observation_is_none(self):
         config = DummyDatasetConfig(
             observation=None,
@@ -558,7 +556,6 @@ class TestAddFittedPreprocessor:
         ):
             operator.add_fitted_preprocessor(preprocessor)
 
-    @pytest.mark.pruned
     def test_adds_to_all_available_pipelines(self):
         model = make_data_config()
         observation = make_data_config()
@@ -670,7 +667,6 @@ class TestGetWeights:
             "longitude": observation.info.coords["longitude"],
         }
 
-    @pytest.mark.pruned
     def test_uses_model_when_observation_is_absent(self):
         model = make_data_config(
             spatial_coords={
@@ -716,7 +712,6 @@ class TestGetWeights:
         ):
             operator.get_weights(config=MagicMock())
 
-    @pytest.mark.pruned
     def test_forwards_save_arguments(self):
         model = make_data_config(
             spatial_coords={
@@ -750,7 +745,6 @@ class TestGetWeights:
         assert kwargs["save_path"] == Path("/tmp/output")
         assert kwargs["save_name"] == "weights.nc"
 
-    @pytest.mark.pruned
     def test_without_flattennanremove_passes_none(self):
         model = make_data_config(
             spatial_coords={
@@ -785,7 +779,6 @@ class TestGetWeights:
             weights_config.build_weights.call_args.kwargs["Flattennanremover"] is None
         )
 
-    @pytest.mark.pruned
     def test_with_flattennanremove_passes_flattener(self):
         from S2D4P.preprocessing.utils_preprocessing import (
             Flattennanremove,
@@ -830,7 +823,6 @@ class TestGetWeights:
             is flattener
         )
 
-    @pytest.mark.pruned
     def test_matching_channel_weights(self):
         model = make_data_config(
             names=[
@@ -977,7 +969,6 @@ class TestInputMetadata:
             ],
         }
 
-    @pytest.mark.pruned
     def test_model_and_condition(self):
         model = make_data_config(
             names=["tas"],
@@ -1015,7 +1006,6 @@ class TestInputMetadata:
             "latitude",
         ]
 
-    @pytest.mark.pruned
     def test_model_used_as_condition_is_not_duplicated(self):
         model = make_data_config(
             names=["tas"],
@@ -1048,7 +1038,6 @@ class TestInputMetadata:
             "longitude",
         ]
 
-    @pytest.mark.pruned
     def test_preprocessor_names_are_lowercase(self):
         model = make_data_config(
             names=["tas"],
@@ -1080,7 +1069,6 @@ class TestInputMetadata:
 
 
 class TestTargetMetadata:
-    @pytest.mark.pruned
     def test_uses_observation_before_model(self):
         model = make_data_config(
             names=["model_var"],
@@ -1138,7 +1126,6 @@ class TestTargetMetadata:
             "longitude",
         ]
 
-    @pytest.mark.pruned
     def test_rejects_missing_model_and_observation(self):
         config = DummyDatasetConfig()
         operator = DatasetOperator(config)
@@ -1151,7 +1138,6 @@ class TestTargetMetadata:
 
 
 class TestUpdateMetadata:
-    @pytest.mark.pruned
     def test_one_preprocessor_list_is_added_per_variable(self):
         source = make_data_config(
             names=[
@@ -1195,7 +1181,6 @@ class TestUpdateMetadata:
             ["standardscaler"],
         ]
 
-    @pytest.mark.pruned
     def test_empty_pipeline(self):
         source = make_data_config(
             names=["tas"],
@@ -1230,7 +1215,6 @@ class TestBuildChunks:
     def test_none_config_returns_none(self):
         assert _build_chunks() is None
 
-    @pytest.mark.pruned
     def test_builds_chunks_for_available_sample_dimensions(self):
         source = make_data_config(
             realizations=[
@@ -1249,7 +1233,6 @@ class TestBuildChunks:
             REALIZATION_DIM: 1,
         }
 
-    @pytest.mark.pruned
     def test_omits_missing_realization_dimension(self):
         source = make_data_config(
             realizations=None,
@@ -1264,7 +1247,6 @@ class TestBuildChunks:
             LEAD_TIME_DIM: 1,
         }
 
-    @pytest.mark.pruned
     def test_uses_configured_dimension_names(self):
         source = SimpleNamespace(
             init_time_dim="forecast_reference_time",
@@ -1302,7 +1284,6 @@ class TestBuildChunks:
             "member": 1,
         }
 
-    @pytest.mark.pruned
     def test_ignores_non_sample_dimensions(self):
         source = make_data_config(
             spatial_coords={
@@ -1347,7 +1328,6 @@ class TestAdditionalFitPreprocessors:
 
         model.fit_preprocessor_pipeline.assert_not_called()
 
-    @pytest.mark.pruned
     def test_validates_times_before_fitting_sources(self):
         model = make_data_config()
         config = DummyDatasetConfig(
@@ -1369,7 +1349,6 @@ class TestAdditionalFitPreprocessors:
         validate.assert_called_once()
         model.fit_preprocessor_pipeline.assert_not_called()
 
-    @pytest.mark.pruned
     def test_model_fit_forwards_default_save_arguments(self):
         model = make_data_config()
         config = DummyDatasetConfig(
@@ -1391,7 +1370,6 @@ class TestAdditionalFitPreprocessors:
         assert kwargs["selection"][INIT_TIME_DIM] is train_times
         assert kwargs["selection"][LEAD_TIME_DIM] is model.coords[LEAD_TIME_DIM]
 
-    @pytest.mark.pruned
     def test_model_fit_includes_realization_coordinate(self):
         model = make_data_config(
             realizations=[
@@ -1410,7 +1388,6 @@ class TestAdditionalFitPreprocessors:
 
         assert selection[REALIZATION_DIM] is model.coords[REALIZATION_DIM]
 
-    @pytest.mark.pruned
     def test_observation_fit_does_not_request_mask(self):
         observation = make_data_config()
         config = DummyDatasetConfig(
@@ -1452,7 +1429,6 @@ class TestAdditionalFitPreprocessors:
         assert selection[INIT_TIME_DIM] is train_times
         assert selection[REALIZATION_DIM] is observation.coords[REALIZATION_DIM]
 
-    @pytest.mark.pruned
     def test_dynamic_condition_fit_omits_realization_when_absent(
         self,
     ):
@@ -1471,7 +1447,6 @@ class TestAdditionalFitPreprocessors:
 
         assert REALIZATION_DIM not in selection
 
-    @pytest.mark.pruned
     def test_dynamic_condition_fit_includes_realization(self):
         condition = make_data_config(
             realizations=[
@@ -1491,7 +1466,6 @@ class TestAdditionalFitPreprocessors:
 
         assert selection[REALIZATION_DIM] is condition.coords[REALIZATION_DIM]
 
-    @pytest.mark.pruned
     def test_static_condition_does_not_call_get_input_times(self):
         condition = make_data_config()
         config = DummyDatasetConfig(
@@ -1544,7 +1518,6 @@ class TestAdditionalFitPreprocessors:
             is selected
         )
 
-    @pytest.mark.pruned
     def test_fitted_flag_is_false_when_no_pipelines_exist(self):
         config = DummyDatasetConfig()
         operator = DatasetOperator(config)
@@ -1553,7 +1526,6 @@ class TestAdditionalFitPreprocessors:
 
         assert config._fitted_preprocessors is False
 
-    @pytest.mark.pruned
     def test_fitted_flag_reflects_pipeline_states(self):
         model_pipeline = make_pipeline()
         model_pipeline.fitted = True
@@ -1605,7 +1577,6 @@ class TestAdditionalLoadFittedPreprocessors:
         condition.load_preprocessor_pipeline.assert_called_once_with(load_dir)
         assert config._fitted_preprocessors is True
 
-    @pytest.mark.pruned
     def test_load_forwards_none_directory(self):
         model = make_data_config()
         model.preprocessing_pipeline.fitted = True
@@ -1626,7 +1597,6 @@ class TestAdditionalLoadFittedPreprocessors:
 
         assert config._fitted_preprocessors is False
 
-    @pytest.mark.pruned
     def test_load_fitted_flag_is_false_when_one_pipeline_is_unfitted(
         self,
     ):
@@ -1649,7 +1619,6 @@ class TestAdditionalLoadFittedPreprocessors:
 
 
 class TestAdditionalAddFittedPreprocessor:
-    @pytest.mark.pruned
     def test_default_index_is_zero(self):
         model = make_data_config()
         config = DummyDatasetConfig(
@@ -1714,7 +1683,6 @@ class TestAdditionalAddFittedPreprocessor:
             )
         )
 
-    @pytest.mark.pruned
     def test_unfitted_preprocessor_is_not_added_anywhere(self):
         model = make_data_config()
         observation = make_data_config()
@@ -1787,7 +1755,6 @@ class TestAdditionalGetWeights:
         constructor.assert_called_once_with()
         assert result is expected
 
-    @pytest.mark.pruned
     def test_empty_spatial_coordinates_are_forwarded(self):
         model = make_data_config()
         model.preprocessing_pipeline.has_flattener = False
@@ -1811,7 +1778,6 @@ class TestAdditionalGetWeights:
         assert result is expected
         assert weights_config.build_weights.call_args.args[0] == {}
 
-    @pytest.mark.pruned
     def test_unsupported_coordinates_are_not_forwarded(self):
         model = make_data_config(
             spatial_coords={
@@ -1847,7 +1813,6 @@ class TestAdditionalGetWeights:
         assert "latitude" in target_coords
         assert "height" not in target_coords
 
-    @pytest.mark.pruned
     def test_flattener_is_not_requested_when_pipeline_has_none(
         self,
     ):
@@ -1882,7 +1847,6 @@ class TestAdditionalGetWeights:
             weights_config.build_weights.call_args.kwargs["Flattennanremover"] is None
         )
 
-    @pytest.mark.pruned
     def test_flattener_is_forwarded_when_present(self):
         flattener = object()
         pipeline = make_pipeline()
@@ -1919,7 +1883,6 @@ class TestAdditionalGetWeights:
             is flattener
         )
 
-    @pytest.mark.pruned
     def test_channel_order_mismatch_raises(self):
         model = make_data_config(
             names=[
@@ -1953,7 +1916,6 @@ class TestAdditionalGetWeights:
                 config=weights_config,
             )
 
-    @pytest.mark.pruned
     def test_weights_without_channel_dimension_are_accepted(self):
         model = make_data_config(
             names=[
@@ -1988,7 +1950,6 @@ class TestAdditionalGetWeights:
 
 
 class TestAdditionalInputMetadata:
-    @pytest.mark.pruned
     def test_condition_only_with_model_as_condition(self):
         condition = make_data_config(
             names=[
@@ -2056,7 +2017,6 @@ class TestAdditionalInputMetadata:
             "latitude",
         ]
 
-    @pytest.mark.pruned
     def test_shared_preprocessor_list_is_recorded_per_variable(
         self,
     ):
@@ -2091,7 +2051,6 @@ class TestAdditionalInputMetadata:
 
 
 class TestAdditionalTargetMetadata:
-    @pytest.mark.pruned
     def test_observation_preprocessors_are_used(self):
         observation = make_data_config(
             names=[
@@ -2165,7 +2124,6 @@ class TestAdditionalTargetMetadata:
 
 
 class TestAdditionalMetadataUpdate:
-    @pytest.mark.pruned
     def test_existing_metadata_entries_are_preserved(self):
         source = make_data_config(
             names=[
@@ -2216,7 +2174,6 @@ class TestAdditionalMetadataUpdate:
             ],
         }
 
-    @pytest.mark.pruned
     def test_preprocessor_names_are_lowercased(self):
         source = make_data_config(
             names=[
@@ -2252,13 +2209,11 @@ class TestAdditionalMetadataUpdate:
 
 
 class TestAdditionalFittedPreprocessorsProperty:
-    @pytest.mark.pruned
     def test_no_active_pipelines_returns_false(self):
         operator = DatasetOperator(DummyDatasetConfig())
 
         assert operator._fitted_preprocessors is False
 
-    @pytest.mark.pruned
     def test_single_fitted_model_pipeline_returns_true(self):
         model = make_data_config()
         model.preprocessing_pipeline.fitted = True
@@ -2271,7 +2226,6 @@ class TestAdditionalFittedPreprocessorsProperty:
 
         assert operator._fitted_preprocessors is True
 
-    @pytest.mark.pruned
     def test_single_unfitted_model_pipeline_returns_false(self):
         model = make_data_config()
         model.preprocessing_pipeline.fitted = False
@@ -2284,7 +2238,6 @@ class TestAdditionalFittedPreprocessorsProperty:
 
         assert operator._fitted_preprocessors is False
 
-    @pytest.mark.pruned
     def test_all_active_pipelines_must_be_fitted(self):
         model = make_data_config()
         observation = make_data_config()
@@ -2305,7 +2258,6 @@ class TestAdditionalFittedPreprocessorsProperty:
 
         assert operator._fitted_preprocessors is False
 
-    @pytest.mark.pruned
     def test_all_fitted_active_pipelines_return_true(self):
         model = make_data_config()
         observation = make_data_config()
@@ -2328,7 +2280,6 @@ class TestAdditionalFittedPreprocessorsProperty:
 
 
 class TestAdditionalBuildChunks:
-    @pytest.mark.pruned
     def test_only_initialization_dimension(self):
         source = SimpleNamespace(
             init_time_dim="initialization",
@@ -2353,7 +2304,6 @@ class TestAdditionalBuildChunks:
             "initialization": 1,
         }
 
-    @pytest.mark.pruned
     def test_only_lead_time_dimension(self):
         source = SimpleNamespace(
             init_time_dim="initialization",
@@ -2374,7 +2324,6 @@ class TestAdditionalBuildChunks:
             "forecast_step": 1,
         }
 
-    @pytest.mark.pruned
     def test_only_realization_dimension(self):
         source = SimpleNamespace(
             init_time_dim="initialization",
@@ -2395,7 +2344,6 @@ class TestAdditionalBuildChunks:
             "member": 1,
         }
 
-    @pytest.mark.pruned
     def test_no_sample_dimensions_returns_empty_mapping(self):
         source = SimpleNamespace(
             init_time_dim="initialization",
