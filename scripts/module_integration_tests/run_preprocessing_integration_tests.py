@@ -21,9 +21,9 @@ import xarray as xr
 import yaml
 from tqdm import tqdm
 
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.train.train_configs import TrainConfig, prepare_config
+from S2D4P.generic.distributed import Distributed
+from S2D4P.generic.runtime import RuntimeContext
+from S2D4P.train.train_configs import TrainConfig, prepare_config
 from integrationtestslib import LoggingUtils
 
 warnings.filterwarnings("ignore")

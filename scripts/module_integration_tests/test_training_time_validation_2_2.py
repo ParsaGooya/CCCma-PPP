@@ -15,20 +15,20 @@ import pandas as pd
 import xarray as xr
 import yaml
 
-from cccma_ppp.data_modules.data.data_configs import (
+from S2D4Pdata.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
 )
-from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.data_modules.utils import _create_train_mask
+from S2D4P.train.dataset import TrainDatasetConfig
+from S2D4P.preprocessing.selector import PreprocessingStepSelector
+from S2D4P.preprocessing.preprocessing import PreprocessingPipeline
+from S2D4Pdata.utils import _create_train_mask
 
 BASE_CONFIG = (
     "scripts/integration_suite_train_config.yaml"  # template YAML for all cases
 )
 CONFIGS_YAML = Path(
-    "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/configs/configs.yaml"
+    "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/configs/configs.yaml"
 )  # library config; its lead_time_resolution is overridden by the profile at runtime
 
 MODEL_VAR = "tas"  # model variable name; must match the YAML "names" entry
@@ -92,7 +92,7 @@ def set_lead_time_resolution(value: str) -> None:
     """
     for mod in list(sys.modules.values()):
         name = getattr(mod, "__name__", "") or ""
-        if not name.startswith("cccma_ppp"):
+        if not name.startswith("S2D4P"):
             continue
         if hasattr(mod, "lead_time_resolution"):
             mod.lead_time_resolution = value

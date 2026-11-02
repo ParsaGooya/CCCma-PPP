@@ -9,10 +9,8 @@ from S2D4P.configs import (
     lead_time_resolution,
     required_sample_dimensions,
 )
-from S2D4P.data.data_configs.data_configs import (
+from S2D4P.data.data_configs import (
     ConditionDataConfig,
-    ModelDataConfig,
-    ObsDataConfig,
     build_time_range,
 )
 
@@ -89,7 +87,7 @@ def patch_common(
         info = DummyInfo()
 
     return patch.multiple(
-        "cccma_ppp.data_modules.data.data_abc",
+        "S2D4P.data_modules.data.data_abc",
         _resolve_data=lambda self: None,
         _get_ds_info=lambda self: info,
     )
@@ -219,7 +217,7 @@ def test_model_data_config_uses_maximum_lead_time():
     )
 
     with patch(
-        "cccma_ppp.data_modules.data.data_configs.build_time_range",
+        "S2D4P.data_modules.data.data_configs.build_time_range",
         return_value=np.array(
             ["2000-01-01"],
             dtype="datetime64[ns]",
@@ -246,7 +244,7 @@ def test_model_data_config_resolve_called():
         called["resolve"] = True
 
     with patch.multiple(
-        "cccma_ppp.data_modules.data.data_abc",
+        "S2D4P.data_modules.data.data_abc",
         _resolve_data=fake_resolve,
         _get_ds_info=lambda self: DummyInfo(),
     ):
@@ -269,7 +267,7 @@ def test_model_data_config_get_info_called():
         return DummyInfo()
 
     with patch.multiple(
-        "cccma_ppp.data_modules.data.data_abc",
+        "S2D4P.data_modules.data.data_abc",
         _resolve_data=lambda self: None,
         _get_ds_info=fake_info,
     ):
@@ -358,7 +356,7 @@ def legacy_obs_data_config_uses_default_single_lead_time():
     info = DummyInfo()
 
     with patch(
-        "cccma_ppp.data_modules.data.data_configs.build_time_range",
+        "S2D4P.data_modules.data.data_configs.build_time_range",
         return_value=np.array(
             ["2000-01-01"],
             dtype="datetime64[ns]",
@@ -385,7 +383,7 @@ def test_obs_data_config_resolve_called():
         called["resolve"] = True
 
     with patch.multiple(
-        "cccma_ppp.data_modules.data.data_abc",
+        "S2D4P.data_modules.data.data_abc",
         _resolve_data=fake_resolve,
         _get_ds_info=lambda self: DummyInfo(),
     ):
@@ -408,7 +406,7 @@ def test_obs_data_config_get_info_called():
         return DummyInfo()
 
     with patch.multiple(
-        "cccma_ppp.data_modules.data.data_abc",
+        "S2D4P.data_modules.data.data_abc",
         _resolve_data=lambda self: None,
         _get_ds_info=fake_info,
     ):
@@ -582,7 +580,7 @@ def test_condition_data_config_uses_maximum_lead_time():
     )
 
     with patch(
-        "cccma_ppp.data_modules.data.data_configs.build_time_range",
+        "S2D4P.data_modules.data.data_configs.build_time_range",
         return_value=np.array(
             ["2000-01-01"],
             dtype="datetime64[ns]",
@@ -609,7 +607,7 @@ def test_condition_data_config_resolve_called():
         called["resolve"] = True
 
     with patch.multiple(
-        "cccma_ppp.data_modules.data.data_abc",
+        "S2D4P.data_modules.data.data_abc",
         _resolve_data=fake_resolve,
         _get_ds_info=lambda self: DummyInfo(),
     ):
@@ -632,7 +630,7 @@ def test_condition_data_config_get_info_called():
         return DummyInfo()
 
     with patch.multiple(
-        "cccma_ppp.data_modules.data.data_abc",
+        "S2D4P.data_modules.data.data_abc",
         _resolve_data=lambda self: None,
         _get_ds_info=fake_info,
     ):
@@ -963,7 +961,7 @@ def test_model_data_config_passes_exact_time_range_arguments():
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_configs.build_time_range",
+            "S2D4P.data_modules.data.data_configs.build_time_range",
             return_value=expected,
         ) as build,
         patch_common(info),
@@ -993,7 +991,7 @@ def test_obs_data_config_passes_exact_time_range_arguments():
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_configs.build_time_range",
+            "S2D4P.data_modules.data.data_configs.build_time_range",
             return_value=expected,
         ) as build,
         patch_common(info),
@@ -1115,7 +1113,7 @@ def test_condition_data_config_incomplete_bounds_skip_time_range_builder(
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_configs.build_time_range",
+            "S2D4P.data_modules.data.data_configs.build_time_range",
         ) as build,
         patch_common(info),
     ):
@@ -1144,7 +1142,7 @@ def test_condition_data_config_complete_bounds_build_time_range():
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_configs.build_time_range",
+            "S2D4P.data_modules.data.data_configs.build_time_range",
             return_value=expected,
         ) as build,
         patch_common(info),
@@ -1624,7 +1622,7 @@ def test_build_time_range_calls_xarray_date_range_twice():
     real_date_range = xr.date_range
 
     with patch(
-        "cccma_ppp.data_modules.data.data_configs.xr.date_range",
+        "S2D4P.data_modules.data.data_configs.xr.date_range",
         side_effect=real_date_range,
     ) as date_range:
         build_time_range(
@@ -1663,7 +1661,7 @@ def test_build_time_range_uses_daily_frequency_code():
     real_date_range = xr.date_range
 
     with patch(
-        "cccma_ppp.data_modules.data.data_configs.xr.date_range",
+        "S2D4P.data_modules.data.data_configs.xr.date_range",
         side_effect=real_date_range,
     ) as date_range:
         build_time_range(
@@ -1696,7 +1694,7 @@ def test_build_time_range_uses_cftime_calendar_in_both_calls():
     real_date_range = xr.date_range
 
     with patch(
-        "cccma_ppp.data_modules.data.data_configs.xr.date_range",
+        "S2D4P.data_modules.data.data_configs.xr.date_range",
         side_effect=real_date_range,
     ) as date_range:
         build_time_range(

@@ -22,9 +22,9 @@ from integrationtestslib import (
     StringUtils,
     TensorUtils,
 )
-from cccma_ppp.configs import required_sample_dimensions
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.train.train_configs import prepare_config
+from S2D4P.configs import required_sample_dimensions
+from S2D4P.generic.runtime import RuntimeContext
+from S2D4P.train.train_configs import prepare_config
 
 warnings.filterwarnings("ignore")
 
@@ -609,7 +609,7 @@ def setup_loader(
     shuffle: bool = False,
 ) -> Any:
     """Set up data loader"""
-    from cccma_ppp.generic.distributed import Distributed
+    from S2D4P.generic.distributed import Distributed
 
     case_dir = Path(config_path).resolve().parent
     case_dir.mkdir(parents=True, exist_ok=True)
@@ -633,7 +633,7 @@ def setup_loader(
 def load_train_config(config_path: Path) -> Any:
     """Load training config from file"""
     import dacite
-    from cccma_ppp.train.train_configs import TrainConfig
+    from S2D4P.train.train_configs import TrainConfig
 
     data = prepare_config(config_path)
     if data is None:

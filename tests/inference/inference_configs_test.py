@@ -414,7 +414,7 @@ def test_set_random_seed_none_does_not_call_set_seed(
     called = []
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.set_seed",
+        "S2D4P.inference.inference_configs.set_seed",
         lambda seed: called.append(seed),
     )
 
@@ -446,7 +446,7 @@ def test_set_random_seed_uses_rank_offset(
     called = []
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.set_seed",
+        "S2D4P.inference.inference_configs.set_seed",
         lambda value: called.append(value),
     )
 
@@ -488,7 +488,7 @@ def patch_module_selector(monkeypatch):
     selector = DummySelector()
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        "S2D4P.inference.inference_configs.dacite.from_dict",
         lambda **kwargs: selector,
     )
 
@@ -655,7 +655,7 @@ def test_load_module_dacite_receives_module_config(
         return selector
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        "S2D4P.inference.inference_configs.dacite.from_dict",
         fake_from_dict,
     )
 
@@ -681,7 +681,7 @@ def test_load_module_calls_gc_collect(
     calls = []
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.gc.collect",
+        "S2D4P.inference.inference_configs.gc.collect",
         lambda: calls.append(True),
     )
 
@@ -736,7 +736,7 @@ def test_build_writer_passes_all_writer_arguments(
     postprocessor = object()
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         lambda self, path: postprocessor,
     )
 
@@ -776,7 +776,7 @@ def test_build_writer_loads_expected_preprocessor(
         return object()
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         fake_load,
     )
 
@@ -807,7 +807,7 @@ def test_build_writer_propagates_loader_setup_error(
     inference_config.setup_distributed = fail_setup
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         lambda self, path: object(),
     )
 
@@ -842,7 +842,7 @@ def test_build_writer_propagates_module_load_error(
     config.load_module = fail_load
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         lambda self, path: object(),
     )
 
@@ -875,7 +875,7 @@ def test_build_writer_propagates_postprocessor_error(
         raise FileNotFoundError("missing preprocessor")
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         fail_load,
     )
 
@@ -1124,7 +1124,7 @@ def test_load_module_propagates_selector_build_error(
             raise RuntimeError("build failed")
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        "S2D4P.inference.inference_configs.dacite.from_dict",
         lambda **kwargs: FailingSelector(),
     )
 
@@ -1188,10 +1188,7 @@ def test_build_writer_setup_arguments(
     ) = make_writer_config_fixture(tmp_path)
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 
@@ -1226,10 +1223,7 @@ def test_build_writer_module_receives_device(
     ) = make_writer_config_fixture(tmp_path)
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 
@@ -1261,10 +1255,7 @@ def test_build_writer_propagates_loader_build_error(
     inference_config.build_inference_loader = fail_build_loader
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 
@@ -1294,10 +1285,7 @@ def test_build_writer_propagates_writer_build_error(
     ) = make_writer_config_fixture(tmp_path)
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 

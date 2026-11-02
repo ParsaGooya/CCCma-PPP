@@ -290,7 +290,7 @@ class TestCVaEMLPInitialization:
         )
 
         with patch(
-            "cccma_ppp.architectures.mlp.cvae.build_mlp",
+            "S2D4P.architectures.mlp.cvae.build_mlp",
             return_value=nn.Sequential(nn.Identity()),
         ):
             model = cVAE_MLP(

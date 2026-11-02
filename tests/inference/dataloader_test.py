@@ -146,7 +146,7 @@ def dataset_config():
 @pytest.fixture
 def patched_dataloader(monkeypatch):
     monkeypatch.setattr(
-        "cccma_ppp.inference.dataloader.Dataloader",
+        "S2D4P.inference.dataloader.Dataloader",
         FakeDataloader,
     )
 
@@ -1034,7 +1034,7 @@ def test_read_configs_builds_missing_dataset_config(
         return converted
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.dataloader._from_train",
+        "S2D4P.inference.dataloader._from_train",
         fake_from_train,
     )
 
@@ -1061,7 +1061,7 @@ def test_read_configs_preserves_existing_dataset_config(
         pytest.fail("_from_train should not be called")
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.dataloader._from_train",
+        "S2D4P.inference.dataloader._from_train",
         fail_from_train,
     )
 

@@ -603,7 +603,7 @@ class TestCVAEUNetInitialization:
     @pytest.mark.pruned
     def test_condition_requests_log_variance_for_dependent_latent(self):
         with patch(
-            "cccma_ppp.architectures.unet.cvae.Recognition",
+            "S2D4P.architectures.unet.cvae.Recognition",
             autospec=True,
         ) as recognition:
             recognition.side_effect = [
@@ -624,10 +624,10 @@ class TestCVAEUNetInitialization:
 
             with (
                 patch(
-                    "cccma_ppp.architectures.unet.cvae.Generation",
+                    "S2D4P.architectures.unet.cvae.Generation",
                 ),
                 patch(
-                    "cccma_ppp.architectures.unet.cvae.UNetOutput",
+                    "S2D4P.architectures.unet.cvae.UNetOutput",
                 ),
                 patch.object(
                     cVAEUNet,
@@ -656,7 +656,7 @@ class TestCVAEUNetInitialization:
     @pytest.mark.pruned
     def test_condition_skips_log_variance_for_independent_latent(self):
         with patch(
-            "cccma_ppp.architectures.unet.cvae.Recognition",
+            "S2D4P.architectures.unet.cvae.Recognition",
             autospec=True,
         ) as recognition:
             recognition.side_effect = [
@@ -677,10 +677,10 @@ class TestCVAEUNetInitialization:
 
             with (
                 patch(
-                    "cccma_ppp.architectures.unet.cvae.Generation",
+                    "S2D4P.architectures.unet.cvae.Generation",
                 ),
                 patch(
-                    "cccma_ppp.architectures.unet.cvae.UNetOutput",
+                    "S2D4P.architectures.unet.cvae.UNetOutput",
                 ),
                 patch.object(
                     cVAEUNet,
@@ -714,7 +714,7 @@ class TestCVAEUNetInitialization:
         config.condition_dependant_flow = True
 
         with patch(
-            "cccma_ppp.architectures.unet.cvae.Recognition",
+            "S2D4P.architectures.unet.cvae.Recognition",
             autospec=True,
         ) as recognition:
             recognition.side_effect = [
@@ -735,10 +735,10 @@ class TestCVAEUNetInitialization:
 
             with (
                 patch(
-                    "cccma_ppp.architectures.unet.cvae.Generation",
+                    "S2D4P.architectures.unet.cvae.Generation",
                 ),
                 patch(
-                    "cccma_ppp.architectures.unet.cvae.UNetOutput",
+                    "S2D4P.architectures.unet.cvae.UNetOutput",
                 ),
                 patch.object(
                     cVAEUNet,

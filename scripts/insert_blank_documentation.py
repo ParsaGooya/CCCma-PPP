@@ -1688,7 +1688,7 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="?",
         type=Path,
         default=DEFAULT_ROOT,
-        help=("Python file or package directory to scan. Default: cccma_ppp"),
+        help=("Python file or package directory to scan. Default: S2D4P"),
     )
 
     parser.add_argument(

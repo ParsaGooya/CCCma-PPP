@@ -18,10 +18,10 @@ from integrationtestslib import (
     OutputFetcher,
     ResultsManager,
 )
-from cccma_ppp.configs import required_sample_dimensions
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.train.train_configs import prepare_config
-from cccma_ppp.generic.distributed import Distributed
+from S2D4P.configs import required_sample_dimensions
+from S2D4P.generic.runtime import RuntimeContext
+from S2D4P.train.train_configs import prepare_config
+from S2D4P.generic.distributed import Distributed
 
 warnings.filterwarnings("ignore")
 
@@ -142,7 +142,7 @@ def setup_train_loader(
 def load_train_config(config_path: Path) -> Any:
     """Load training config from file"""
     import dacite
-    from cccma_ppp.train.train_configs import TrainConfig
+    from S2D4P.train.train_configs import TrainConfig
 
     data = prepare_config(config_path)
     if data is None:

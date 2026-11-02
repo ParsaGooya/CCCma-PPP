@@ -9,7 +9,7 @@ result = subprocess.run(
     [
         "pytest",
         "tests",  # Run all tests in the tests directory
-        "--cov=cccma_ppp",  # Measure coverage for this package
+        "--cov=S2D4P",  # Measure coverage for this package
         "--cov-report=term-missing",  # Print coverage to terminal (show missing lines)
         "--cov-report=xml",  # Also save coverage data as XML (for parsing later)
         "--cov-branch",  # Track branch coverage (if/else paths) not just line coverage

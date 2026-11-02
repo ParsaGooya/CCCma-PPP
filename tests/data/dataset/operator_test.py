@@ -256,7 +256,7 @@ class LegacyFitPreprocessors:
         train_times = make_train_times()
 
         with patch(
-            "cccma_ppp.data_modules.dataset.operator._validate_time_sequence"
+            "S2D4P.data_modules.dataset.operator._validate_time_sequence"
         ) as mock_validate:
             operator.fit_preprocessors(train_times)
 
@@ -773,7 +773,7 @@ class TestGetWeights:
         )
 
         with patch(
-            "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove"
+            "S2D4P.preprocessing.utils_preprocessing.Flattennanremove"
         ) as flatten_type:
             flatten_type.return_value = MagicMock()
 
@@ -1357,7 +1357,7 @@ class TestAdditionalFitPreprocessors:
         error = ValueError("invalid time sequence")
 
         with patch(
-            "cccma_ppp.data_modules.dataset.operator._validate_time_sequence",
+            "S2D4P.data_modules.dataset.operator._validate_time_sequence",
             side_effect=error,
         ) as validate:
             with pytest.raises(
@@ -1775,7 +1775,7 @@ class TestAdditionalGetWeights:
         )
 
         monkeypatch.setattr(
-            "cccma_ppp.data_modules.dataset.operator.WeightsConfig",
+            "S2D4P.data_modules.dataset.operator.WeightsConfig",
             constructor,
         )
 

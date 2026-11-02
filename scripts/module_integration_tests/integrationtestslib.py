@@ -53,7 +53,7 @@ class LoggingUtils:
         logger_names.extend(
             name
             for name in logging.Logger.manager.loggerDict
-            if name.startswith("cccma_ppp")
+            if name.startswith("S2D4P")
         )
 
         for name in dict.fromkeys(logger_names):

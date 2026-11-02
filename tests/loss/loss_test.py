@@ -336,7 +336,7 @@ def test_config_build_forwards_all_arguments(
             captured["generative_context"] = generative_context
 
     monkeypatch.setattr(
-        "cccma_ppp.loss.loss.Losspipeline",
+        "S2D4P.loss.loss.Losspipeline",
         FakePipeline,
     )
 
@@ -916,7 +916,7 @@ def test_build_resolves_mask_before_constructing_pipeline(
 
     constructor = Mock(return_value=object())
     monkeypatch.setattr(
-        "cccma_ppp.loss.loss.Losspipeline",
+        "S2D4P.loss.loss.Losspipeline",
         constructor,
     )
 

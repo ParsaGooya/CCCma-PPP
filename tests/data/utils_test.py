@@ -251,7 +251,7 @@ class TestLoadXarrayData:
         expected = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=expected,
         ) as mock_open:
             result = _load_xarray_data(
@@ -282,7 +282,7 @@ class TestLoadXarrayData:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -300,7 +300,7 @@ class TestLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -318,7 +318,7 @@ class TestLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -333,7 +333,7 @@ class TestLoadXarrayData:
         dataset = make_dataset().mean(REALIZATION_DIM)
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -347,7 +347,7 @@ class TestLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -362,7 +362,7 @@ class TestLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -381,7 +381,7 @@ class TestLoadXarrayData:
         }
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ) as mock_open:
             _load_xarray_data(
@@ -395,7 +395,7 @@ class TestLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -428,7 +428,7 @@ class TestLoadXarrayData:
         dataset = make_dataset().drop_vars(INIT_TIME_DIM)
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             with pytest.raises(
@@ -458,7 +458,7 @@ class TestLoadXarrayData:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             with pytest.raises(
@@ -484,7 +484,7 @@ class TestLoadXarrayData:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             with pytest.raises(
@@ -508,7 +508,7 @@ class TestLoadXarrayData:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -529,7 +529,7 @@ class TestLoadXarrayData:
         loaded = dataset
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -2066,7 +2066,7 @@ class TestAdditionalLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             with pytest.raises(
@@ -2085,7 +2085,7 @@ class TestAdditionalLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -2113,7 +2113,7 @@ class TestAdditionalLoadXarrayData:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -2142,11 +2142,11 @@ class TestAdditionalLoadXarrayData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                "S2D4P.data_modules.utils.xr.open_mfdataset",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.utils._standardize_time",
+                "S2D4P.data_modules.utils._standardize_time",
             ) as standardize,
         ):
             _load_xarray_data(
@@ -2165,11 +2165,11 @@ class TestAdditionalLoadXarrayData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                "S2D4P.data_modules.utils.xr.open_mfdataset",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.utils._standardize_time",
+                "S2D4P.data_modules.utils._standardize_time",
                 return_value=standardized,
             ) as standardize,
         ):
@@ -2199,11 +2199,11 @@ class TestAdditionalLoadXarrayData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                "S2D4P.data_modules.utils.xr.open_mfdataset",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.utils._validate_time_sequence",
+                "S2D4P.data_modules.utils._validate_time_sequence",
             ) as validate,
         ):
             _load_xarray_data(
@@ -2235,11 +2235,11 @@ class TestAdditionalLoadXarrayData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                "S2D4P.data_modules.utils.xr.open_mfdataset",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.utils._validate_time_sequence",
+                "S2D4P.data_modules.utils._validate_time_sequence",
             ),
         ):
             with pytest.raises(
@@ -2257,7 +2257,7 @@ class TestAdditionalLoadXarrayData:
         dataset = make_dataset()
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -2283,7 +2283,7 @@ class TestAdditionalLoadXarrayData:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            "S2D4P.data_modules.utils.xr.open_mfdataset",
             return_value=dataset,
         ):
             result = _load_xarray_data(
@@ -3082,7 +3082,7 @@ class TestAdditionalCreateTrainMask:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils._calculate_target_times",
+            "S2D4P.data_modules.utils._calculate_target_times",
             return_value=target_times,
         ) as calculate:
             _create_train_mask(
@@ -3650,7 +3650,7 @@ class TestAdditionalAssignDatetimeInitTime:
         )
 
         with patch(
-            "cccma_ppp.data_modules.utils.xr.date_range",
+            "S2D4P.data_modules.utils.xr.date_range",
             return_value=expected,
         ) as date_range:
             result = assign_datetime_init_time(

@@ -8,11 +8,8 @@ import torch
 import S2D4P.core.selectors as selectors_mod
 from S2D4P.core.selectors import (
     FlowSelector,
-    ModelSelector,
     ModuleSelector,
     _load_config_from_checkpoint,
-    cVAEModelSelector,
-    deterministicModelSelector,
 )
 
 

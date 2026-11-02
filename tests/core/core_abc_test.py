@@ -459,7 +459,7 @@ def test_load_state_dict_calls_gc_collect(
     calls = []
 
     monkeypatch.setattr(
-        "cccma_ppp.core.core_abc.gc.collect",
+        "S2D4P.core.core_abc.gc.collect",
         lambda: calls.append(True),
     )
 

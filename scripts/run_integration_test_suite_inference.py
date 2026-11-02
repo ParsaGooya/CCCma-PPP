@@ -16,17 +16,17 @@ import yaml
 from tqdm import tqdm
 
 # Import architecture modules
-from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
-from cccma_ppp.configs import required_sample_dimensions
-from cccma_ppp.generic import registry_imports  # noqa: F401
+from S2D4P.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from S2D4P.configs import required_sample_dimensions
+from S2D4P.generic import registry_imports  # noqa: F401
 
 # Import loss modules
-from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
-from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
-from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
+from S2D4P.loss import kld as _loss_kld  # noqa: F401
+from S2D4P.loss import loss as _loss_pipeline  # noqa: F401
+from S2D4P.loss import utils_loss as _loss_utils  # noqa: F401
 
 # Import the training entry point
-from cccma_ppp.train.train import main as train_main
+from S2D4P.train.train import main as train_main
 
 # Suppress warnings and exceptions during tests
 warnings.filterwarnings("ignore")
@@ -143,9 +143,9 @@ def get_inference_main():
     Returns the callable main function from the inference module.
     """
     candidates = [
-        "cccma_ppp.inference.inference",
-        "cccma_ppp.inference.main",
-        "cccma_ppp.inference.predict",
+        "S2D4P.inference.inference",
+        "S2D4P.inference.main",
+        "S2D4P.inference.predict",
     ]
 
     errors = []
@@ -194,7 +194,7 @@ def cleanup_logging_handlers():
 
     # Collect all loggers that start with the package name
     for logger_name in list(logging.Logger.manager.loggerDict):
-        if logger_name.startswith("cccma_ppp"):
+        if logger_name.startswith("S2D4P"):
             logger_names.append(logger_name)
 
     # Remove all handlers from each logger

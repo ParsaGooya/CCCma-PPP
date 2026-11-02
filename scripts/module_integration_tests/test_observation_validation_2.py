@@ -10,19 +10,19 @@ from typing import Literal, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass
 
-# Import actual TrainDatasetConfig from cccma_ppp
+# Import actual TrainDatasetConfig from S2D4P
 try:
-    from cccma_ppp.train.dataset import TrainDatasetConfig
-    from cccma_ppp.data_modules.utils import add_lead_times
+    from S2D4P.train.dataset import TrainDatasetConfig
+    from S2D4Pdata.utils import add_lead_times
 
     CCCMA_AVAILABLE = True
 except ImportError:
-    # For testing without full cccma_ppp installation, provide mock add_lead_times
+    # For testing without full S2D4P installation, provide mock add_lead_times
     TrainDatasetConfig = None
     CCCMA_AVAILABLE = False
 
     def add_lead_times(init_times, lead_times, resolution="month"):
-        """Mock implementation for testing when cccma_ppp unavailable."""
+        """Mock implementation for testing when S2D4P unavailable."""
         result = []
 
         for init_t, lead_t in zip(init_times, lead_times):
@@ -179,7 +179,7 @@ class ObservationValidator:
             lead_times = np.concatenate([lead_times, lead_times_range[:remainder]])
 
         try:
-            # Calculate observation times using cccma_ppp function
+            # Calculate observation times using S2D4P function
             obs_times = add_lead_times(
                 init_times, lead_times, validation_range.resolution
             )
@@ -282,7 +282,7 @@ class DatasetDimensionExtractor:
         Parameters
         ----------
         config : TrainDatasetConfig
-            Actual TrainDatasetConfig instance from cccma_ppp
+            Actual TrainDatasetConfig instance from S2D4P
 
         Returns
         -------
@@ -349,7 +349,7 @@ def example_1_monthly_numpy():
     # Create lead times (1 to 12 months)
     lead_times = np.arange(1, 13)
 
-    # Calculate observation times using cccma_ppp function
+    # Calculate observation times using S2D4P function
     observation_times = add_lead_times(init_times, lead_times, "month")
 
     # Create DataFrame
@@ -388,7 +388,7 @@ def example_2_daily_numpy():
     # Create lead times (1 to 10 days, repeated)
     lead_times = np.tile(np.arange(1, 11), len(init_times) // 10 + 1)[: len(init_times)]
 
-    # Calculate observation times using cccma_ppp function
+    # Calculate observation times using S2D4P function
     observation_times = add_lead_times(init_times, lead_times, "day")
 
     # Create DataFrame
@@ -436,7 +436,7 @@ def example_3_cftime():
     # Custom lead times
     lead_times = np.array([1, 3, 5, 2, 4])
 
-    # Calculate observation times using cccma_ppp function
+    # Calculate observation times using S2D4P function
     observation_times = add_lead_times(init_times, lead_times, "day")
 
     # Create DataFrame - handle cftime datetime objects
@@ -487,7 +487,7 @@ def example_4_cftime_noleap():
     # Lead times: 1 to 6 months
     lead_times = np.arange(1, 7)
 
-    # Calculate observation times using cccma_ppp function
+    # Calculate observation times using S2D4P function
     observation_times = add_lead_times(init_times, lead_times, "month")
 
     # Create DataFrame - handle cftime datetime objects

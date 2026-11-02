@@ -17,7 +17,7 @@ import pandas as pd
 import seaborn as sns
 
 # Find the project root (documentation to audit)
-ROOT = Path("cccma_ppp")
+ROOT = Path("S2D4P")
 
 # Output directories for audit results
 OUTPUT_DIR = Path("../output/documentation_audit_results")

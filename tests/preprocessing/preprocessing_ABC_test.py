@@ -1677,7 +1677,7 @@ class TestInverseTargetTime:
         )
 
         with patch(
-            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            "S2D4P.preprocessing.preprocessing_ABC.add_lead_times",
             return_value=expected,
         ) as add_times:
             result = preprocessor._get_inverse_target_time(
@@ -1743,7 +1743,7 @@ class TestInverseTargetTime:
         )
 
         with patch(
-            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            "S2D4P.preprocessing.preprocessing_ABC.add_lead_times",
             return_value=np.asarray(
                 [
                     "2000-01-01",
@@ -1790,7 +1790,7 @@ class TestInverseTargetTime:
         )
 
         with patch(
-            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            "S2D4P.preprocessing.preprocessing_ABC.add_lead_times",
             return_value=np.asarray(
                 [
                     "2000-01-01",
@@ -1848,7 +1848,7 @@ class TestInverseTargetTime:
         )
 
         with patch(
-            "cccma_ppp.preprocessing.preprocessing_ABC.add_lead_times",
+            "S2D4P.preprocessing.preprocessing_ABC.add_lead_times",
             return_value=target_times,
         ):
             result = preprocessor._get_inverse_target_time(

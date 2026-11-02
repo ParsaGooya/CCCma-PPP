@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = cccma_ppp
+source = S2D4P
 omit =
     */tests/*
     */test_*

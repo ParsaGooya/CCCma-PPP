@@ -1066,7 +1066,7 @@ class TestTargetShape:
         dataset.observation_dataset = object()
 
         monkeypatch.setattr(
-            "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
+            "S2D4P.preprocessing.utils_preprocessing.Flattennanremove",
             FakeFlattennanremove,
         )
 

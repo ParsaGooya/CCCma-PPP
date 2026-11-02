@@ -4,12 +4,12 @@ import cftime
 import pandas as pd
 from pathlib import Path
 
-from cccma_ppp.data_modules.data.data_configs import (
+from S2D4Pdata.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
 )
-from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.data_modules.utils import add_lead_times
+from S2D4P.train.dataset import TrainDatasetConfig
+from S2D4Pdata.utils import add_lead_times
 
 
 def create_synthetic_model_data(output_path: str, years: list = None) -> xr.Dataset:
@@ -42,7 +42,7 @@ def create_synthetic_model_data(output_path: str, years: list = None) -> xr.Data
         280, 10, (len(init_times), len(lead_times), len(lats), len(lons))
     )
 
-    # Create dataset with time dimension (as expected by cccma_ppp)
+    # Create dataset with time dimension (as expected by S2D4P)
     ds = xr.Dataset(
         {
             "tas": (["time", "lead_time", "lat", "lon"], temp_data),
@@ -110,7 +110,7 @@ def create_synthetic_observations(output_path: str, dates: list = None) -> xr.Da
     np.random.seed(43)
     obs_data = np.random.normal(280, 10, (len(obs_times), len(lats), len(lons)))
 
-    # Create dataset with time dimension (as expected by cccma_ppp)
+    # Create dataset with time dimension (as expected by S2D4P)
     ds_obs = xr.Dataset(
         {
             "tas": (["time", "lat", "lon"], obs_data),
@@ -278,7 +278,7 @@ def main(
     create_synthetic_observations(obs_path)
 
     print("\n" + "=" * 80)
-    print("LOADING WITH cccma_ppp LIBRARY")
+    print("LOADING WITH S2D4P LIBRARY")
     print("=" * 80)
 
     try:
@@ -331,7 +331,7 @@ def main(
         print("\nSynthetic data created:")
         print(f"  Model: {model_path}")
         print(f"  Observations: {obs_path}")
-        print("\ncccma_ppp Library used:")
+        print("\nS2D4P Library used:")
         print("  ModelDataConfig: loads model data from directory")
         print("  ObsDataConfig: loads observation data from directory")
         print("  TrainDatasetConfig: combines them and finds common times")

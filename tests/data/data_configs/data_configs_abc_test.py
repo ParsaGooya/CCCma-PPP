@@ -217,7 +217,7 @@ def test_resolve_data_empty_directory(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc.glob.glob",
+        "S2D4P.data_modules.data.data_abc.glob.glob",
         return_value=[],
     ):
         with pytest.raises(FileNotFoundError):
@@ -230,11 +230,11 @@ def test_resolve_data_valid(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=make_valid_ds(),
         ),
     ):
@@ -248,11 +248,11 @@ def test_resolve_data_skip_checks_branch(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["file1.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
         ) as mock_open,
     ):
         _resolve_data(
@@ -282,11 +282,11 @@ def test_resolve_data_missing_required_dims(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -317,11 +317,11 @@ def test_resolve_data_init_time_coordinate_is_accepted(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -357,11 +357,11 @@ def test_resolve_data_invalid_dims(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -379,11 +379,11 @@ def test_resolve_data_missing_variable(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -413,11 +413,11 @@ def test_resolve_data_missing_coords(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -434,11 +434,11 @@ def test_resolve_data_realization_required_missing(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=make_valid_ds(),
         ),
     ):
@@ -457,11 +457,11 @@ def test_resolve_data_realization_present(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=make_ensemble_ds(),
         ),
     ):
@@ -494,11 +494,11 @@ def test_resolve_data_no_supported_nn_dimensions(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -520,11 +520,11 @@ def test_resolve_data_invalid_time_type(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -541,14 +541,14 @@ def test_resolve_data_multiple_files(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=[
                 "a.nc",
                 "b.nc",
             ],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             side_effect=[
                 make_valid_ds(),
                 make_valid_ds(),
@@ -580,11 +580,11 @@ def test_resolve_data_applies_rename_dict(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["x.nc"],
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+            "S2D4P.data_modules.data.data_abc.xr.open_dataset",
             return_value=ds,
         ),
     ):
@@ -598,7 +598,7 @@ def test_get_ds_info_basic(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -612,7 +612,7 @@ def test_get_ds_info_final_time(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -625,7 +625,7 @@ def test_get_ds_info_sizes(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -640,7 +640,7 @@ def test_get_ds_info_coords(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -655,7 +655,7 @@ def test_get_ds_info_time_metadata(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -672,15 +672,15 @@ def test_get_ds_info_time_helpers_are_used(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc.get_time_representation",
+            "S2D4P.data_modules.data.data_abc.get_time_representation",
             return_value=expected_type,
         ) as mock_representation,
         patch(
-            "cccma_ppp.data_modules.data.data_abc.infer_time_resolution",
+            "S2D4P.data_modules.data.data_abc.infer_time_resolution",
             return_value=expected_frequency,
         ) as mock_resolution,
     ):
@@ -709,7 +709,7 @@ def test_get_ds_info_requires_init_time_coordinate(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=ds,
     ):
         info = _get_ds_info(cfg)
@@ -726,7 +726,7 @@ def test_get_ds_info_with_realization_selection(tmp_path):
     )
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_ensemble_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -759,7 +759,7 @@ def test_get_ds_info_sizes_none(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=ds,
     ):
         info = _get_ds_info(cfg)
@@ -776,10 +776,10 @@ def test_get_ds_info_uses_existing_list_paths(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
         ) as mock_glob,
         patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ) as mock_load,
     ):
@@ -796,11 +796,11 @@ def test_get_ds_info_resolves_paths_when_not_set(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc.glob.glob",
+            "S2D4P.data_modules.data.data_abc.glob.glob",
             return_value=["resolved.nc"],
         ) as mock_glob,
         patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ) as mock_load,
     ):
@@ -815,7 +815,7 @@ def test_get_ds_info_without_realization_selection(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -829,7 +829,7 @@ def test_get_ds_info_coord_contents(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ):
         info = _get_ds_info(cfg)
@@ -854,7 +854,7 @@ def test_fit_preprocessor_pipeline(tmp_path):
     }
 
     with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        "S2D4P.data_modules.data.data_abc._load_xarray_data",
         return_value=make_valid_ds(),
     ) as mock_load:
         cfg.fit_preprocessor_pipeline(
@@ -901,11 +901,11 @@ def test_fit_preprocessor_pipeline_with_mask(tmp_path):
 
     with (
         patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ),
         patch(
-            "cccma_ppp.data_modules.data.data_abc._create_train_mask",
+            "S2D4P.data_modules.data.data_abc._create_train_mask",
             return_value=expected_mask,
         ) as mock_mask,
     ):
@@ -1037,10 +1037,10 @@ class TestDataConfigInitialization:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._resolve_data",
+                "S2D4P.data_modules.data.data_abc._resolve_data",
             ) as resolve,
             patch(
-                "cccma_ppp.data_modules.data.data_abc._get_ds_info",
+                "S2D4P.data_modules.data.data_abc._get_ds_info",
                 return_value=expected_info,
             ) as get_info,
         ):
@@ -1084,10 +1084,10 @@ class TestDataConfigInitialization:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._resolve_data",
+                "S2D4P.data_modules.data.data_abc._resolve_data",
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc._get_ds_info",
+                "S2D4P.data_modules.data.data_abc._get_ds_info",
                 return_value=Mock(),
             ),
         ):
@@ -1329,7 +1329,7 @@ class TestFitPreprocessorPipelineCleanup:
         base.load.return_value = loaded_base
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=base,
         ):
             config.fit_preprocessor_pipeline(
@@ -1355,7 +1355,7 @@ class TestFitPreprocessorPipelineCleanup:
         base.load.return_value = base
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=base,
         ):
             config.fit_preprocessor_pipeline(
@@ -1380,11 +1380,11 @@ class TestFitPreprocessorPipelineCleanup:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                "S2D4P.data_modules.data.data_abc._load_xarray_data",
                 return_value=base,
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.gc.collect",
+                "S2D4P.data_modules.data.data_abc.gc.collect",
             ) as collect,
         ):
             config.fit_preprocessor_pipeline(
@@ -1408,11 +1408,11 @@ class TestFitPreprocessorPipelineCleanup:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                "S2D4P.data_modules.data.data_abc._load_xarray_data",
                 return_value=base,
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc._create_train_mask",
+                "S2D4P.data_modules.data.data_abc._create_train_mask",
                 return_value=expected_mask,
             ) as create_mask,
         ):
@@ -1446,11 +1446,11 @@ class TestFitPreprocessorPipelineCleanup:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                "S2D4P.data_modules.data.data_abc._load_xarray_data",
                 return_value=make_valid_ds(),
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc._create_train_mask",
+                "S2D4P.data_modules.data.data_abc._create_train_mask",
             ) as create_mask,
         ):
             config.fit_preprocessor_pipeline(
@@ -1475,13 +1475,13 @@ class TestAdditionalResolveData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.zarr",
                 ],
             ) as resolve_paths,
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=make_valid_ds(),
             ),
         ):
@@ -1499,14 +1499,14 @@ class TestAdditionalResolveData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "first.nc",
                     "second.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 side_effect=[
                     make_valid_ds(),
                     make_valid_ds(),
@@ -1530,17 +1530,17 @@ class TestAdditionalResolveData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc._validate_time_sequence",
+                "S2D4P.data_modules.data.data_abc._validate_time_sequence",
             ) as validate,
         ):
             _resolve_data(config)
@@ -1561,21 +1561,21 @@ class TestAdditionalResolveData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "first.nc",
                     "second.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 side_effect=[
                     make_valid_ds(),
                     make_valid_ds(),
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.gc.collect",
+                "S2D4P.data_modules.data.data_abc.gc.collect",
             ) as collect,
         ):
             _resolve_data(config)
@@ -1595,13 +1595,13 @@ class TestAdditionalResolveData:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=make_valid_ds(),
             ),
         ):
@@ -1639,7 +1639,7 @@ class TestAdditionalGetDatasetInfo:
         ]
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ) as load_data:
             _get_ds_info(config)
@@ -1673,7 +1673,7 @@ class TestAdditionalGetDatasetInfo:
         ]
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_ensemble_ds(),
         ) as load_data:
             _get_ds_info(config)
@@ -1693,7 +1693,7 @@ class TestAdditionalGetDatasetInfo:
         dataset = make_valid_ds()
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=dataset,
         ):
             info = _get_ds_info(config)
@@ -1709,7 +1709,7 @@ class TestAdditionalGetDatasetInfo:
         dataset = make_valid_ds()
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=dataset,
         ):
             info = _get_ds_info(config)
@@ -1743,7 +1743,7 @@ class TestAdditionalGetDatasetInfo:
         config = DummyDataConfig(tmp_path)
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=dataset,
         ):
             info = _get_ds_info(config)
@@ -1759,7 +1759,7 @@ class TestAdditionalGetDatasetInfo:
         config = DummyDataConfig(tmp_path)
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_ensemble_ds(),
         ):
             info = _get_ds_info(config)
@@ -1789,13 +1789,13 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=dataset,
             ),
             patch.object(
@@ -1828,13 +1828,13 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=make_valid_ds(),
             ),
         ):
@@ -1882,13 +1882,13 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=dataset,
             ),
         ):
@@ -1936,13 +1936,13 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=dataset,
             ),
         ):
@@ -1992,13 +1992,13 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=dataset,
             ),
         ):
@@ -2051,13 +2051,13 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=dataset,
             ),
         ):
@@ -2098,17 +2098,17 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "static.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc._validate_time_sequence",
+                "S2D4P.data_modules.data.data_abc._validate_time_sequence",
             ) as validate,
         ):
             _resolve_data(config)
@@ -2133,13 +2133,13 @@ class TestMoreResolveDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                "S2D4P.data_modules.data.data_abc.glob.glob",
                 return_value=[
                     "data.nc",
                 ],
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                "S2D4P.data_modules.data.data_abc.xr.open_dataset",
                 return_value=make_valid_ds(),
             ),
         ):
@@ -2176,14 +2176,14 @@ class TestMoreDatasetInfoBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                "S2D4P.data_modules.data.data_abc._load_xarray_data",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc.get_time_representation",
+                "S2D4P.data_modules.data.data_abc.get_time_representation",
             ) as representation,
             patch(
-                "cccma_ppp.data_modules.data.data_abc.infer_time_resolution",
+                "S2D4P.data_modules.data.data_abc.infer_time_resolution",
             ) as resolution,
         ):
             info = _get_ds_info(config)
@@ -2210,7 +2210,7 @@ class TestMoreDatasetInfoBranches:
         )
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=dataset,
         ):
             info = _get_ds_info(config)
@@ -2235,7 +2235,7 @@ class TestMoreDatasetInfoBranches:
         )
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=dataset,
         ):
             info = _get_ds_info(config)
@@ -2277,11 +2277,11 @@ class TestMoreFitPreprocessorBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                "S2D4P.data_modules.data.data_abc._load_xarray_data",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc._create_train_mask",
+                "S2D4P.data_modules.data.data_abc._create_train_mask",
             ) as create_mask,
         ):
             config.fit_preprocessor_pipeline(
@@ -2304,7 +2304,7 @@ class TestMoreFitPreprocessorBranches:
         ]
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ):
             config.fit_preprocessor_pipeline(
@@ -2330,7 +2330,7 @@ class TestMoreFitPreprocessorBranches:
         ]
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ) as load_data:
             config.fit_preprocessor_pipeline(
@@ -2379,11 +2379,11 @@ class TestOpenXarrayDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                "S2D4P.data_modules.data.data_abc._load_xarray_data",
                 return_value=dataset,
             ) as load_data,
             patch(
-                "cccma_ppp.data_modules.data.data_abc._validate_time_sequence",
+                "S2D4P.data_modules.data.data_abc._validate_time_sequence",
             ) as validate,
         ):
             result = config.open_xarray_data(
@@ -2437,7 +2437,7 @@ class TestOpenXarrayDataBranches:
         )
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=make_valid_ds(),
         ) as load_data:
             config.open_xarray_data()
@@ -2475,11 +2475,11 @@ class TestOpenXarrayDataBranches:
 
         with (
             patch(
-                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                "S2D4P.data_modules.data.data_abc._load_xarray_data",
                 return_value=dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.data.data_abc._validate_time_sequence",
+                "S2D4P.data_modules.data.data_abc._validate_time_sequence",
             ) as validate,
         ):
             result = config.open_xarray_data()
@@ -2504,7 +2504,7 @@ class TestOpenXarrayDataBranches:
         config.data = old_data
 
         with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            "S2D4P.data_modules.data.data_abc._load_xarray_data",
             return_value=new_data,
         ):
             config.open_xarray_data()

@@ -467,7 +467,7 @@ class TestLoadWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ) as mock_open:
             result = config.build_weights(
@@ -521,11 +521,11 @@ class TestLoadWeights:
 
         with (
             patch(
-                "cccma_ppp.data_modules.weights.xr.open_dataset",
+                "S2D4P.data_modules.weights.xr.open_dataset",
                 return_value=loaded_dataset,
             ),
             patch(
-                "cccma_ppp.data_modules.weights._unwrap_data_variables",
+                "S2D4P.data_modules.weights._unwrap_data_variables",
                 return_value=unwrapped,
             ) as mock_unwrap,
         ):
@@ -561,7 +561,7 @@ class TestLoadWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             with pytest.raises(
@@ -595,7 +595,7 @@ class TestLoadWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             with pytest.raises(
@@ -627,7 +627,7 @@ class TestLoadWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             with pytest.raises(
@@ -653,7 +653,7 @@ class TestLoadWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             config.build_weights(
@@ -732,7 +732,7 @@ class TestSaveWeights:
         config = WeightsConfig()
 
         with (
-            patch("cccma_ppp.data_modules.weights.os.makedirs") as mock_makedirs,
+            patch("S2D4P.data_modules.weights.os.makedirs") as mock_makedirs,
             patch.object(
                 xr.DataArray,
                 "to_netcdf",
@@ -758,7 +758,7 @@ class TestSaveWeights:
 
         with (
             patch(
-                "cccma_ppp.data_modules.weights.os.makedirs",
+                "S2D4P.data_modules.weights.os.makedirs",
                 wraps=original_makedirs,
             ) as mock_makedirs,
             patch.object(
@@ -873,7 +873,7 @@ class TestFlattenNaNRemover:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             result = config.build_weights(
@@ -1297,19 +1297,19 @@ class TestAdditionalLoadedWeights:
 
         with (
             patch(
-                "cccma_ppp.data_modules.weights.xr.open_dataset",
+                "S2D4P.data_modules.weights.xr.open_dataset",
                 return_value=loaded,
             ),
             patch(
-                "cccma_ppp.data_modules.weights.np.any",
+                "S2D4P.data_modules.weights.np.any",
                 return_value=False,
             ),
             patch(
-                "cccma_ppp.data_modules.weights.np.isnan",
+                "S2D4P.data_modules.weights.np.isnan",
                 return_value=False,
             ),
             patch(
-                "cccma_ppp.data_modules.weights.np.isinf",
+                "S2D4P.data_modules.weights.np.isinf",
                 return_value=False,
             ),
         ):
@@ -1338,7 +1338,7 @@ class TestAdditionalLoadedWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             result = config.build_weights(
@@ -1366,7 +1366,7 @@ class TestAdditionalLoadedWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             result = config.build_weights(
@@ -1392,7 +1392,7 @@ class TestAdditionalLoadedWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             result = config.build_weights(
@@ -1417,7 +1417,7 @@ class TestAdditionalLoadedWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             with pytest.raises(
@@ -1443,7 +1443,7 @@ class TestAdditionalLoadedWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             with pytest.raises(
@@ -1469,7 +1469,7 @@ class TestAdditionalLoadedWeights:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             with pytest.raises(
@@ -1554,7 +1554,7 @@ class TestAdditionalSavingBranches:
         )
 
         with patch(
-            "cccma_ppp.data_modules.weights.xr.open_dataset",
+            "S2D4P.data_modules.weights.xr.open_dataset",
             return_value=loaded,
         ):
             config.build_weights(

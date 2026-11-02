@@ -6,7 +6,7 @@ from typing import Literal
 
 lead_time_unit = Literal["day", "month"]
 
-from cccma_ppp.data_modules.utils import add_lead_times
+from S2D4Pdata.utils import add_lead_times
 
 
 def create_observation_validation_csv(
@@ -16,7 +16,7 @@ def create_observation_validation_csv(
     output_path: str = "/fs/site7/eccc/crd/cccma/users/rna002/output/observation_validation/observation_validation.csv",
 ) -> pd.DataFrame:
     """
-    Create a CSV file for observation validation using cccma_ppp add_lead_times.
+    Create a CSV file for observation validation using S2D4P add_lead_times.
 
     Parameters
     ----------
@@ -34,7 +34,7 @@ def create_observation_validation_csv(
     pd.DataFrame
         DataFrame containing the validation data
     """
-    # Calculate observation times using cccma_ppp function
+    # Calculate observation times using S2D4P function
     observation_times = add_lead_times(init_times, lead_times, lead_time_resolution)
 
     # Create DataFrame - handle both numpy.datetime64 and cftime.datetime

@@ -1402,7 +1402,7 @@ def test_dataloader_forwards_zero_worker_options():
     )
 
     with patch(
-        "cccma_ppp.data_modules.dataloader.DataLoader",
+        "S2D4P.data_modules.dataloader.DataLoader",
     ) as constructor:
         Dataloader(
             config=config,
@@ -1429,7 +1429,7 @@ def test_dataloader_forwards_nonzero_worker_options():
     )
 
     with patch(
-        "cccma_ppp.data_modules.dataloader.DataLoader",
+        "S2D4P.data_modules.dataloader.DataLoader",
     ) as constructor:
         Dataloader(
             config=config,
@@ -1454,7 +1454,7 @@ def test_dataloader_wraps_collate_function_with_mask_options():
     )
 
     with patch(
-        "cccma_ppp.data_modules.dataloader.DataLoader",
+        "S2D4P.data_modules.dataloader.DataLoader",
     ) as constructor:
         Dataloader(
             config=config,
