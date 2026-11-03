@@ -18,7 +18,6 @@ from S2D4P.configs import (
 )
 
 from S2D4P.data.utils import (
-    TEMPORAL_ORDER,
     _load_xarray_data,
     _create_train_mask,
     _validate_time_sequence,
@@ -26,7 +25,6 @@ from S2D4P.data.utils import (
     get_time_representation,
     TimeTypes,
     TimeFrequency,
-    TEMPORAL_ORDER,
 )
 from S2D4P.generic.runtime import RuntimeContext
 

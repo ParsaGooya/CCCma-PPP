@@ -13,9 +13,7 @@ from typing import ClassVar, Literal
 from S2D4P.preprocessing.selector import PreprocessingStepSelector
 from S2D4P.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from S2D4P.generic.runtime import RuntimeContext
-from S2D4P.data.utils import (add_lead_times, 
-                                          TEMPORAL_ORDER, 
-                                          infer_time_resolution)
+from S2D4P.data.utils import add_lead_times, infer_time_resolution
 from S2D4P.configs import (
     supported_NN_dimensions_sorted,
     required_sample_dimensions,
@@ -177,17 +175,18 @@ class Normalizer(PreprocessModuleABC):
         )
 
         return data * (maximum - minimum) + minimum
-    
+
     def _reset_fit(self):
         """Reset fitted statistics while preserving configuration."""
         self.min = None
         self.max = None
         self.fitted = False
 
+
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
     """
-    Document this class. 
+    Document this class.
 
     Parameters
     ----------
@@ -265,7 +264,7 @@ class Standardizer(PreprocessModuleABC):
 
         if self.frequency is None or self.init_time_dim not in self.dims:
             self.mean = data.mean(reduction_dims).load()
-            std = data.std(reduction_dims, ddof = 1).load()
+            std = data.std(reduction_dims, ddof=1).load()
 
         else:
             grouped_data = self._add_grouping_coordinate(data)
@@ -1132,16 +1131,13 @@ def align_stat_data_lead_time_inverse_transform(
 
     if init_time_dim not in ds.coords:
         raise ValueError(
-            f"Data must contain the initialization-time coordinate "
-            f"{init_time_dim!r}."
+            f"Data must contain the initialization-time coordinate {init_time_dim!r}."
         )
 
     init_times = np.asarray(ds[init_time_dim].values)
 
     if init_times.ndim != 1:
-        raise ValueError(
-            f"Coordinate {init_time_dim!r} must be one-dimensional."
-        )
+        raise ValueError(f"Coordinate {init_time_dim!r} must be one-dimensional.")
 
     # Select the temporal reference.
     if lead_time_dim in stat.dims or lead_time_dim not in ds.dims:
@@ -1155,9 +1151,7 @@ def align_stat_data_lead_time_inverse_transform(
         lead_times = np.asarray(ds[lead_time_dim].values)
 
         if lead_times.ndim != 1:
-            raise ValueError(
-                f"Coordinate {lead_time_dim!r} must be one-dimensional."
-            )
+            raise ValueError(f"Coordinate {lead_time_dim!r} must be one-dimensional.")
 
         init_time_grid, lead_time_grid = np.meshgrid(
             init_times,

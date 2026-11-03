@@ -340,9 +340,7 @@ def test_output_preprocessor_dir_observation_branch(tmp_path):
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path
-        / "preprocessing_pipeline"
-        / "reference_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "reference_preprocessing_pipeline.joblib"
     )
 
 
@@ -992,9 +990,7 @@ def test_output_preprocessor_dir_prefers_observation(
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path
-        / "preprocessing_pipeline"
-        / "reference_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "reference_preprocessing_pipeline.joblib"
     )
 
 

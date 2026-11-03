@@ -21,7 +21,6 @@ from S2D4P.data.data_configs.data_configs import (
     RefDataConfig,
     build_time_range,
 )
-from S2D4P.data.data_configs.data_configs_abc import DataConfigABC
 
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
@@ -226,8 +225,10 @@ def test_forecast_resolve_and_info_are_called():
         called["info"] = True
         return DummyInfo()
 
-    with patch("S2D4P.data.data_configs.data_configs_abc._resolve_data", fake_resolve), \
-         patch("S2D4P.data.data_configs.data_configs_abc._get_ds_info", fake_info):
+    with (
+        patch("S2D4P.data.data_configs.data_configs_abc._resolve_data", fake_resolve),
+        patch("S2D4P.data.data_configs.data_configs_abc._get_ds_info", fake_info),
+    ):
         ForecastDataConfig(paths="x", names=["var"])
 
     assert called == {"resolve": True, "info": True}
@@ -471,8 +472,10 @@ def test_condition_resolve_and_info_are_called():
         called["info"] = True
         return DummyInfo()
 
-    with patch("S2D4P.data.data_configs.data_configs_abc._resolve_data", fake_resolve), \
-         patch("S2D4P.data.data_configs.data_configs_abc._get_ds_info", fake_info):
+    with (
+        patch("S2D4P.data.data_configs.data_configs_abc._resolve_data", fake_resolve),
+        patch("S2D4P.data.data_configs.data_configs_abc._get_ds_info", fake_info),
+    ):
         ConditionDataConfig(paths="x", names=["var"])
 
     assert called == {"resolve": True, "info": True}

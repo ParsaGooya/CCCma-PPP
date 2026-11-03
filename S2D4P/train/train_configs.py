@@ -22,7 +22,6 @@ from S2D4P.core.trainer import TrainerConfig
 from S2D4P.core.optimization import OptimizerConfig
 from S2D4P.core.core_abc import GenerativeContext
 
-from S2D4P.generic import registry_imports
 
 
 def set_seed(seed):
@@ -504,7 +503,6 @@ def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
         raise ValueError("only checks IO in data vs module.")
 
     if model_dims == 2:
-        
         if len(metadata.get("NN_dims")) != 2:
             if not all(
                 ["flattener" in pipeline for pipeline in metadata.get("preprocessors")]

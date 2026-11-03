@@ -16,7 +16,8 @@ from S2D4P.generic.runtime import RuntimeContext
 from S2D4P.train.dataloader import TrainDataloaderConfig
 from S2D4P.train.train_configs import set_seed
 
-from S2D4P.generic import registry_imports
+
+
 @dataclasses.dataclass
 class InferenceConfig:
     """
@@ -339,7 +340,6 @@ def build_writer(
 
     module = config.load_module()
     module = module.to(distributed.device)
-
 
     log("creating data loader ...")
 

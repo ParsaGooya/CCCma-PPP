@@ -116,7 +116,9 @@ class cVAEConfig(moduleConfigABC):
         self.latent_size = self.architecture_config.latent_size
 
         if self.prior_flow_config is not None:
-            self.condition_dependant_flow = self.architecture_config.condition_dependant_latent
+            self.condition_dependant_flow = (
+                self.architecture_config.condition_dependant_latent
+            )
 
         self.architecture_config._resolve_flow_settings(self.condition_dependant_flow)
 

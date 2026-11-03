@@ -195,7 +195,8 @@ class TrainDatasetConfig(DatasetConfigABC):
             ]
 
         return common_times[
-            (common_times >= forecast_times.min()) & (common_times <= forecast_times.max())
+            (common_times >= forecast_times.min())
+            & (common_times <= forecast_times.max())
         ]
 
     def fit_preprocessors(
@@ -471,13 +472,10 @@ class TrainDataset(DatasetABC):
             Description not yet provided.
         """
         if self.config.reference is not None:
-
             len_names = len(self.config.reference.names)
 
             if self.config.reference.preprocessing_pipeline.has_flattener:
-                flattener = (
-                    self.config.reference.preprocessing_pipeline.get_flattener()
-                )
+                flattener = self.config.reference.preprocessing_pipeline.get_flattener()
                 out_shape = flattener.final_locations.shape
 
             else:

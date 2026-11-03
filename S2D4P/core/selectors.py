@@ -240,7 +240,9 @@ class ArchSelector:
                 f"all architecture config overwritten by the saved model from {self.load_dir}"
             )
             if self._freeze_weights:
-                warnings.warn(f"Checkpoint {self.type} architecture weights will be frozen.")
+                warnings.warn(
+                    f"Checkpoint {self.type} architecture weights will be frozen."
+                )
 
     @classmethod
     def register(cls, name: str) -> Callable[..., ArchABC]:

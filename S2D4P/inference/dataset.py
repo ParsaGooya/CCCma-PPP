@@ -239,7 +239,10 @@ class InferenceDataset(DatasetABC):
             Description not yet provided.
         """
         return any(
-            [self.config._using_forecast_data_as_condition, self.config.forecast is None]
+            [
+                self.config._using_forecast_data_as_condition,
+                self.config.forecast is None,
+            ]
         )
 
     @property
@@ -329,7 +332,9 @@ def _from_train(
 
     train_has_reference = train_dataset_config.reference is not None
     train_has_condition = train_dataset_config.effective_condition is not None
-    train_condition_from_forecast = train_dataset_config._using_forecast_data_as_condition
+    train_condition_from_forecast = (
+        train_dataset_config._using_forecast_data_as_condition
+    )
 
     if train_has_reference and not train_has_condition:
         kwargs["forecast"] = copy.deepcopy(train_dataset_config.forecast)

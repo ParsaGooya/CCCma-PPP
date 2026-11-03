@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 import datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
