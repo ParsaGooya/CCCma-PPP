@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; CCCma PPP  documentation</title>
+  <title>Usage &mdash; S2D4P  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
@@ -32,7 +32,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            CCCma PPP
+            S2D4P
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -76,7 +76,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">CCCma PPP</a>
+          <a href="../index.html">S2D4P</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -98,13 +98,13 @@
 <h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
 <section id="training">
 <h2>Training<a class="headerlink" href="#training" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>cccma_ppp.train<span class="w"> </span>path_to_train_config.yaml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>S2D4P.train<span class="w"> </span>path_to_train_config.yaml
 </pre></div>
 </div>
 </section>
 <section id="inference">
 <h2>Inference<a class="headerlink" href="#inference" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>cccma_ppp.inference<span class="w"> </span>path_to_inference_config.yaml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>S2D4P.inference<span class="w"> </span>path_to_inference_config.yaml
 </pre></div>
 </div>
 </section>

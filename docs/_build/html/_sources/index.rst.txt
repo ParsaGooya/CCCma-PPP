@@ -1,4 +1,4 @@
-CCCma PPP
+S2D4P
 =========
 
 .. toctree::

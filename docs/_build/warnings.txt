@@ -38,19 +38,19 @@
 <unknown>:1: WARNING: duplicate object description of S2D4P.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling, other instance in api/S2D4P.inference.predictors, use :no-index: for one of them
 <unknown>:1: WARNING: duplicate object description of S2D4P.inference.predictors.predictor_abc.PredictorABC.output_dir, other instance in api/S2D4P.inference.predictors, use :no-index: for one of them
 <unknown>:1: WARNING: duplicate object description of S2D4P.inference.predictors.predictor_abc.PredictorABC.output_sampler, other instance in api/S2D4P.inference.predictors, use :no-index: for one of them
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/S2D4P/loss/loss_abc.py:docstring of S2D4P.loss.loss_abc.lossABC:9: WARNING: duplicate object description of S2D4P.loss.loss_abc.lossABC.generative_context, other instance in api/S2D4P.loss, use :no-index: for one of them
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/loss/loss_abc.py:docstring of S2D4P.loss.loss_abc.lossABC:9: WARNING: duplicate object description of S2D4P.loss.loss_abc.lossABC.generative_context, other instance in api/S2D4P.loss, use :no-index: for one of them
 <unknown>:1: WARNING: duplicate object description of S2D4P.loss.loss_abc.lossABC.generative_context, other instance in api/S2D4P.loss, use :no-index: for one of them
 <unknown>:1: WARNING: duplicate object description of S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted, other instance in api/S2D4P.preprocessing, use :no-index: for one of them
 <unknown>:1: WARNING: duplicate object description of S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble, other instance in api/S2D4P.preprocessing, use :no-index: for one of them
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/start_here/further_development.rst:2: WARNING: Title underline too short.
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/source/start_here/further_development.rst:2: WARNING: Title underline too short.
 
 Further Development
 ============ [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/start_here/usage.rst:10: WARNING: Title underline too short.
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/source/start_here/usage.rst:10: WARNING: Title underline too short.
 
 Inference
 -------- [docutils]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/S2D4P.core.models.rst:8: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/S2D4P.core.models.rst:8: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/S2D4P.core.models.rst:16: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/S2D4P.core.models.rst:16: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/source/api/S2D4P.core.models.rst:8: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/source/api/S2D4P.core.models.rst:8: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/source/api/S2D4P.core.models.rst:16: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
+/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/docs/source/api/S2D4P.core.models.rst:16: WARNING: more than one target found for cross-reference 'BatchData': S2D4P.inference.dataloader.BatchData, S2D4P.train.dataloader.BatchData [ref.python]
