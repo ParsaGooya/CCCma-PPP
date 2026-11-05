@@ -4,28 +4,41 @@ from typing import Any
 
 class Registery:
     """
-    Document this class.
+    Registry for named classes.
+
+    Classes can be registered under unique string identifiers and later
+    instantiated by name using optional keyword configuration.
     """
 
     def __init__(self):
         """
-        Document this function.
+        Registry for named classes.
+
+        Classes can be registered under unique string identifiers and later
+        instantiated by name using optional keyword configuration.
         """
         self._modules = {}
 
     def register(self, name: str):
         """
-        Document this function.
+        Create a decorator that registers a class under a unique name.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
+        name : str
+            Name used to identify the registered class.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Callable
+            Decorator that registers and returns the supplied class.
+
+        Raises
+        ------
+        TypeError
+            If ``name`` is not a string.
+        ValueError
+            If ``name`` is empty or has already been registered.
         """
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got {type(name)}.")
@@ -40,12 +53,22 @@ class Registery:
 
         def decorator(cls):
             """
-            Document this function.
+            Register a class under the configured name.
+
+            Parameters
+            ----------
+            cls : type
+                Class to register.
 
             Returns
             -------
-            Any
-                Description not yet provided.
+            type
+                Registered class, returned unchanged.
+
+            Raises
+            ------
+            TypeError
+                If the decorated object is not a class.
             """
             if not inspect.isclass(cls):
                 raise TypeError(
@@ -59,24 +82,30 @@ class Registery:
 
     def get(self, name: str, config: dict | None = None) -> Any:
         """
-        Document this function.
+        Retrieve and instantiate a registered class.
+
+        When no configuration is provided, the class is instantiated without
+        arguments. Otherwise, the configuration dictionary is expanded into keyword
+        arguments.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
-        config : Any
-            Description not yet provided.
+        name : str
+            Name identifying the registered class.
+        config : dict | None
+            Keyword arguments used to construct the registered class.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Instance of the registered class.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``name`` is not registered.
+        TypeError
+            If ``config`` is neither a dictionary nor ``None``.
         """
         if name not in self._modules:
             raise ValueError(f"{name} not registered. should be in {self.available()}")
@@ -96,11 +125,11 @@ class Registery:
 
     def available(self):
         """
-        Document this function.
+        Return the names of all registered classes.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list[str]
+            Names currently available in the registry.
         """
         return list(self._modules.keys())

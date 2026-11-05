@@ -14,20 +14,24 @@ from S2D4P.generic.runtime import RuntimeContext
 @dataclasses.dataclass
 class MetricsAggregator:
     """
-    Document this class.
+    Accumulate and aggregate training or validation metrics.
+
+    Batch-level losses, learning rates, and auxiliary scalar values are summed
+    locally and can be reduced across distributed processes. Aggregated epoch
+    metrics and elapsed times are retained for checkpointing and plotting.
 
     Parameters
     ----------
     distributed : Distributed
-        Description not yet provided.
+        Distributed runtime used to reduce metrics across processes.
     name : str
-        Description not yet provided.
+        Name identifying the metric collection, such as training or validation.
     epoch_metric_terms : dict[str, list[float]] | None
-        Description not yet provided.
+        Previously recorded epoch-level metrics keyed by metric name.
     epoch_times : list[float] | None
-        Description not yet provided.
+        Previously recorded elapsed times for each epoch.
     num_epochs_seen : int
-        Description not yet provided.
+        Number of epochs represented by the stored history.
     """
 
     distributed: Distributed
@@ -39,12 +43,13 @@ class MetricsAggregator:
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize batch accumulators and validate existing epoch history.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If stored metric histories have inconsistent lengths or ``epoch_times``
+            does not match the number of recorded metric epochs.
         """
         self.loss_terms = defaultdict(float)
         self.lr_values = 0.0
@@ -84,16 +89,20 @@ class MetricsAggregator:
         kwargs: dict[str, torch.Tensor | int | float] | None = None,
     ) -> None:
         """
-        Document this function.
+        Accumulate metrics from one batch.
+
+        Tensor values are detached, converted to floating point, averaged when
+        necessary, and accumulated as Python scalars.
 
         Parameters
         ----------
         loss_dict : dict[str, torch.Tensor | int | float]
-            Description not yet provided.
+            Batch loss values keyed by metric name.
         lr : torch.Tensor | int | float | None
-            Description not yet provided.
+            Learning rate associated with the batch.
         kwargs : dict[str, torch.Tensor | int | float] | None
-            Description not yet provided.
+            Additional scalar values, such as annealing coefficients, to aggregate
+            with the batch metrics.
         """
         for name, value in loss_dict.items():
             if value is None:
@@ -128,13 +137,17 @@ class MetricsAggregator:
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
         """
-        Document this function.
+        Compute distributed averages for accumulated batch metrics.
+
+        Losses, auxiliary values, and learning rates are reduced across all
+        distributed processes using the total number of recorded batches.
 
         Returns
         -------
         dict[str, float]
-            Description not yet provided.
+            Globally averaged metrics for the accumulated batches.
         """
+
         logs = {}
 
         for name in sorted(self.loss_terms):
@@ -150,17 +163,18 @@ class MetricsAggregator:
 
     def _dist_average(self, tensor: float) -> float:
         """
-        Document this function.
+        Compute a batch-weighted average across distributed processes.
 
         Parameters
         ----------
         tensor : float
-            Description not yet provided.
+            Locally accumulated scalar value.
 
         Returns
         -------
         float
-            Description not yet provided.
+            Global accumulated value divided by the total number of batches, or
+            ``NaN`` if no batches were recorded.
         """
         local = torch.tensor(
             [tensor, self.num_batches_seen],
@@ -185,28 +199,35 @@ class MetricsAggregator:
         time_elapsed: float = None,
     ):
         """
-        Document this function.
+        Store aggregated metrics for an epoch.
+
+        Metrics are appended to the epoch history by default. When ``replace_index``
+        is provided, an existing epoch entry is replaced instead. Batch accumulators
+        are reset after the epoch is recorded.
 
         Parameters
         ----------
         logs : dict[str, float]
-            Description not yet provided.
-        replace_index : int
-            Description not yet provided.
-        time_elapsed : float
-            Description not yet provided.
+            Distributed epoch metrics keyed by metric name.
+        replace_index : int | None
+            Index of an existing epoch entry to replace. If ``None``, a new epoch is
+            appended.
+        time_elapsed : float | None
+            Elapsed time for the epoch. If ``None``, ``NaN`` is recorded.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict[str, float]
+            The recorded epoch metrics.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If distributed metric aggregation has not been performed before recording
+            the epoch.
         ValueError
-            Description not yet provided.
+            If replacement is requested for a metric that has not previously been
+            recorded.
         """
         if not self._aggregated_across_ranks:
             raise RuntimeError(
@@ -243,12 +264,15 @@ class MetricsAggregator:
 
     def reset_batch_losses(self):
         """
-        Document this function.
+        Reset accumulated batch-level metrics.
+
+        Loss, auxiliary-value, learning-rate, and batch-count accumulators are cleared
+        after at least one epoch has been submitted.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If batch metrics are reset before any epoch has been submitted.
         """
         if self.epochs_submitted:
             self.loss_terms = defaultdict(float)
@@ -270,23 +294,30 @@ class MetricsAggregator:
         figsize=(8, 5),
     ) -> None:
         """
-        Document this function.
+        Plot and save recorded epoch metrics.
+
+        A separate plot and CSV file are generated for each recorded metric. Epoch
+        times are also plotted. Existing files for the same metrics are replaced.
+        Training and validation aggregators receive default blue and orange styles
+        when explicit styles are not provided.
 
         Parameters
         ----------
-        aggregator_list : list['MetricsAggregator']
-            Description not yet provided.
-        color_styles_list : list[tuple[str, str]]
-            Description not yet provided.
+        aggregator_list : list[MetricsAggregator]
+            Metric aggregators whose epoch histories are plotted together.
+        color_styles_list : list[tuple[str, str]] | None
+            Optional color and line-style pair for each aggregator.
         plot_dir : str | Path | None
-            Description not yet provided.
-        figsize : Any
-            Description not yet provided.
+            Directory in which plots and CSV files are saved. If ``None``, the global
+            figures directory is used.
+        figsize : tuple
+            Width and height of generated figures in inches.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If no aggregators are provided, aggregators contain different numbers of
+            epochs or history entries, or no epochs have been recorded.
         """
         if plot_dir is None:
             plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
@@ -456,12 +487,13 @@ class MetricsAggregator:
 
     def state_dict(self):
         """
-        Document this function.
+        Return the stored epoch metric state.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            Aggregator name, epoch metric histories, epoch times, and number of
+            recorded epochs.
         """
         return {
             "name": self.name,
@@ -472,12 +504,13 @@ class MetricsAggregator:
 
     def load_state_dict(self, state_dict):
         """
-        Document this function.
+        Restore stored epoch metric state.
 
         Parameters
         ----------
-        state_dict : Any
-            Description not yet provided.
+        state_dict : dict
+            Saved aggregator state containing metric histories, timing information,
+            and epoch counts.
         """
         self.name = state_dict.get("name")
         self.epoch_metric_terms = state_dict.get("epoch_metric_terms", None)
@@ -490,18 +523,23 @@ class MetricsAggregator:
 @dataclasses.dataclass
 class RunningCovariance:
     """
-    Document this class.
+    Accumulate statistics required to compute a covariance matrix.
+
+    Maintains the running sum of observations, sum of outer products, and sample
+    count. Statistics can be reduced across distributed processes before the
+    final mean and unbiased sample covariance are calculated.
 
     Parameters
     ----------
     distributed : Distributed
-        Description not yet provided.
+        Distributed runtime used to reduce accumulated statistics across
+        processes.
     sum_x : torch.Tensor | None
-        Description not yet provided.
+        Running sum of observations.
     sum_xxT : torch.Tensor | None
-        Description not yet provided.
+        Running sum of observation outer products.
     count : torch.Tensor | None
-        Description not yet provided.
+        Number of observations accumulated.
     """
 
     distributed: Distributed
@@ -511,12 +549,13 @@ class RunningCovariance:
 
     def update(self, x: torch.Tensor):
         """
-        Document this function.
+        Update running covariance statistics with a batch of observations.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Two-dimensional tensor with samples along the first dimension and
+            features along the second dimension.
         """
         x = x.detach().double()
 
@@ -539,7 +578,10 @@ class RunningCovariance:
 
     def distributed_reduce(self):
         """
-        Document this function.
+        Sum accumulated covariance statistics across distributed processes.
+
+        The running observation sum, outer-product sum, and sample count are reduced
+        in place across all processes.
         """
         self.distributed.all_reduce_sum(self.sum_x)
         self.distributed.all_reduce_sum(self.sum_xxT)
@@ -547,22 +589,27 @@ class RunningCovariance:
 
     def finalize(self, print_checks=False):
         """
-        Document this function.
+        Compute the mean and unbiased sample covariance.
+
+        The covariance matrix is explicitly symmetrized before being returned.
+        Optional diagnostic output reports symmetry error, minimum eigenvalue, sample
+        count, and feature dimension.
 
         Parameters
         ----------
-        print_checks : Any
-            Description not yet provided.
+        print_checks : bool
+            Whether to print numerical diagnostics for the calculated covariance
+            matrix.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        tuple[torch.Tensor, torch.Tensor]
+            Mean vector and covariance matrix moved to CPU.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If fewer than two observations have been accumulated.
         """
         mean = self.sum_x / self.count
 

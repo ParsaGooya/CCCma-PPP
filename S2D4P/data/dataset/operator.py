@@ -14,34 +14,39 @@ from S2D4P.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 class DatasetOperator:
     """
-    Document this class.
+    Coordinate dataset-level preprocessing, weighting, and metadata operations.
+
+    Provides shared operations across forecast, reference, and conditioning data
+    configured by a dataset configuration.
 
     Parameters
     ----------
     config : DatasetConfigABC
-        Description not yet provided.
+        Dataset configuration defining the active data sources and preprocessing
+        pipelines.
     """
 
     def __init__(self, config: DatasetConfigABC):
         """
-        Document this function.
+        Initialize the dataset operator.
 
         Parameters
         ----------
         config : DatasetConfigABC
-            Description not yet provided.
+            Dataset configuration on which operations are performed.
         """
         self.config = config
 
     @property
     def config_reference(self):
         """
-        Document this function.
+        Return the configured reference dataset when available.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        DataConfigABC | None
+            Reference data configuration, or ``None`` when the dataset configuration
+            does not define reference data.
         """
         if hasattr(self.config, "reference"):
             return self.config.reference
@@ -58,23 +63,28 @@ class DatasetOperator:
         save_name: str | None = None,
     ):
         """
-        Document this function.
+        Fit active preprocessing pipelines using training data.
+
+        Training times are validated against the available dataset times before
+        forecast, reference, and conditioning preprocessing pipelines are fitted.
+        Temporal training masks are applied to forecast and non-static conditioning
+        data.
 
         Parameters
         ----------
         train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-            Description not yet provided.
-        save : Any
-            Description not yet provided.
+            Initialization times used to fit preprocessing statistics.
+        save : bool
+            Whether fitted preprocessing pipelines are saved.
         save_path : Path | str | None
-            Description not yet provided.
+            Directory in which fitted preprocessing pipelines are saved.
         save_name : str | None
-            Description not yet provided.
+            Optional filename used when saving preprocessing pipelines.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If one or more requested training times are unavailable.
         """
 
         train_times_array = np.asarray(train_times)
@@ -154,12 +164,13 @@ class DatasetOperator:
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Document this function.
+        Load fitted preprocessing pipelines for all active data sources.
 
         Parameters
         ----------
         load_dir : Path | str | None
-            Description not yet provided.
+            Directory containing saved preprocessing pipelines. If ``None``, each
+            data configuration uses its default preprocessing location.
         """
         if self.config.forecast is not None:
             self.config.forecast.load_preprocessor_pipeline(load_dir)
@@ -174,21 +185,21 @@ class DatasetOperator:
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
-        Document this function.
+        Add a fitted preprocessing module to all active pipelines.
 
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
+            Fitted preprocessing module to add.
+        index : int
+            Position at which the preprocessing module is inserted.
 
         Raises
         ------
-        AssertionError
-            Description not yet provided.
         TypeError
-            Description not yet provided.
+            If ``preprocessor`` is not an instance of ``PreprocessModuleABC``.
+        ValueError
+            If ``preprocessor`` has not been fitted.
         """
         if not isinstance(preprocessor, PreprocessModuleABC):
             raise TypeError(
@@ -220,30 +231,36 @@ class DatasetOperator:
         save_name: str | None = None,
     ) -> xr.DataArray:
         """
-        Document this function.
+        Build loss weights from the configured target data.
+
+        Reference data are used when available; otherwise, forecast data define the
+        target coordinates and variables. If the target preprocessing pipeline
+        contains a flattener, it is supplied when constructing the weights.
 
         Parameters
         ----------
         config : WeightsConfig | None
-            Description not yet provided.
+            Configuration used to construct loss weights. If ``None``, default weight
+            settings are used.
         save : bool
-            Description not yet provided.
+            Whether generated weights are saved.
         save_path : Path | str | None
-            Description not yet provided.
+            Directory in which generated weights are saved.
         save_name : str | None
-            Description not yet provided.
+            Optional filename used when saving generated weights.
 
         Returns
         -------
         xr.DataArray
-            Description not yet provided.
+            Generated loss weights aligned with target dimensions and variables.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If channel-specific weights do not match the configured output variables.
         ValueError
-            Description not yet provided.
+            If neither reference nor forecast data are available to define the target
+            coordinates.
         """
         if config is None:
             config = WeightsConfig()
@@ -286,12 +303,17 @@ class DatasetOperator:
 
     def get_input_var_metadata(self) -> dict:
         """
-        Document this function.
+        Return metadata describing model input variables.
+
+        Metadata include input variable names, preprocessing steps applied to each
+        variable, and neural-network dimensions. Conditioning metadata are included
+        according to the configured conditioning behavior.
 
         Returns
         -------
         dict
-            Description not yet provided.
+            Input metadata containing ``variables``, ``preprocessors``, and
+            ``NN_dims``.
         """
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
@@ -334,17 +356,22 @@ class DatasetOperator:
 
     def get_target_var_metadata(self):
         """
-        Document this function.
+        Return metadata describing model target variables.
+
+        Reference data define the target when available. Otherwise, forecast data are
+        used.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            Target metadata containing ``variables``, ``preprocessors``, and
+            ``NN_dims``.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If neither reference nor forecast data are available to define target
+            metadata.
         """
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
@@ -387,19 +414,22 @@ class DatasetOperator:
         self, metadata: dict, dataconfig: DataConfigABC
     ):
         """
-        Document this function.
+        Append data-source metadata to a metadata dictionary.
+
+        Each configured variable is added together with the ordered preprocessing
+        steps associated with its data source.
 
         Parameters
         ----------
         metadata : dict
-            Description not yet provided.
+            Metadata dictionary containing variable and preprocessor lists.
         dataconfig : DataConfigABC
-            Description not yet provided.
+            Data configuration whose variable and preprocessing information is added.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            Updated metadata dictionary.
         """
         preprocessor_names = [
             processor[0].lower()
@@ -413,7 +443,16 @@ class DatasetOperator:
 
     @property
     def _fitted_preprocessors(self) -> bool:
-        """Check if all active pipelines are fitted."""
+        """
+        Indicate whether all active preprocessing pipelines are fitted.
+
+        Returns
+        -------
+        bool
+            ``True`` when every active forecast, reference, and conditioning
+            preprocessing pipeline is fitted. Returns ``False`` when no active
+            pipelines are available.
+        """
         pipelines = []
         if self.config.forecast is not None:
             pipelines.append(self.config.forecast.preprocessing_pipeline.fitted)
@@ -429,17 +468,22 @@ class DatasetOperator:
 
 def _build_chunks(config: DataConfigABC | None = None):
     """
-    Document this function.
+    Build sample-dimension chunk settings for a data configuration.
+
+    Initialization time, lead time, and realization dimensions that are present
+    in the configured data are assigned a chunk size of one.
 
     Parameters
     ----------
     config : DataConfigABC | None
-        Description not yet provided.
+        Data configuration whose available sample dimensions determine the chunk
+        settings.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    dict[str, int] | None
+        Mapping of available sample dimensions to a chunk size of one, or
+        ``None`` when no configuration is provided.
     """
     if config is None:
         return

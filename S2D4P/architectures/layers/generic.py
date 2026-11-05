@@ -17,17 +17,18 @@ NoiseLevel = Literal["full", "medium", "low"]
 
 def _validate_dropout(value: float | None) -> None:
     """
-    Document this function.
+    Validate a dropout probability.
 
     Parameters
     ----------
     value : float | None
-        Description not yet provided.
+        Dropout probability to validate. If ``None``, dropout is considered
+        disabled.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If ``value`` is outside the interval [0, 1].
     """
     if value is not None and not 0 <= value <= 1:
         raise ValueError("Dropout rates must be between 0 and 1.")
@@ -35,22 +36,22 @@ def _validate_dropout(value: float | None) -> None:
 
 def _build_activation(name: ActivationName) -> nn.Module:
     """
-    Document this function.
+    Build an activation module from its configured name.
 
     Parameters
     ----------
     name : ActivationName
-        Description not yet provided.
+        Activation function to construct.
 
     Returns
     -------
     nn.Module
-        Description not yet provided.
+        Configured activation module.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If ``name`` is not a supported activation function.
     """
     if name == "relu":
         return nn.ReLU(inplace=True)
@@ -68,26 +69,29 @@ def _build_normalization(
     group_norm_groups: int = 8,
 ) -> nn.Module:
     """
-    Document this function.
+    Build a normalization module.
+
+    For group normalization, the requested number of groups is reduced when
+    necessary until it evenly divides the number of channels.
 
     Parameters
     ----------
     name : NormalizationMethod
-        Description not yet provided.
+        Normalization method to construct.
     channels : int
-        Description not yet provided.
+        Number of feature channels to normalize.
     group_norm_groups : int
-        Description not yet provided.
+        Maximum number of groups used for group normalization.
 
     Returns
     -------
     nn.Module
-        Description not yet provided.
+        Configured normalization module.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If ``name`` is not a supported normalization method.
     """
     if name == "batch":
         return nn.BatchNorm2d(channels)
@@ -109,26 +113,29 @@ def _build_normalization(
 
 class LayerNorm2d(nn.Module):
     """
-    Document this class.
+    Apply layer normalization to channel-first two-dimensional feature maps.
+
+    Normalization is performed over the channel dimension independently at each
+    spatial location.
 
     Parameters
     ----------
     num_channels : int
-        Description not yet provided.
+        Number of feature channels.
     eps : float
-        Description not yet provided.
+        Small value added for numerical stability during normalization.
     """
 
     def __init__(self, num_channels: int, eps: float = 1e-6):
         """
-        Document this function.
+        Initialize two-dimensional layer normalization.
 
         Parameters
         ----------
         num_channels : int
-            Description not yet provided.
+            Number of feature channels.
         eps : float
-            Description not yet provided.
+            Small value added for numerical stability during normalization.
         """
         super().__init__()
         self.weight = nn.Parameter(torch.ones(num_channels))
@@ -137,17 +144,17 @@ class LayerNorm2d(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Document this function.
+        Apply layer normalization to a feature tensor.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Channel-first tensor with shape ``(batch, channels, height, width)``.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Layer-normalized tensor with the same shape as the input.
         """
         return F.layer_norm(
             x.permute(0, 2, 3, 1),
@@ -160,39 +167,46 @@ class LayerNorm2d(nn.Module):
 
 class DropPath(nn.Module):
     """
-    Document this class.
+    Apply stochastic depth to a residual branch.
+
+    During training, complete residual paths are independently dropped for each
+    batch element and retained paths are rescaled to preserve their expected
+    magnitude.
 
     Parameters
     ----------
     drop_probability : float
-        Description not yet provided.
+        Probability of dropping a residual path.
     """
 
     def __init__(self, drop_probability: float = 0.0):
         """
-        Document this function.
+        Initialize stochastic depth.
 
         Parameters
         ----------
         drop_probability : float
-            Description not yet provided.
+            Probability of dropping a residual path during training.
         """
         super().__init__()
         self.drop_probability = drop_probability
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Document this function.
+        Apply stochastic depth to an input tensor.
+
+        During evaluation, or when the drop probability is zero, the input is
+        returned unchanged.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Input residual tensor.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Tensor with stochastic depth applied during training.
         """
         if self.drop_probability == 0.0 or not self.training:
             return x

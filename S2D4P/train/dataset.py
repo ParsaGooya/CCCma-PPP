@@ -32,20 +32,26 @@ from S2D4P.configs import lead_time_resolution
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
     """
-    Document this class.
+    Configuration for a training dataset.
+
+    Defines forecast inputs, optional reference targets, optional conditioning
+    data, the conditioning strategy, and forecast lead times used to construct
+    training samples.
 
     Parameters
     ----------
     forecast : ForecastDataConfig
-        Description not yet provided.
+        Forecast data configuration used to construct model inputs and, when no
+        reference data are provided, training targets.
     reference : RefDataConfig | None
-        Description not yet provided.
+        Optional reference data configuration used to construct training targets.
     condition : ConditionDataConfig | None
-        Description not yet provided.
-    condition_method : str
-        Description not yet provided.
+        Optional auxiliary conditioning data configuration.
+    condition_method : str | None
+        Method used to associate conditioning data with forecast inputs.
     lead_times : lead_time_config | None
-        Description not yet provided.
+        Forecast lead times included in training samples. If ``None``, all
+        available input lead times are used.
     """
 
     forecast: ForecastDataConfig
@@ -56,7 +62,10 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize and validate the training dataset configuration.
+
+        Performs common dataset configuration validation and then checks compatibility
+        between forecast and optional reference data.
         """
         super().__init__()
 
@@ -64,22 +73,28 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def _check_reference(self):
         """
-        Document this function.
+        Validate compatibility between forecast and reference data.
+
+        Spatial neural-network coordinates are compared when reference data are
+        provided, and both sources must use the same datetime representation. When no
+        reference data are configured, a conditioning method is required.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        TrainDatasetConfig
+            This validated training dataset configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If forecast and reference data use different datetime representations, or
+            no reference data and no conditioning method are configured.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If forecast and reference data have different neural-network coordinates
+            or a reference neural-network dimension is absent from the forecast data.
         """
         if self.reference is not None:
             for dim in [
@@ -122,36 +137,41 @@ class TrainDatasetConfig(DatasetConfigABC):
     @property
     def effective_input(self):
         """
-        Document this function.
+        Return the primary data source used for model input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        ForecastDataConfig
+            Forecast data configuration.
         """
         return self.forecast
 
     @property
     def ds_operator(self):
         """
-        Document this function.
+        Return an operator for this training dataset configuration.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        DatasetOperator
+            Dataset operator providing preprocessing, weighting, and metadata
+            operations.
         """
         return DatasetOperator(self)
 
     @property
     def get_common_time(self):
         """
-        Document this function.
+        Return the temporal coverage shared by forecast and target data.
+
+        When no reference data are configured, the forecast temporal range is used
+        directly.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Intersection of forecast and reference temporal coverage, or forecast
+            temporal coverage when no reference data are configured.
         """
         if self.reference is None:
             return self.forecast.time_range
@@ -162,12 +182,18 @@ class TrainDatasetConfig(DatasetConfigABC):
     @property
     def available_times(self):
         """
-        Document this function.
+        Return initialization times available for training.
+
+        The common forecast and reference temporal coverage is restricted to the
+        initialization period represented by the forecast data. Yearly and
+        monthly-initialized forecasts are handled using their corresponding calendar
+        resolution.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Times within the common temporal coverage that are valid forecast
+            initialization times.
         """
         forecast_times = self.forecast.coords[self.init_time_dim].to_index()
         common_times = self.get_common_time
@@ -211,18 +237,18 @@ class TrainDatasetConfig(DatasetConfigABC):
         save_name: str | None = None,
     ):
         """
-        Document this function.
+        Fit preprocessing pipelines using selected training times.
 
         Parameters
         ----------
-        train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray | slice
-            Description not yet provided.
+        train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
+            Initialization times used to estimate preprocessing statistics.
         save : bool
-            Description not yet provided.
+            Whether fitted preprocessing pipelines are saved.
         save_path : str | Path | None
-            Description not yet provided.
+            Directory in which fitted preprocessing pipelines are saved.
         save_name : str | None
-            Description not yet provided.
+            Optional filename used when saving fitted preprocessing pipelines.
         """
         self.ds_operator.fit_preprocessors(
             train_times=train_times,
@@ -233,25 +259,26 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Document this function.
+        Load fitted preprocessing pipelines for the training data sources.
 
         Parameters
         ----------
         load_dir : Path | str | None
-            Description not yet provided.
+            Directory containing saved preprocessing pipelines. If ``None``, the
+            default preprocessing location is used.
         """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor, index=0):
         """
-        Document this function.
+        Add a fitted preprocessing module to the active data pipelines.
 
         Parameters
         ----------
-        preprocessor : Any
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
+        preprocessor : PreprocessModuleABC
+            Fitted preprocessing module to add.
+        index : int
+            Position at which the preprocessing module is inserted.
         """
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
@@ -268,25 +295,26 @@ class TrainDatasetConfig(DatasetConfigABC):
         load: bool = False,
     ):
         """
-        Document this function.
+        Build a training dataset from this configuration.
 
         Parameters
         ----------
         times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-            Description not yet provided.
+            Initialization times included in the training dataset.
         time_features : AddedTimeFeatures
-            Description not yet provided.
+            Temporal feature generator applied to training samples.
         mask : xr.DataArray | None
-            Description not yet provided.
+            Optional mask identifying initialization-time and lead-time combinations
+            excluded from sampling.
         return_metadata : bool
-            Description not yet provided.
+            Whether each sample is returned with its sampling-coordinate metadata.
         load : bool
-            Description not yet provided.
+            Whether underlying xarray data are loaded into memory when opened.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        TrainDataset
+            Constructed training dataset.
         """
         return TrainDataset(
             config=self,
@@ -301,22 +329,26 @@ class TrainDatasetConfig(DatasetConfigABC):
 @dataclasses.dataclass
 class TrainDataset(DatasetABC):
     """
-    Document this class.
+    Dataset for constructing model inputs and targets during training.
+
+    Training samples are assembled from forecast, reference, and conditioning
+    data according to the configured conditioning strategy. When reference data
+    are absent, forecast data are used as reconstruction targets.
 
     Parameters
     ----------
     config : TrainDatasetConfig
-        Description not yet provided.
+        Configuration defining training data sources and sampling behavior.
     requested_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-        Description not yet provided.
+        Initialization times requested for training.
     time_features : AddedTimeFeatures
-        Description not yet provided.
+        Temporal feature generator applied to samples.
     mask : xr.DataArray | None
-        Description not yet provided.
+        Optional mask identifying sample combinations excluded from training.
     return_metadata : bool
-        Description not yet provided.
+        Whether each sample is returned with its sampling-coordinate metadata.
     load : bool
-        Description not yet provided.
+        Whether underlying xarray data are loaded into memory when opened.
     """
 
     config: TrainDatasetConfig
@@ -332,7 +364,11 @@ class TrainDataset(DatasetABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize the training dataset.
+
+        Initializes common sampling state, opens reference data when configured, and
+        maps forecast initialization and lead times to corresponding reference
+        indexes.
         """
         super().__init__()
 
@@ -346,24 +382,25 @@ class TrainDataset(DatasetABC):
     @property
     def _autoencoding_forecast_data(self):
         """
-        Document this function.
+        Indicate whether forecast data are used as reconstruction targets.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when no separate reference dataset is configured.
         """
         return self.config.reference is None
 
     @property
     def _load_forecast(self):
         """
-        Document this function.
+        Indicate whether forecast data must be loaded separately.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when forecast data are required as reconstruction targets or are
+            not being reused through the conditioning configuration.
         """
         return any(
             [
@@ -375,12 +412,14 @@ class TrainDataset(DatasetABC):
     @property
     def _write_condition_to_input(self):
         """
-        Document this function.
+        Indicate whether conditioning data are used directly as model input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when forecast data are reused as conditioning data or when
+            forecast autoencoding requires the resolved conditioning input to replace
+            the separately indexed forecast input.
         """
         if self.config._using_forecast_data_as_condition:
             return True
@@ -393,12 +432,13 @@ class TrainDataset(DatasetABC):
     @property
     def _concat_condition_to_input(self):
         """
-        Document this function.
+        Indicate whether conditioning data are concatenated with forecast input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when forecast data remain the primary input and separate
+            conditioning data are configured.
         """
         return (
             self._write_condition_to_input is False
@@ -410,22 +450,27 @@ class TrainDataset(DatasetABC):
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
         """
-        Document this function.
+        Map forecast samples to positional reference-data indexes.
+
+        Reference valid times are calculated from each forecast initialization time
+        and lead time before being mapped to the reference dataset's time index.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Description not yet provided.
+            Sampling coordinates for all valid training samples.
 
         Returns
         -------
         dict[str, np.ndarray] | None
-            Description not yet provided.
+            Positional reference-data indexes for each sample, or ``None`` when no
+            reference dataset is configured.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If one or more calculated reference times cannot be found in the reference
+            dataset.
         """
         if self.config.reference is None:
             return None
@@ -464,12 +509,16 @@ class TrainDataset(DatasetABC):
 
     def get_target_shape(self):
         """
-        Document this function.
+        Determine the shape of a target sample.
+
+        Reference variables and spatial dimensions define the target shape when
+        reference data are configured. A fitted flattener determines the flattened
+        spatial size when applicable. Without reference data, the input shape is used.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        tuple
+            Target shape excluding the batch dimension.
         """
         if self.config.reference is not None:
             len_names = len(self.config.reference.names)
@@ -492,17 +541,22 @@ class TrainDataset(DatasetABC):
 
     def _index_reference_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Document this function.
+        Retrieve reference target data for a sample.
+
+        The precomputed reference time index is used to select the target. When the
+        reference retains individual ensemble members, one realization is selected
+        randomly.
 
         Parameters
         ----------
         ind : int
-            Description not yet provided.
+            Sample index to retrieve.
 
         Returns
         -------
         xr.DataArray | None
-            Description not yet provided.
+            Selected and preprocessed reference variables, or ``None`` when no
+            reference dataset is configured.
         """
         if self.config.reference is None:
             return None
@@ -525,17 +579,23 @@ class TrainDataset(DatasetABC):
 
     def __getitem__(self, ind):
         """
-        Document this function.
+        Return a training sample.
+
+        Forecast, conditioning, and reference data are indexed and combined according
+        to the configured training and conditioning strategy. Temporal features are
+        generated and the resulting input and target data are converted to tensors.
 
         Parameters
         ----------
-        ind : Any
-            Description not yet provided.
+        ind : int
+            Index of the training sample to retrieve.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict | tuple[dict, dict]
+            Dictionary containing input, target, and optional additional-feature
+            tensors. When metadata are enabled, the sample dictionary is returned
+            together with its sampling coordinates.
         """
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 

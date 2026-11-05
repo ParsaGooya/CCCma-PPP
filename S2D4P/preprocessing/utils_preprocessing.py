@@ -27,16 +27,19 @@ TemporalFrequency = Literal["year", "month", "day"]
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
     """
-    Document this class.
+    Scale data to a normalized range using fitted minimum and maximum values.
+
+    Statistics are calculated over the configured dimensions and can optionally
+    be grouped by year, month, or day.
 
     Parameters
     ----------
     dims : list[str] | None
-        Description not yet provided.
+        Dimensions over which minimum and maximum statistics are calculated.
     frequency : TemporalFrequency | None
-        Description not yet provided.
-    **kwargs : Any
-        Description not yet provided.
+        Optional temporal frequency used to group fitted statistics.
+    kwargs : Any
+        Additional unused keyword arguments accepted for pipeline compatibility.
     """
 
     def __init__(
@@ -46,21 +49,22 @@ class Normalizer(PreprocessModuleABC):
         **kwargs,
     ) -> None:
         """
-        Document this function.
+        Initialize the normalizer.
 
         Parameters
         ----------
         dims : list[str] | None
-            Description not yet provided.
+            Dimensions over which minimum and maximum statistics are calculated.
         frequency : TemporalFrequency | None
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+            Optional temporal grouping frequency. Supported values are ``"year"``,
+            ``"month"``, ``"day"``, and ``None``.
+        kwargs : Any
+            Additional unused keyword arguments accepted for pipeline compatibility.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``frequency`` is unsupported.
         """
         self.min: xr.DataArray | xr.Dataset | None = None
         self.max: xr.DataArray | xr.Dataset | None = None
@@ -78,19 +82,28 @@ class Normalizer(PreprocessModuleABC):
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
-        Document this function.
+        Fit minimum and maximum normalization statistics.
+
+        An optional mask excludes values from fitting. When temporal grouping is
+        enabled and initialization time is reduced, separate statistics are fitted
+        for each temporal group.
 
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
-            Description not yet provided.
-        mask : xr.DataArray
-            Description not yet provided.
+            Data used to estimate normalization statistics.
+        mask : xr.DataArray | None
+            Optional mask identifying values excluded from fitting.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Normalizer
+            This fitted normalizer.
+
+        Raises
+        ------
+        ValueError
+            If any fitted normalization range is zero.
         """
         self._reset_fit()
 
@@ -120,17 +133,17 @@ class Normalizer(PreprocessModuleABC):
 
     def transform(self, data: xr.Dataset):
         """
-        Document this function.
+        Normalize data using fitted minimum and maximum values.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Data to normalize.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.Dataset
+            Normalized data.
         """
         self._check_fitted()
 
@@ -148,17 +161,20 @@ class Normalizer(PreprocessModuleABC):
 
     def inverse_transform(self, data: xr.Dataset):
         """
-        Document this function.
+        Reverse normalization using fitted statistics.
+
+        Statistics are temporally aligned with initialization or forecast target
+        times before the original data scale is restored.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Normalized data to restore.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.Dataset
+            Data restored to its original scale.
         """
         self._check_fitted()
 
@@ -186,20 +202,25 @@ class Normalizer(PreprocessModuleABC):
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
     """
-    Document this class.
+    Standardize data using fitted mean and standard deviation.
+
+    Statistics are calculated over the configured dimensions and can optionally
+    be grouped by year, month, or day. Locations with zero standard deviation are
+    masked because they cannot be standardized.
 
     Parameters
     ----------
     dims : list[str] | None
-        Description not yet provided.
+        Dimensions over which mean and standard deviation are calculated.
     frequency : TemporalFrequency | None
-        Description not yet provided.
-    **kwargs : Any
-        Description not yet provided.
+        Optional temporal frequency used to group fitted statistics.
+    kwargs : Any
+        Additional unused keyword arguments accepted for pipeline compatibility.
 
-    Note
-    ---------
-    Should explicitly mention that std zero will be masked.
+    Notes
+    -----
+    Fitted standard deviations that are not greater than zero are replaced with
+    missing values and therefore remain masked during transformation.
     """
 
     def __init__(
@@ -209,21 +230,22 @@ class Standardizer(PreprocessModuleABC):
         **kwargs,
     ) -> None:
         """
-        Document this function.
+        Initialize the standardizer.
 
         Parameters
         ----------
         dims : list[str] | None
-            Description not yet provided.
+            Dimensions over which mean and standard deviation are calculated.
         frequency : TemporalFrequency | None
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+            Optional temporal grouping frequency. Supported values are ``"year"``,
+            ``"month"``, ``"day"``, and ``None``.
+        kwargs : Any
+            Additional unused keyword arguments accepted for pipeline compatibility.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``frequency`` is unsupported.
         """
         self.mean: xr.Dataset | xr.DataArray | None = None
         self.std: xr.Dataset | xr.DataArray | None = None
@@ -241,20 +263,26 @@ class Standardizer(PreprocessModuleABC):
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
-        Document this function.
+        Fit mean and sample standard-deviation statistics.
+
+        An optional mask excludes values from fitting. When temporal grouping is
+        enabled and initialization time is reduced, separate statistics are fitted
+        for each temporal group. Standard deviations that are not positive are
+        masked.
 
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
-            Description not yet provided.
-        mask : xr.DataArray
-            Description not yet provided.
+            Data used to estimate standardization statistics.
+        mask : xr.DataArray | None
+            Optional mask identifying values excluded from fitting.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Standardizer
+            This fitted standardizer.
         """
+
         self._reset_fit()
 
         reduction_dims = self._get_reduction_dims(data)
@@ -286,17 +314,17 @@ class Standardizer(PreprocessModuleABC):
 
     def transform(self, data: xr.Dataset):
         """
-        Document this function.
+        Standardize data using fitted mean and standard deviation.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Data to standardize.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.Dataset
+            Standardized data.
         """
         self._check_fitted()
 
@@ -314,17 +342,20 @@ class Standardizer(PreprocessModuleABC):
 
     def inverse_transform(self, data: xr.Dataset):
         """
-        Document this function.
+        Reverse standardization using fitted statistics.
+
+        Statistics are temporally aligned with initialization or forecast target
+        times before the original data scale is restored.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Standardized data to restore.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.Dataset
+            Data restored to its original scale.
         """
         self._check_fitted()
 
@@ -352,16 +383,19 @@ class Standardizer(PreprocessModuleABC):
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
     """
-    Document this class.
+    Convert data to anomalies relative to a fitted mean.
+
+    The mean is calculated over configurable dimensions and can optionally be
+    estimated separately by year, month, or day.
 
     Parameters
     ----------
     dims : list[str] | None
-        Description not yet provided.
+        Dimensions over which the mean is calculated.
     frequency : TemporalFrequency | None
-        Description not yet provided.
-    **kwargs : Any
-        Description not yet provided.
+        Optional temporal frequency used to group fitted means.
+    kwargs : Any
+        Additional unused keyword arguments accepted for pipeline compatibility.
     """
 
     def __init__(
@@ -371,16 +405,16 @@ class AnomaliesScaler(PreprocessModuleABC):
         **kwargs,
     ) -> None:
         """
-        Document this function.
+        Initialize the anomaly scaler.
 
         Parameters
         ----------
         dims : list[str] | None
-            Description not yet provided.
+            Dimensions over which the mean is calculated.
         frequency : TemporalFrequency | None
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+            Optional temporal grouping frequency.
+        kwargs : Any
+            Additional unused keyword arguments accepted for pipeline compatibility.
         """
         self.mean: xr.DataArray | xr.Dataset | None = None
 
@@ -391,19 +425,23 @@ class AnomaliesScaler(PreprocessModuleABC):
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
-        Document this function.
+        Fit mean values used to calculate anomalies.
+
+        An optional mask excludes values from fitting. When temporal grouping is
+        enabled and initialization time is reduced, a separate mean is fitted for
+        each temporal group.
 
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
-            Description not yet provided.
-        mask : xr.DataArray
-            Description not yet provided.
+            Data used to estimate mean values.
+        mask : xr.DataArray | None
+            Optional mask identifying values excluded from fitting.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        AnomaliesScaler
+            This fitted anomaly scaler.
         """
         self._reset_fit()
 
@@ -427,17 +465,17 @@ class AnomaliesScaler(PreprocessModuleABC):
 
     def transform(self, data: xr.Dataset):
         """
-        Document this function.
+        Convert data to anomalies by subtracting the fitted mean.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Data to transform.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.Dataset
+            Anomalies relative to the fitted mean.
         """
         self._check_fitted()
 
@@ -450,17 +488,20 @@ class AnomaliesScaler(PreprocessModuleABC):
 
     def inverse_transform(self, data: xr.Dataset):
         """
-        Document this function.
+        Restore anomalies by adding the fitted mean.
+
+        The fitted mean is temporally aligned with initialization or forecast target
+        times before being added.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Anomaly data to restore.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.Dataset
+            Data with the fitted mean restored.
         """
         self._check_fitted()
 
@@ -481,14 +522,18 @@ class AnomaliesScaler(PreprocessModuleABC):
 @PreprocessingStepSelector.register("trend_remover")
 class TrendRemover(PreprocessModuleABC):
     """
-    Document this class.
+    Remove a fitted linear temporal trend from data.
+
+    A linear trend is fitted along initialization time. Trends can be fitted
+    globally or separately by month or day-of-year.
 
     Parameters
     ----------
-    frequency : Literal['month', 'day'] | None
-        Description not yet provided.
-    **kwargs : Any
-        Description not yet provided.
+    frequency : Literal["month", "day"] | None
+        Optional temporal grouping frequency. If ``None``, one trend is fitted
+        across all initialization times.
+    kwargs : Any
+        Additional unused keyword arguments accepted for pipeline compatibility.
     """
 
     TEMPORAL_ORDER: ClassVar[dict] = {
@@ -503,23 +548,24 @@ class TrendRemover(PreprocessModuleABC):
         **kwargs,
     ) -> None:
         """
-        Document this function.
+        Initialize the linear trend remover.
 
         Parameters
         ----------
-        frequency : Literal['month', 'day'] | None
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        frequency : Literal["month", "day"] | None
+            Optional temporal grouping frequency. ``None`` fits one global trend.
+        kwargs : Any
+            Additional unused keyword arguments accepted for pipeline compatibility.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``frequency`` is not ``None``, ``"month"``, or ``"day"``.
 
         Notes
-        -------
-        Frequency cannot be year for trend remover.
+        -----
+        Yearly grouping is not supported because a trend requires multiple temporal
+        samples within each fitted group.
         """
         if frequency not in {None, "month", "day"}:
             raise ValueError(
@@ -542,24 +588,28 @@ class TrendRemover(PreprocessModuleABC):
         origin: (np.datetime64 | datetime.datetime | cftime.datetime),
     ) -> xr.DataArray:
         """
-        Document this function.
+        Convert datetime values to elapsed days from an origin.
+
+        Supports NumPy datetime values, Python datetimes, and CFTime-compatible
+        datetime arithmetic.
 
         Parameters
         ----------
         times : xr.DataArray
-            Description not yet provided.
+            Time values to convert.
         origin : np.datetime64 | datetime.datetime | cftime.datetime
-            Description not yet provided.
+            Scalar reference time from which elapsed days are measured.
 
         Returns
         -------
         xr.DataArray
-            Description not yet provided.
+            Floating-point elapsed days with the same dimensions and coordinates as
+            ``times``.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``origin`` is a nonscalar array or ``times`` is empty.
         """
         values = np.asarray(times.values)
 
@@ -598,22 +648,26 @@ class TrendRemover(PreprocessModuleABC):
         data: xr.Dataset,
     ) -> tuple[xr.Dataset, xr.Dataset]:
         """
-        Document this function.
+        Fit a first-degree polynomial along initialization time.
+
+        Initialization times are converted to elapsed days before fitting. Separate
+        slope and intercept datasets are extracted for every data variable.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Data used to fit the linear trend.
 
         Returns
         -------
         tuple[xr.Dataset, xr.Dataset]
-            Description not yet provided.
+            Fitted slopes and intercepts for all variables.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If xarray does not produce the expected polynomial coefficient variable
+            for a data variable.
         """
         numeric_time = self._time_to_numeric(
             data[self.init_time_dim],
@@ -664,24 +718,29 @@ class TrendRemover(PreprocessModuleABC):
         mask: xr.DataArray | None = None,
     ):
         """
-        Document this function.
+        Fit linear temporal trends.
+
+        Data can be fitted globally or independently within temporal groups. An
+        optional mask excludes values from trend estimation.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Data used to estimate linear trends.
         mask : xr.DataArray | None
-            Description not yet provided.
+            Optional mask identifying values excluded from fitting.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        TrendRemover
+            This fitted trend remover.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If initialization time is absent, the requested grouping frequency is
+            coarser than the source temporal resolution, or a temporal group contains
+            fewer than two initialization times.
         """
         self._reset_fit()
 
@@ -753,17 +812,17 @@ class TrendRemover(PreprocessModuleABC):
         data: xr.Dataset,
     ) -> xr.Dataset:
         """
-        Document this function.
+        Remove the fitted linear trend from data.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Data from which the trend is removed.
 
         Returns
         -------
         xr.Dataset
-            Description not yet provided.
+            Detrended data.
         """
         self._check_fitted()
 
@@ -791,17 +850,20 @@ class TrendRemover(PreprocessModuleABC):
         data: xr.Dataset,
     ) -> xr.Dataset:
         """
-        Document this function.
+        Restore the fitted linear trend.
+
+        Trend statistics are aligned with the appropriate initialization or forecast
+        target times before the trend is reconstructed and added to the data.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Detrended data to restore.
 
         Returns
         -------
         xr.Dataset
-            Description not yet provided.
+            Data with the fitted linear trend restored.
         """
         self._check_fitted()
 
@@ -842,28 +904,33 @@ class TrendRemover(PreprocessModuleABC):
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
     """
-    Document this class.
+    Flatten neural-network dimensions while removing invalid locations.
+
+    Supported neural-network dimensions are stacked into a single ``ref``
+    dimension. Only locations containing valid data are retained. When both input
+    and target data are supplied, only locations valid in both are preserved.
 
     Parameters
     ----------
-    load_dir : Path | str
-        Description not yet provided.
-    **kwargs : Any
-        Description not yet provided.
+    load_dir : Path | str | None
+        Path to a previously fitted flattening preprocessor.
+    kwargs : Any
+        Additional unused keyword arguments accepted for pipeline compatibility.
     """
 
     supported_NN_dimensions_sorted: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self, load_dir: Path | str = None, **kwargs):
         """
-        Document this function.
+        Initialize the flattening preprocessor.
 
         Parameters
         ----------
-        load_dir : Path | str
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        load_dir : Path | str | None
+            Path to a previously fitted flattening preprocessor. If provided, fitted
+            state is restored during ``fit``.
+        kwargs : Any
+            Additional unused keyword arguments accepted for pipeline compatibility.
         """
         self.load_dir = load_dir
         self.fitted = False
@@ -880,32 +947,39 @@ class Flattennanremove(PreprocessModuleABC):
         save_path: Path | str = None,
     ):
         """
-        Document this function.
+        Fit the valid flattened locations.
+
+        Neural-network dimensions are stacked into a ``ref`` dimension and locations
+        containing missing values are removed. When a target is provided, retained
+        locations are restricted to those valid in both input and target data.
 
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
-            Description not yet provided.
+            Input data used to determine valid flattened locations.
         target : xr.Dataset | xr.DataArray | None
-            Description not yet provided.
+            Optional target data used to restrict locations to those valid in both
+            input and target datasets.
         mask : Any
-            Description not yet provided.
+            Optional mask argument accepted for preprocessing pipeline compatibility.
+            It is not used by this preprocessor.
         save : bool
-            Description not yet provided.
+            Whether to serialize the fitted preprocessor.
         save_name : str | None
-            Description not yet provided.
-        save_path : Path | str
-            Description not yet provided.
+            Base filename used when saving the fitted preprocessor.
+        save_path : Path | str | None
+            Directory in which the fitted preprocessor is saved.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Flattennanremove
+            This fitted flattening preprocessor.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If input data do not contain all neural-network dimensions required by
+            the reference data.
         """
         self._reset_fit()
 
@@ -981,17 +1055,17 @@ class Flattennanremove(PreprocessModuleABC):
         data: xr.Dataset | xr.DataArray,
     ):
         """
-        Document this function.
+        Validate neural-network dimensions against fitted state.
 
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
-            Description not yet provided.
+            Data whose dimensions are validated.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If one or more fitted neural-network dimensions are absent from ``data``.
         """
         if data is not None:
             missing_dims = [dim for dim in self.NN_dims if dim not in data.dims]
@@ -1004,17 +1078,18 @@ class Flattennanremove(PreprocessModuleABC):
 
     def transform(self, data: xr.Dataset) -> xr.Dataset:
         """
-        Document this function.
+        Flatten data and retain fitted valid locations.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Data to flatten.
 
         Returns
         -------
         xr.Dataset
-            Description not yet provided.
+            Data containing the fitted valid locations along the trailing ``ref``
+            dimension.
         """
         self._check_fitted()
 
@@ -1027,22 +1102,25 @@ class Flattennanremove(PreprocessModuleABC):
 
     def inverse_transform(self, data: xr.Dataset) -> xr.Dataset:
         """
-        Document this function.
+        Restore flattened data to its original neural-network dimensions.
+
+        Missing locations removed during flattening are reintroduced using the stored
+        reference coordinate structure.
 
         Parameters
         ----------
         data : xr.Dataset
-            Description not yet provided.
+            Flattened data containing a ``ref`` dimension.
 
         Returns
         -------
         xr.Dataset
-            Description not yet provided.
+            Data restored to the original neural-network dimensions.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``data`` does not contain the flattened ``ref`` dimension.
         """
         self._check_fitted()
 
@@ -1053,17 +1131,17 @@ class Flattennanremove(PreprocessModuleABC):
 
     def _load_from_memory(self, load_dir: Path | str) -> None:
         """
-        Document this function.
+        Restore fitted flattening state from disk.
 
         Parameters
         ----------
         load_dir : Path | str
-            Description not yet provided.
+            Path to the serialized flattening preprocessor.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the loaded preprocessor has not been fitted.
         """
         loaded = joblib.load(Path(load_dir))
         if not loaded.fitted:

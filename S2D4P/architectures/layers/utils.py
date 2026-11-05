@@ -6,22 +6,22 @@ from S2D4P.architectures.layers.generic import AlignmentMethod, PaddingMethod
 
 def _same_padding(kernel_size: int) -> int:
     """
-    Document this function.
+    Calculate padding that preserves spatial size for an odd kernel.
 
     Parameters
     ----------
     kernel_size : int
-        Description not yet provided.
+        Convolution kernel size.
 
     Returns
     -------
     int
-        Description not yet provided.
+        Symmetric padding size required to preserve the spatial dimensions.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If ``kernel_size`` is nonpositive or even.
     """
     if kernel_size <= 0 or kernel_size % 2 == 0:
         raise ValueError("Feature-block kernel sizes must be positive odd integers.")
@@ -35,30 +35,33 @@ def align_to_skip(
     padding_mode: PaddingMethod = "zeros",
 ) -> torch.Tensor:
     """
-    Document this function.
+    Align a tensor with a target spatial shape.
+
+    The tensor can be aligned by interpolation or padding, or strict shape
+    matching can be enforced.
 
     Parameters
     ----------
     x : torch.Tensor
-        Description not yet provided.
-    skip_shape : torch.Tensor
-        Description not yet provided.
+        Tensor whose spatial dimensions are aligned.
+    skip_shape : tuple[int, int]
+        Target height and width.
     mode : AlignmentMethod
-        Description not yet provided.
+        Method used to align the spatial dimensions.
     padding_mode : PaddingMethod
-        Description not yet provided.
+        Padding mode used when ``mode`` is ``"padd"``.
 
     Returns
     -------
     torch.Tensor
-        Description not yet provided.
+        Tensor aligned to ``skip_shape``.
 
     Raises
     ------
     RuntimeError
-        Description not yet provided.
+        If strict alignment is requested and the spatial dimensions do not match.
     ValueError
-        Description not yet provided.
+        If ``mode`` is unsupported.
     """
     if x.shape[-2:] == skip_shape:
         return x
@@ -87,21 +90,24 @@ def padd(
     x: torch.Tensor, target_size: tuple[int, int], padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
     """
-    Document this function.
+    Pad a tensor symmetrically to a target spatial size.
+
+    Any odd amount of required padding places the additional element on the
+    right or bottom side.
 
     Parameters
     ----------
     x : torch.Tensor
-        Description not yet provided.
+        Tensor to pad.
     target_size : tuple[int, int]
-        Description not yet provided.
+        Target height and width.
     padding_mode : PaddingMethod
-        Description not yet provided.
+        Padding mode to apply. ``"zeros"`` uses constant zero padding.
 
     Returns
     -------
     torch.Tensor
-        Description not yet provided.
+        Tensor padded to the requested spatial size.
     """
     mode = "constant" if padding_mode == "zeros" else padding_mode
     target_h, target_w = target_size
@@ -127,19 +133,20 @@ def _resize_mask(
     size: tuple[int, int],
 ) -> torch.Tensor | None:
     """
-    Document this function.
+    Resize a validity mask using nearest-neighbor interpolation.
 
     Parameters
     ----------
     mask : torch.Tensor | None
-        Description not yet provided.
+        Validity mask to resize. If ``None``, no resizing is performed.
     size : tuple[int, int]
-        Description not yet provided.
+        Target height and width.
 
     Returns
     -------
     torch.Tensor | None
-        Description not yet provided.
+        Resized mask with its original data type restored, or ``None`` when no
+        mask is provided.
     """
     if mask is None:
         return None
@@ -161,24 +168,31 @@ def _broadcast_mask(
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
     """
-    Document this function.
+    Align a validity mask with a reference tensor.
+
+    Two- and three-dimensional masks are expanded to four dimensions, singleton
+    batch dimensions are broadcast when necessary, and spatial dimensions are
+    resized to match the reference tensor.
 
     Parameters
     ----------
     mask : torch.Tensor | None
-        Description not yet provided.
+        Validity mask to align with the reference tensor.
     reference : torch.Tensor
-        Description not yet provided.
+        Reference tensor defining the required batch size, spatial dimensions,
+        device, and data type.
 
     Returns
     -------
     torch.Tensor | None
-        Description not yet provided.
+        Mask aligned with the reference tensor, or ``None`` when no mask is
+        provided.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If the mask is not two-, three-, or four-dimensional, or its batch
+        dimension cannot be matched to the reference tensor.
     """
     if mask is None:
         return None
@@ -219,27 +233,32 @@ def _merge_masks(
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
     """
-    Document this function.
+    Merge input and skip-connection validity masks.
+
+    Both masks are resized to the requested spatial dimensions. A missing mask is
+    replaced with an all-valid mask having the corresponding number of channels.
 
     Parameters
     ----------
     input_mask : torch.Tensor | None
-        Description not yet provided.
+        Validity mask associated with the decoder input.
     skip_mask : torch.Tensor | None
-        Description not yet provided.
+        Validity mask associated with the skip connection.
     out_channels : int
-        Description not yet provided.
+        Number of decoder-output channels represented by ``input_mask``.
     skip_channels : int
-        Description not yet provided.
+        Number of skip-connection channels represented by ``skip_mask``.
     spatial_size : tuple[int, int]
-        Description not yet provided.
+        Target height and width for both masks.
     reference : torch.Tensor
-        Description not yet provided.
+        Reference tensor defining the batch size, device, and data type used when
+        constructing missing masks.
 
     Returns
     -------
     torch.Tensor | None
-        Description not yet provided.
+        Channel-wise concatenation of the skip and input masks, or ``None`` when
+        both masks are absent.
     """
     if input_mask is None and skip_mask is None:
         return None
@@ -275,21 +294,22 @@ def _resize_tensor(
     mode: str = "bilinear",
 ) -> torch.Tensor:
     """
-    Document this function.
+    Resize a tensor to a target spatial size.
 
     Parameters
     ----------
     x : torch.Tensor
-        Description not yet provided.
+        Tensor to resize.
     size : tuple[int, int]
-        Description not yet provided.
+        Target height and width.
     mode : str
-        Description not yet provided.
+        Interpolation mode. Bilinear and bicubic interpolation disable corner
+        alignment.
 
     Returns
     -------
     torch.Tensor
-        Description not yet provided.
+        Tensor with the requested spatial dimensions.
     """
     if x.shape[-2:] == size:
         return x
@@ -307,23 +327,24 @@ def _resize_tensor(
 
 def _sample(mu, var, sample_size=1, std=1):
     """
-    Document this function.
+    Draw samples around a mean using element-wise variance.
 
     Parameters
     ----------
-    mu : Any
-        Description not yet provided.
-    var : Any
-        Description not yet provided.
-    sample_size : Any
-        Description not yet provided.
-    std : Any
-        Description not yet provided.
+    mu : torch.Tensor
+        Mean of the sampling distribution.
+    var : torch.Tensor
+        Element-wise variance of the sampling distribution.
+    sample_size : int
+        Number of samples to draw.
+    std : float
+        Standard deviation of the standard-normal noise before scaling by
+        ``sqrt(var)``.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    torch.Tensor
+        Sampled tensor with a leading sample dimension.
     """
     out = mu + torch.sqrt(var) * _get_normal(var, std).sample((sample_size,))
 
@@ -332,19 +353,20 @@ def _sample(mu, var, sample_size=1, std=1):
 
 def _get_normal(ref_tensor, std=1):
     """
-    Document this function.
+    Construct a zero-mean normal distribution matching a reference tensor.
 
     Parameters
     ----------
-    ref_tensor : Any
-        Description not yet provided.
-    std : Any
-        Description not yet provided.
+    ref_tensor : torch.Tensor
+        Reference tensor defining the shape, data type, and device of the
+        distribution parameters.
+    std : float
+        Standard deviation of the normal distribution.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    torch.distributions.Normal
+        Element-wise zero-mean normal distribution.
     """
     return torch.distributions.Normal(
         torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std
@@ -353,17 +375,21 @@ def _get_normal(ref_tensor, std=1):
 
 def _noise_injection(ref_tensor: torch.Tensor):
     """
-    Document this function.
+    Append a random noise channel to a feature tensor.
+
+    One independent standard-normal noise channel is generated with the same
+    batch and spatial dimensions as the reference tensor and concatenated along
+    the channel dimension.
 
     Parameters
     ----------
     ref_tensor : torch.Tensor
-        Description not yet provided.
+        Feature tensor receiving the additional noise channel.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    torch.Tensor
+        Feature tensor with one additional noise channel.
     """
     noise_ref_tensor = ref_tensor[:, [0], ...]
 
@@ -376,19 +402,22 @@ def _noise_injection(ref_tensor: torch.Tensor):
 
 def _expand_mask(x: torch.Tensor, mask: torch.Tensor):
     """
-    Document this function.
+    Expand a channel-wise mask for newly added feature channels.
+
+    New channels are assigned an all-valid mask and appended to the existing
+    mask.
 
     Parameters
     ----------
     x : torch.Tensor
-        Description not yet provided.
+        Feature tensor defining the required number of channels.
     mask : torch.Tensor
-        Description not yet provided.
+        Existing channel-wise validity mask.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    torch.Tensor
+        Validity mask with enough all-valid channels to match ``x``.
     """
     n = x.shape[1] - mask.shape[1]
 

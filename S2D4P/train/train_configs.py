@@ -23,15 +23,14 @@ from S2D4P.core.optimization import OptimizerConfig
 from S2D4P.core.core_abc import GenerativeContext
 
 
-
 def set_seed(seed):
     """
-    Document this function.
+    Set NumPy and PyTorch random seeds.
 
     Parameters
     ----------
-    seed : Any
-        Description not yet provided.
+    seed : int
+        Seed used to initialize NumPy and PyTorch random-number generators.
     """
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -40,34 +39,40 @@ def set_seed(seed):
 @dataclasses.dataclass
 class TrainConfig:
     """
-    Document this class.
+    Configuration for a model training experiment.
+
+    Coordinates data loading, model construction, loss configuration,
+    optimization, trainer behavior, experiment directories, checkpoint
+    resumption, and reproducibility settings.
 
     Parameters
     ----------
     experiment_dir : str
-        Description not yet provided.
+        Directory in which experiment outputs, checkpoints, logs, figures, and
+        configuration files are stored.
     max_epochs : int
-        Description not yet provided.
+        Maximum number of training epochs.
     train_loader : TrainDataloaderConfig | None
-        Description not yet provided.
+        Configuration used to construct training and validation data loaders.
     module : ModuleSelector | None
-        Description not yet provided.
+        Model module and architecture configuration.
     losspipeline : LosspipelineConfig | None
-        Description not yet provided.
+        Configuration defining the reconstruction loss pipeline.
     trainer : TrainerConfig | None
-        Description not yet provided.
+        Configuration controlling the training loop.
     optimization : OptimizerConfig | None
-        Description not yet provided.
+        Optimizer and learning-rate scheduler configuration.
     weights : WeightsConfig | None
-        Description not yet provided.
+        Configuration used to construct spatial and variable loss weights.
     log_every_n_epochs : int
-        Description not yet provided.
+        Number of epochs between metric logging and plot updates.
     save_checkpoint : bool
-        Description not yet provided.
+        Whether training checkpoints are saved.
     seed : int | None
-        Description not yet provided.
+        Base random seed used for reproducible training.
     resume_dir : str | None
-        Description not yet provided.
+        Directory of a halted experiment whose configuration and checkpoint state
+        should be resumed.
     """
 
     experiment_dir: str
@@ -87,12 +92,16 @@ class TrainConfig:
 
     def __post_init__(self):
         """
-        Document this function.
+        Resolve and validate the training configuration.
+
+        Resumption settings are resolved first, followed by compatibility checks
+        between the data pipeline, model architecture, loss configuration, and model
+        input and output dimensionality.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If ``max_epochs`` is negative.
         """
         self._resolve_resuming()
         self._check_module_pipeline_compatability()
@@ -107,19 +116,28 @@ class TrainConfig:
 
     def _check_module_pipeline_compatability(self):
         """
-        Document this function.
+        Validate compatibility between the module, data, loss, and trainer settings.
+
+        Generator-enabled architectures require CRPS in the reconstruction loss.
+        Deterministic models require reference targets, while cVAE models require
+        beta annealing. MLP architectures using batch normalization require a batch
+        size greater than one.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If a generator-enabled architecture does not include CRPS in the loss
+            pipeline.
         ValueError
-            Description not yet provided.
+            If required reference or conditioning data are missing, cVAE beta
+            annealing is not configured, or an MLP uses batch normalization with a
+            batch size of one.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If beta annealing is configured for a deterministic model, where it is
+            ignored.
         """
 
         if self.module.GENERATOR is not None:
@@ -162,7 +180,11 @@ class TrainConfig:
 
     def _check_IO_consistency(self):
         """
-        Document this function.
+        Validate data dimensionality against model input and output requirements.
+
+        Input and target metadata are checked against the dimensionality expected by
+        the selected architecture, including compatibility with flattening
+        preprocessing.
         """
         input_metadata = self.train_loader.input_var_metadata
         output_metadata = self.train_loader.target_var_metadata
@@ -171,12 +193,15 @@ class TrainConfig:
 
     def set_random_seed(self, rank: int):
         """
-        Document this function.
+        Set the process-specific training random seed.
+
+        The configured base seed is offset by process rank so distributed processes
+        use distinct deterministic seeds.
 
         Parameters
         ----------
         rank : int
-            Description not yet provided.
+            Distributed process rank added to the configured base seed.
         """
         if self.seed is not None:
             set_seed(self.seed + rank)
@@ -184,54 +209,60 @@ class TrainConfig:
     @property
     def checkpoint_dir(self) -> str:
         """
-        Document this function.
+        Return the experiment checkpoint directory.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Path to the ``checkpoints`` directory under the experiment directory.
         """
         return os.path.join(self.experiment_dir, "checkpoints")
 
     @property
     def log_dir(self) -> str:
         """
-        Document this function.
+        Return the experiment logging directory.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Path to the ``logs`` directory under the experiment directory.
         """
         return os.path.join(self.experiment_dir, "logs")
 
     @property
     def monitoring_dir(self) -> str:
         """
-        Document this function.
+        Return the experiment resource-monitoring directory.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Path to the ``resource_monitoring`` directory under the experiment
+            directory.
         """
         return os.path.join(self.experiment_dir, "resource_monitoring")
 
     @property
     def figures_dir(self) -> str:
         """
-        Document this function.
+        Return the experiment resource-monitoring directory.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Path to the ``resource_monitoring`` directory under the experiment
+            directory.
         """
         return os.path.join(self.experiment_dir, "figures")
 
     def _prepare_runtime_variables(self):
         """
-        Document this function.
+        Populate global runtime settings for training.
+
+        Updates experiment, checkpoint, figure, logging, and monitoring directories
+        together with input and target variable metadata derived from the training
+        data configuration.
         """
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
         RuntimeContext.GLOBAL_CHECKPOINT_DIR = str(self.checkpoint_dir)
@@ -243,14 +274,20 @@ class TrainConfig:
 
     def prepare_directory(self, distributed: Distributed, yaml_config: str = None):
         """
-        Document this function.
+        Prepare experiment directories for training.
+
+        For a resumed experiment targeting a new location, the previous experiment
+        directory is copied to the new path. Otherwise, required experiment
+        directories are created. The supplied YAML configuration is copied into the
+        experiment directory by the root process.
 
         Parameters
         ----------
         distributed : Distributed
-            Description not yet provided.
-        yaml_config : str
-            Description not yet provided.
+            Distributed runtime used for root-process detection and synchronization.
+        yaml_config : str | None
+            Path to the source training configuration file to copy into the experiment
+            directory.
         """
         self._prepare_runtime_variables()
 
@@ -279,12 +316,17 @@ class TrainConfig:
 
     def _resolve_resuming(self):
         """
-        Document this function.
+        Resolve configuration for new or resumed training.
+
+        When ``resume_dir`` is configured, the saved training configuration is loaded
+        and updated with the requested experiment directory and maximum epoch count.
+        For a new experiment, all required training configurations must be provided.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If a required configuration is missing for a new experiment or the
+            requested resume configuration cannot be loaded.
         """
         if self.resume_dir is not None:
             requested_experiment_dir = self.experiment_dir
@@ -324,26 +366,30 @@ class TrainConfig:
         self, resume_dir: str | Path, experiment_dir: str | Path, max_epochs: int
     ) -> "TrainConfig":
         """
-        Document this function.
+        Load configuration from a halted training experiment.
+
+        The saved configuration is updated with the newly requested experiment
+        directory and maximum epoch count before being reconstructed as a training
+        configuration.
 
         Parameters
         ----------
         resume_dir : str | Path
-            Description not yet provided.
+            Directory containing the halted experiment and its saved configuration.
         experiment_dir : str | Path
-            Description not yet provided.
+            Experiment directory to use for resumed training.
         max_epochs : int
-            Description not yet provided.
+            Maximum number of epochs for resumed training.
 
         Returns
         -------
-        'TrainConfig'
-            Description not yet provided.
+        TrainConfig
+            Reconstructed configuration for the resumed experiment.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``resume_dir`` does not exist as a directory.
         """
         resume_dir = Path(resume_dir)
 
@@ -362,17 +408,17 @@ class TrainConfig:
 
 def prepare_config(path: Path | str) -> dict:
     """
-    Document this function.
+    Load a YAML configuration file.
 
     Parameters
     ----------
     path : Path | str
-        Description not yet provided.
+        Path to the YAML configuration file.
 
     Returns
     -------
     dict
-        Description not yet provided.
+        Parsed configuration values.
     """
     with open(path) as f:
         data = yaml.safe_load(f)
@@ -383,33 +429,38 @@ def build_trainer(
     config: TrainConfig, distributed: Distributed, logger: logging.Logger | None = None
 ):
     """
-    Document this function.
+    Build the complete training workflow.
+
+    Constructs training and validation data loaders, loss weights, the configured
+    model module, reconstruction loss pipeline, optimizer, and trainer. Spatial
+    masks are requested automatically when required by the selected architecture.
 
     Parameters
     ----------
     config : TrainConfig
-        Description not yet provided.
+        Configuration defining the training experiment.
     distributed : Distributed
-        Description not yet provided.
+        Distributed runtime used for data loading and model device placement.
     logger : logging.Logger | None
-        Description not yet provided.
+        Logger used for root-process setup messages. If ``None``, messages are
+        printed instead.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    Trainer
+        Fully configured trainer ready for distributed setup and training.
     """
 
     def log(msg, **kwargs):
         """
-        Document this function.
+        Log a training setup message from the root process.
 
         Parameters
         ----------
         msg : Any
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+            Message to log or print.
+        kwargs : Any
+            Additional keyword arguments passed to the configured logger.
         """
         if distributed.is_root():
             if logger is not None:
@@ -481,23 +532,29 @@ def build_trainer(
 
 def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
     """
-    Document this function.
+    Validate data preprocessing against model dimensionality.
+
+    Two-dimensional model interfaces accept either two neural-network dimensions
+    or flattened data. Higher-dimensional interfaces must not use flattening and
+    must expose exactly the number of neural-network dimensions expected by the
+    model.
 
     Parameters
     ----------
     metadata : dict
-        Description not yet provided.
+        Variable metadata containing ``NN_dims`` and preprocessing steps.
     model_dims : int
-        Description not yet provided.
+        Number of input or output dimensions expected by the model architecture.
     which : str
-        Description not yet provided.
+        Interface being validated. Must be ``"input"`` or ``"output"``.
 
     Raises
     ------
     RuntimeError
-        Description not yet provided.
+        If data dimensionality or flattening preprocessing is incompatible with
+        the model interface.
     ValueError
-        Description not yet provided.
+        If ``which`` is neither ``"input"`` nor ``"output"``.
     """
     if which not in ["input", "output"]:
         raise ValueError("only checks IO in data vs module.")

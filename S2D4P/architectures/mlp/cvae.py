@@ -26,32 +26,34 @@ from S2D4P.core.selectors import cVAEArchSelector
 @dataclasses.dataclass
 class cVAE_MLPConfig(cVAEArchConfigABC):
     """
-    Document this class.
+    Configuration for an MLP-based conditional variational autoencoder.
 
     Parameters
     ----------
     encoder_hidden_dims : list
-        Description not yet provided.
+        Hidden-layer sizes used by the recognition network.
     latent_size : int
-        Description not yet provided.
+        Size of the latent representation.
     condition_embedding_dims : list | None
-        Description not yet provided.
+        Hidden-layer sizes used to embed the conditioning input. If ``None``, the
+        encoder hidden dimensions are used.
     condition_embedding_size : int | None
-        Description not yet provided.
-    decoder_hidden_dims : list
-        Description not yet provided.
+        Size of the conditioning embedding. If ``None``, ``latent_size`` is used.
+    decoder_hidden_dims : list | None
+        Hidden-layer sizes used by the decoder. If ``None``, they are derived
+        from the encoder hidden dimensions in reverse order.
     condition_dependant_latent : bool
-        Description not yet provided.
+        Whether the latent prior depends on the conditioning input.
     condemb_to_decoder : bool
-        Description not yet provided.
+        Whether the conditioning embedding is supplied directly to the decoder.
     batch_normalization : bool
-        Description not yet provided.
-    dropout_rate : float
-        Description not yet provided.
+        Whether MLP layers use batch normalization.
+    dropout_rate : float | None
+        Dropout probability applied within MLP layers.
     init_method : InitMethod
-        Description not yet provided.
+        Weight initialization method used when a checkpoint is not loaded.
     activation : ActivationName
-        Description not yet provided.
+        Activation function used by the MLP networks.
     """
 
     encoder_hidden_dims: list
@@ -73,12 +75,17 @@ class cVAE_MLPConfig(cVAEArchConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Resolve defaults and validate the cVAE MLP configuration.
+
+        Decoder dimensions, conditioning embedding dimensions, and conditioning
+        embedding size are inferred when omitted.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the dropout rate is invalid, or if a condition-independent latent
+            representation is configured without passing the conditioning embedding
+            to the decoder.
         """
         _validate_dropout(self.dropout_rate)
 
@@ -103,12 +110,12 @@ class cVAE_MLPConfig(cVAEArchConfigABC):
     @property
     def EXPECTS_MASK(self) -> bool:
         """
-        Document this function.
+        Indicate whether the architecture expects spatial masks.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            ``False`` because the MLP architecture does not require spatial masks.
         """
         return False
 
@@ -119,21 +126,22 @@ class cVAE_MLPConfig(cVAEArchConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Build an MLP-based conditional variational autoencoder.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape of each conditioning input sample excluding the batch dimension.
         output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of each model output excluding the batch dimension. If ``None``,
+            the input shape is used.
+        added_features_dim : int | None
+            Number of additional features supplied to the architecture.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        cVAE_MLP
+            Constructed MLP-based conditional variational autoencoder.
         """
         return cVAE_MLP(
             config=self,
@@ -145,18 +153,24 @@ class cVAE_MLPConfig(cVAEArchConfigABC):
 
 class cVAE_MLP(cVAEArchABC):
     """
-    Document this class.
+    MLP-based conditional variational autoencoder architecture.
+
+    The architecture embeds conditioning inputs, parameterizes a posterior latent
+    distribution from targets and conditioning information, and decodes latent
+    samples into model outputs.
 
     Parameters
     ----------
     config : cVAE_MLPConfig
-        Description not yet provided.
+        Configuration defining the encoder, conditioning embedding, latent
+        representation, decoder, and initialization behavior.
     input_shape : np.ndarray | tuple
-        Description not yet provided.
+        Shape of each conditioning input sample excluding the batch dimension.
     output_shape : np.ndarray | tuple | None
-        Description not yet provided.
-    added_features_dim : int
-        Description not yet provided.
+        Shape of each output sample excluding the batch dimension. If ``None``,
+        the input shape is used.
+    added_features_dim : int | None
+        Number of additional features supplied alongside each sample.
     """
 
     def __init__(
@@ -167,23 +181,29 @@ class cVAE_MLP(cVAEArchABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Initialize the MLP-based conditional variational autoencoder.
+
+        Builds the conditioning embedding, posterior recognition network, latent
+        parameter projections, and decoder. Parameters are restored from a checkpoint
+        when configured; otherwise, the requested initialization method is applied.
 
         Parameters
         ----------
         config : cVAE_MLPConfig
-            Description not yet provided.
+            Configuration defining the architecture.
         input_shape : np.ndarray | tuple
-            Description not yet provided.
+            Shape of each conditioning input sample excluding the batch dimension.
         output_shape : np.ndarray | tuple | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of each output sample excluding the batch dimension. If ``None``,
+            the input shape is used.
+        added_features_dim : int | None
+            Number of additional features supplied alongside each sample.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If ``output_shape`` does not have the number of dimensions required by
+            the MLP architecture.
         """
         super().__init__(config)
 
@@ -289,17 +309,24 @@ class cVAE_MLP(cVAEArchABC):
 
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
         """
-        Document this function.
+        Run the training forward pass.
+
+        The conditioning input is embedded, posterior parameters are inferred from
+        the target and conditioning representation, optional posterior variance
+        limits are applied, and latent samples are decoded into model outputs.
 
         Parameters
         ----------
         request : cVAEForwardRequest
-            Description not yet provided.
+            Forward-pass request containing targets, conditioning data, masks,
+            additional features, latent sample count, and optional posterior variance
+            limits.
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Model output containing decoded predictions, posterior mean and
+            log-variance, latent samples, and conditional prior parameters.
         """
         x = request.target
         x_mask = request.target_mask
@@ -354,17 +381,21 @@ class cVAE_MLP(cVAEArchABC):
         request: cVAEPredictRequest,
     ) -> cVAEOutput:
         """
-        Document this function.
+        Generate predictions from the latent prior.
+
+        Latent samples and conditional prior parameters are obtained from the
+        configured prior before the samples are decoded into model outputs.
 
         Parameters
         ----------
         request : cVAEPredictRequest
-            Description not yet provided.
+            Prediction request containing conditioning data, additional features,
+            latent sampling settings, and prior-sampling information.
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Generated predictions and conditional prior parameters.
         """
         condition = request.condition
         added_features = request.added_features
@@ -396,23 +427,27 @@ class cVAE_MLP(cVAEArchABC):
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
-        Document this function.
+        Infer posterior latent parameters from target data.
+
+        An optional target mask is applied before flattening. The target is then
+        combined with the conditioning representation and optional additional
+        features before being passed through the recognition network.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Target tensor used to infer the posterior distribution.
         x_mask : torch.Tensor | None
-            Description not yet provided.
-        condition : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+            Optional validity mask applied to the target.
+        condition : torch.Tensor | None
+            Embedded conditioning representation concatenated with the target.
+        added_features : torch.Tensor | None
+            Optional additional features concatenated with the recognition input.
 
         Returns
         -------
-        tuple[torch.Tensor]
-            Description not yet provided.
+        tuple[torch.Tensor, torch.Tensor]
+            Posterior mean and log-variance.
         """
         if x_mask is not None:
             x = x * x_mask
@@ -443,21 +478,27 @@ class cVAE_MLP(cVAEArchABC):
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
-        Document this function.
+        Encode the conditioning input.
+
+        An optional validity mask is applied before flattening, and additional
+        features are concatenated when available. Depending on the architecture,
+        the resulting embedding either parameterizes a conditional latent prior or
+        serves directly as the conditioning representation.
 
         Parameters
         ----------
         condition : torch.Tensor
-            Description not yet provided.
-        condition_mask : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+            Conditioning input tensor.
+        condition_mask : torch.Tensor | None
+            Optional validity mask applied to the conditioning input.
+        added_features : torch.Tensor | None
+            Optional additional features concatenated with the conditioning input.
 
         Returns
         -------
-        tuple[torch.Tensor]
-            Description not yet provided.
+        tuple[torch.Tensor, torch.Tensor | None]
+            Conditioning representation or conditional prior mean, together with the
+            conditional prior log-variance when explicitly parameterized.
         """
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
@@ -488,21 +529,25 @@ class cVAE_MLP(cVAEArchABC):
         added_features: torch.Tensor = None,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Decode latent samples into model outputs.
+
+        Additional features and, when configured, the conditioning embedding are
+        broadcast across latent samples and concatenated with the latent vectors
+        before decoding.
 
         Parameters
         ----------
         latent_samples : torch.Tensor
-            Description not yet provided.
-        condition : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+            Latent samples with leading latent-sample and batch dimensions.
+        condition : torch.Tensor | None
+            Conditioning representation optionally supplied to the decoder.
+        added_features : torch.Tensor | None
+            Additional features optionally supplied to the decoder.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Decoded outputs with leading latent-sample and batch dimensions.
         """
         latent_sample_size, batch_size = latent_samples.shape[:-1]
 
