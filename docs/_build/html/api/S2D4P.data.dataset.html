@@ -122,31 +122,43 @@
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.data.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">AddedTimeFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Generate temporal features for dataset samples.</p>
+<p>Requested initialization-time, lead-time, month, and day-of-year features are
+computed from sample coordinates. Linear time features are normalized against
+the dataset temporal extent, while periodic calendar features use sine and
+cosine encodings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reference_config</strong> (<a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><em>DatasetConfigABC</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>time_features</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>reference_config</strong> (<a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><em>DatasetConfigABC</em></a>) – Dataset configuration providing temporal coverage, lead times, and
+dimension names used to construct temporal features.</p></li>
+<li><p><strong>time_features</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Temporal features to generate. Supported values are the initialization-
+time dimension, lead-time dimension, <code class="docutils literal notranslate"><span class="pre">&quot;month_sin&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;month_cos&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;day_sin&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;day_cos&quot;</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures.build_time_features">
 <span class="sig-name descname"><span class="pre">build_time_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><span class="pre">AddedTimeFeatures</span></a></span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures.build_time_features" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build temporal features for all dataset samples.</p>
+<p>Target times are calculated from initialization and lead times. Requested
+linear temporal features are normalized, while month and day-of-year features
+are represented using cyclic sine and cosine encodings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Sample coordinates containing initialization and lead times for each
+dataset sample.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>This instance with <code class="docutils literal notranslate"><span class="pre">time_features_array</span></code> populated for all samples.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>‘AddedTimeFeatures’</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures">AddedTimeFeatures</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If required sample coordinates are missing, the reference temporal span
+    has zero length, or lead time normalization would use a zero maximum.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -167,11 +179,14 @@
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.data.dataset.dataset_abc.</span></span><span class="sig-name descname"><span class="pre">DatasetABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Document this class.</p>
+<p>Abstract base class for sampled pipeline datasets.</p>
+<p>Provides common sampling, mask preparation, source indexing, temporal feature
+generation, and lazy data computation functionality for training and
+inference datasets.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.config">
 <span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.config" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Dataset configuration defining data sources and sampling behavior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC">DatasetConfigABC</a></p>
@@ -182,7 +197,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.requested_times">
 <span class="sig-name descname"><span class="pre">requested_times</span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.requested_times" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Initialization times requested for dataset construction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray</p>
@@ -193,7 +208,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.mask">
 <span class="sig-name descname"><span class="pre">mask</span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.mask" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Mask identifying sample combinations excluded from the dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xr.DataArray | None</p>
@@ -204,7 +219,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.time_features">
 <span class="sig-name descname"><span class="pre">time_features</span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.time_features" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Temporal feature generator associated with the dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures">AddedTimeFeatures</a></p>
@@ -215,7 +230,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.return_metadata">
 <span class="sig-name descname"><span class="pre">return_metadata</span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.return_metadata" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Whether samples are returned with their sampling-coordinate metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -226,7 +241,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.load">
 <span class="sig-name descname"><span class="pre">load</span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.load" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Whether configured xarray data are loaded into memory when opened.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -242,13 +257,13 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.get_added_features_dim">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_added_features_dim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.get_added_features_dim" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the number of additional temporal features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Number of configured temporal features.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>int</p>
 </dd>
 </dl>
 </dd></dl>
@@ -256,19 +271,24 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.get_cond_indexes">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_cond_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.get_cond_indexes" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Map sampling coordinates to positional conditioning indexes.</p>
+<p>Static conditioning requires no sample-specific indexes. Same-member
+conditioning additionally maps realization coordinates so forecast and
+conditioning ensemble members remain aligned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Sampling coordinates for all valid dataset samples.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Positional indexes into the conditioning dataset, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when
+conditioning is absent or static.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, np.ndarray] | None</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If same-member conditioning lacks realization coordinates or one or more
+    requested coordinates cannot be found in the conditioning dataset.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -276,19 +296,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.get_forecast_indexes">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_forecast_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.get_forecast_indexes" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Map sampling coordinates to positional forecast indexes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Sampling coordinates for all valid dataset samples.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Positional indexes into the forecast dataset for each sampling dimension,
+or <code class="docutils literal notranslate"><span class="pre">None</span></code> when forecast data are not loaded.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, np.ndarray] | None</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If one or more sampling coordinates cannot be found in the forecast
+    dataset.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -296,10 +318,14 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.get_input_shape">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_input_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.get_input_shape" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Determine the shape of a model input sample.</p>
+<p>The channel count includes conditioning variables when conditioning is
+concatenated with the primary input. Spatial dimensions are determined from
+the fitted flattener when present or directly from supported neural-network
+coordinates otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Input shape excluding the batch dimension.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>tuple</p>
@@ -310,13 +336,15 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.dataset_abc.DatasetABC.get_sampling_coords">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_sampling_coords</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.dataset_abc.DatasetABC.get_sampling_coords" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Extract coordinates for valid dataset samples.</p>
+<p>The sampling mask is stacked into a single batch dimension and masked
+combinations are removed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Sampling coordinate values for every valid dataset sample.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>dict[str, np.ndarray]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -651,27 +679,30 @@ Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end<
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.data.dataset.operator.</span></span><span class="sig-name descname"><span class="pre">DatasetOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Coordinate dataset-level preprocessing, weighting, and metadata operations.</p>
+<p>Provides shared operations across forecast, reference, and conditioning data
+configured by a dataset configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><em>DatasetConfigABC</em></a>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><em>DatasetConfigABC</em></a>) – Dataset configuration defining the active data sources and preprocessing
+pipelines.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator.add_fitted_preprocessor">
 <span class="sig-name descname"><span class="pre">add_fitted_preprocessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><span class="pre">PreprocessModuleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator.add_fitted_preprocessor" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Add a fitted preprocessing module to all active pipelines.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>preprocessor</strong> (<a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><em>PreprocessModuleABC</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>index</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>preprocessor</strong> (<a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><em>PreprocessModuleABC</em></a>) – Fitted preprocessing module to add.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – Position at which the preprocessing module is inserted.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>AssertionError</strong> – Description not yet provided.</p></li>
-<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>TypeError</strong> – If <code class="docutils literal notranslate"><span class="pre">preprocessor</span></code> is not an instance of <code class="docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code>.</p></li>
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">preprocessor</span></code> has not been fitted.</p></li>
 </ul>
 </dd>
 </dl>
@@ -680,13 +711,14 @@ Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end<
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator.config_reference">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">config_reference</span></span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator.config_reference" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the configured reference dataset when available.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Reference data configuration, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when the dataset configuration
+does not define reference data.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC" title="S2D4P.data.data_configs.data_configs_abc.DataConfigABC">DataConfigABC</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -694,18 +726,22 @@ Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end<
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator.fit_preprocessors">
 <span class="sig-name descname"><span class="pre">fit_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator.fit_preprocessors" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Fit active preprocessing pipelines using training data.</p>
+<p>Training times are validated against the available dataset times before
+forecast, reference, and conditioning preprocessing pipelines are fitted.
+Temporal training masks are applied to forecast and non-static conditioning
+data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>save</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>train_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Initialization times used to fit preprocessing statistics.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether fitted preprocessing pipelines are saved.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory in which fitted preprocessing pipelines are saved.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Optional filename used when saving preprocessing pipelines.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If one or more requested training times are unavailable.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -713,10 +749,14 @@ Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end<
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator.get_input_var_metadata">
 <span class="sig-name descname"><span class="pre">get_input_var_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator.get_input_var_metadata" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return metadata describing model input variables.</p>
+<p>Metadata include input variable names, preprocessing steps applied to each
+variable, and neural-network dimensions. Conditioning metadata are included
+according to the configured conditioning behavior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Input metadata containing <code class="docutils literal notranslate"><span class="pre">variables</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocessors</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">NN_dims</span></code>.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict</p>
@@ -727,16 +767,20 @@ Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end<
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator.get_target_var_metadata">
 <span class="sig-name descname"><span class="pre">get_target_var_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator.get_target_var_metadata" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return metadata describing model target variables.</p>
+<p>Reference data define the target when available. Otherwise, forecast data are
+used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Target metadata containing <code class="docutils literal notranslate"><span class="pre">variables</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocessors</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">NN_dims</span></code>.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>dict</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>ValueError</strong> – If neither reference nor forecast data are available to define target
+    metadata.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -744,26 +788,31 @@ Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end<
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator.get_weights">
 <span class="sig-name descname"><span class="pre">get_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><span class="pre">WeightsConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span></span></span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator.get_weights" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build loss weights from the configured target data.</p>
+<p>Reference data are used when available; otherwise, forecast data define the
+target coordinates and variables. If the target preprocessing pipeline
+contains a flattener, it is supplied when constructing the weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><em>WeightsConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>save</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><em>WeightsConfig</em></a><em> | </em><em>None</em>) – Configuration used to construct loss weights. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, default weight
+settings are used.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether generated weights are saved.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory in which generated weights are saved.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Optional filename used when saving generated weights.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Generated loss weights aligned with target dimensions and variables.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xr.DataArray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>RuntimeError</strong> – Description not yet provided.</p></li>
-<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+<li><p><strong>RuntimeError</strong> – If channel-specific weights do not match the configured output variables.</p></li>
+<li><p><strong>ValueError</strong> – If neither reference nor forecast data are available to define the target
+    coordinates.</p></li>
 </ul>
 </dd>
 </dl>
@@ -772,10 +821,11 @@ Otherwise, generates an inclusive sequence from <cite>start</cite> to <cite>end<
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.data.dataset.operator.DatasetOperator.load_fitted_preprocessors">
 <span class="sig-name descname"><span class="pre">load_fitted_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataset.operator.DatasetOperator.load_fitted_preprocessors" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Load fitted preprocessing pipelines for all active data sources.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory containing saved preprocessing pipelines. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, each
+data configuration uses its default preprocessing location.</p>
 </dd>
 </dl>
 </dd></dl>

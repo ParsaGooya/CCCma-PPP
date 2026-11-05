@@ -121,14 +121,18 @@
 <dt class="sig sig-object py" id="S2D4P.loss.kld.BetaAnnealing">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.kld.</span></span><span class="sig-name descname"><span class="pre">BetaAnnealing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epoch_to_warmup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs_to_hold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.kld.BetaAnnealing" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configure annealing of the Kullback-Leibler divergence weight.</p>
+<p>The beta coefficient increases linearly from <code class="docutils literal notranslate"><span class="pre">beta_min</span></code> to <code class="docutils literal notranslate"><span class="pre">beta</span></code> over
+the configured warmup period. An optional hold period produces a repeating
+cyclical schedule.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>beta</strong> (<em>float</em>) – Description not yet provided.</p></li>
-<li><p><strong>beta_min</strong> (<em>float</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_epoch_to_warmup</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_epochs_to_hold</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – Maximum KLD weight reached after warmup.</p></li>
+<li><p><strong>beta_min</strong> (<em>float</em>) – Minimum KLD weight at the beginning of each warmup period.</p></li>
+<li><p><strong>num_epoch_to_warmup</strong> (<em>int</em>) – Number of epochs over which beta increases from <code class="docutils literal notranslate"><span class="pre">beta_min</span></code> to <code class="docutils literal notranslate"><span class="pre">beta</span></code>.</p></li>
+<li><p><strong>num_epochs_to_hold</strong> (<em>int</em>) – Number of additional epochs included in each annealing cycle after beta
+reaches its maximum value.</p></li>
 </ul>
 </dd>
 </dl>
@@ -145,10 +149,12 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.kld.BetaAnnealing.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_batches</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.kld.BetaAnnealing.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Initialize the beta schedule from the number of batches per epoch.</p>
+<p>The configured warmup and hold periods are converted from epochs to training
+steps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>num_batches</strong> (<em>Any</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>num_batches</strong> (<em>int</em>) – Number of training batches in each epoch.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -169,35 +175,43 @@
 <dt class="sig sig-object py" id="S2D4P.loss.kld.KLD">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.kld.</span></span><span class="sig-name descname"><span class="pre">KLD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.kld.KLD" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.loss.loss_abc.lossABC" title="S2D4P.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Compute Kullback-Leibler divergence for a variational latent distribution.</p>
+<p>Supports divergence relative to a standard normal prior, a condition-dependent
+Gaussian prior, or a learned normalizing-flow prior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>reduction</strong> (<em>Reduction</em>) – Reduction applied to the KLD across latent dimensions and samples.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.kld.KLD.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_log_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_flow</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.normalized_flows.NormalizedFlowModel" title="S2D4P.architectures.normalized_flows.NormalizedFlowModel"><span class="pre">NormalizedFlowModel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#S2D4P.loss.kld.KLD.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Compute the Kullback-Leibler divergence.</p>
+<p>Without a normalizing flow, the posterior Gaussian is compared analytically
+with either a condition-dependent Gaussian prior or a standard normal prior.
+With a normalizing flow, the divergence is estimated from posterior samples
+using posterior and transformed-prior log probabilities together with the
+flow log-determinant.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>cond_mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>cond_log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>prior_flow</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.normalized_flows.NormalizedFlowModel" title="S2D4P.architectures.normalized_flows.NormalizedFlowModel"><em>NormalizedFlowModel</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Mean of the posterior latent distribution.</p></li>
+<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Log-variance of the posterior latent distribution.</p></li>
+<li><p><strong>cond_mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Mean of the condition-dependent Gaussian prior.</p></li>
+<li><p><strong>cond_log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Log-variance of the condition-dependent Gaussian prior.</p></li>
+<li><p><strong>prior_flow</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.normalized_flows.NormalizedFlowModel" title="S2D4P.architectures.normalized_flows.NormalizedFlowModel"><em>NormalizedFlowModel</em></a><em> | </em><em>None</em>) – Optional normalizing flow defining the latent prior.</p></li>
+<li><p><strong>print_loss</strong> (<em>bool</em>) – Whether to print the calculated KLD value.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Reduced Kullback-Leibler divergence.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>AssertionError</strong> – If posterior mean and log-variance shapes differ, or if both conditional
+    prior parameters are provided with incompatible shapes.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -205,21 +219,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.kld.KLD.sample">
 <span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.kld.KLD.sample" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Draw samples from a Gaussian latent distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mu</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>log_var</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>sample_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>std</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Mean of the latent distribution.</p></li>
+<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Log-variance used to construct the latent variance.</p></li>
+<li><p><strong>sample_size</strong> (<em>int</em>) – Number of samples to draw.</p></li>
+<li><p><strong>std</strong> (<em>float</em>) – Standard-deviation multiplier applied to the sampling noise.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Latent samples with a leading sample dimension.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 </dd></dl>
@@ -233,12 +247,12 @@
 <dt class="sig sig-object py" id="S2D4P.loss.loss.LossStepConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.loss.</span></span><span class="sig-name descname"><span class="pre">LossStepConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">object]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.loss.LossStepConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configuration for a single loss term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>object</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Registered name of the loss function to construct.</p></li>
+<li><p><strong>args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>object</em><em>]</em>) – Loss-specific arguments passed when constructing the loss function.</p></li>
 </ul>
 </dd>
 </dl>
@@ -258,39 +272,48 @@
 <dt class="sig sig-object py" id="S2D4P.loss.loss.Losspipeline">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.loss.</span></span><span class="sig-name descname"><span class="pre">Losspipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.loss.loss.LosspipelineConfig" title="S2D4P.loss.loss.LosspipelineConfig"><span class="pre">LosspipelineConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.loss.Losspipeline" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Document this class.</p>
+<p>Combine multiple weighted loss functions into one training objective.</p>
+<p>Each configured loss term is constructed from the loss registry with shared
+reduction, spatial and variable weights, output dimensionality, and generative
+context. Optional target masks and a fixed output mask can be applied before
+individual losses are evaluated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.loss.loss.LosspipelineConfig" title="S2D4P.loss.loss.LosspipelineConfig"><em>LosspipelineConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.loss.loss.LosspipelineConfig" title="S2D4P.loss.loss.LosspipelineConfig"><em>LosspipelineConfig</em></a>) – Configuration defining loss terms, weights, masking, and reduction.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial and variable weights supplied to each loss term.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Number of model output dimensions expected by each loss function.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Context describing generative-model and generator behavior.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.loss.Losspipeline.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_arguments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.loss.Losspipeline.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Evaluate and combine all configured loss terms.</p>
+<p>An optional fixed output mask is combined with the target mask before loss
+calculation. Each loss term is evaluated independently and multiplied by its
+configured weight before contributing to the total loss.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>target</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>target_mask</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>step_arguments</strong> (<em>dict</em>) – Description not yet provided.</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions supplied to each loss function.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target values used to calculate the losses.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask applied during loss calculation.</p></li>
+<li><p><strong>print_loss</strong> (<em>bool</em>) – Whether individual loss functions print their calculated values.</p></li>
+<li><p><strong>step_arguments</strong> (<em>dict</em><em> | </em><em>None</em>) – Additional keyword arguments passed to each loss function.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Weighted total loss and detached individual loss values keyed by loss
+step name.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>tuple[torch.Tensor, dict[str, torch.Tensor]]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the target dimensionality is incompatible with the configured number
+    of output dimensions and generative-model context.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -298,16 +321,16 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.loss.Losspipeline.register">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.loss.Losspipeline.register" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Create a decorator that registers a loss function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name under which the loss function is registered.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Decorator used to register the loss class.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>Callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -345,21 +368,23 @@ The sizes must match that of the input and target data.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.loss.LosspipelineConfig.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.loss.LosspipelineConfig.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the configured loss pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>output_shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial and variable weights applied by individual loss functions.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Number of model output dimensions expected by the loss functions.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Context describing generative-model and generator behavior. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+a non-generative context is used.</p></li>
+<li><p><strong>output_shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – Model output shape excluding the batch dimension. Required when a saved
+output mask is configured.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Constructed weighted loss pipeline.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.loss.loss.Losspipeline" title="S2D4P.loss.loss.Losspipeline">Losspipeline</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -398,22 +423,14 @@ The sizes must match that of the input and target data.</p>
 <dt class="sig sig-object py" id="S2D4P.loss.loss_abc.lossABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.loss_abc.</span></span><span class="sig-name descname"><span class="pre">lossABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.loss_abc.lossABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Document this class.</p>
+<p>Abstract base class for loss functions.</p>
+<p>Defines the common interface for computing, aggregating, and reporting model
+losses while retaining information about the model’s generative behavior.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.loss.loss_abc.lossABC.generative_context">
 <span class="sig-name descname"><span class="pre">generative_context</span></span><a class="headerlink" href="#S2D4P.loss.loss_abc.lossABC.generative_context" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext">GenerativeContext</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">generative_context</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Context describing whether the associated model uses generative modeling
+or generator-based stochastic output sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext">GenerativeContext</a></p>
@@ -424,21 +441,27 @@ The sizes must match that of the input and target data.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.loss_abc.lossABC.forward">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#S2D4P.loss.loss_abc.lossABC.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Compute the loss between model output and target data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions used to calculate the loss.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target values against which predictions are compared.</p></li>
+<li><p><strong>print_loss</strong> (<em>bool</em>) – Whether to print the calculated loss.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Calculated loss.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">generative_context</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">generative_context</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -450,17 +473,19 @@ The sizes must match that of the input and target data.</p>
 <dt class="sig sig-object py" id="S2D4P.loss.registery.Registery">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.registery.</span></span><span class="sig-name descname"><span class="pre">Registery</span></span><a class="headerlink" href="#S2D4P.loss.registery.Registery" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Registry for named classes.</p>
+<p>Registered classes can be retrieved and instantiated by name using optional
+configuration data.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.registery.Registery.available">
 <span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.registery.Registery.available" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the names of all registered classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Names currently available in the registry.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>list[str]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -468,22 +493,26 @@ The sizes must match that of the input and target data.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.registery.Registery.get">
 <span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.registery.Registery.get" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Retrieve and instantiate a registered class.</p>
+<p>Dictionary configurations are expanded into constructor arguments. Dataclass
+types are constructed using strict field matching, while other dictionary
+configurations are passed as keyword arguments. Non-dictionary configuration
+values are passed as a single positional argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>config</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name identifying the registered class.</p></li>
+<li><p><strong>config</strong> (<em>Any</em>) – Configuration used to construct the registered class.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Instance of the registered class.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">name</span></code> is not registered.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -491,16 +520,16 @@ The sizes must match that of the input and target data.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.registery.Registery.register">
 <span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.registery.Registery.register" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Create a decorator that registers a class under a name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name used to identify the registered class.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Decorator that registers and returns the supplied class.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>Callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -514,39 +543,47 @@ The sizes must match that of the input and target data.</p>
 <dt class="sig sig-object py" id="S2D4P.loss.utils_loss.Frobenius_norm">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.utils_loss.</span></span><span class="sig-name descname"><span class="pre">Frobenius_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariance_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'spatial'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'channel'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'spatial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.utils_loss.Frobenius_norm" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.loss.loss_abc.lossABC" title="S2D4P.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Measure covariance mismatch using the Frobenius norm.</p>
+<p>Covariance matrices are calculated from targets and predictions either across
+spatial features within each channel or across channels. Their difference is
+measured with the matrix Frobenius norm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>covariance_dim</strong> (<em>CovarianceDim</em>) – Description not yet provided.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Target weight array used to determine the spatial output size.</p></li>
+<li><p><strong>reduction</strong> (<em>Reduction</em>) – Reduction applied to the covariance discrepancy.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Number of model output dimensions, including the channel dimension.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Context describing generative-model and generator behavior.</p></li>
+<li><p><strong>covariance_dim</strong> (<em>CovarianceDim</em>) – Dimension over which covariance structure is compared. Supported values
+are <code class="docutils literal notranslate"><span class="pre">&quot;spatial&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;channel&quot;</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.utils_loss.Frobenius_norm.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#S2D4P.loss.utils_loss.Frobenius_norm.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Compute covariance discrepancy between predictions and targets.</p>
+<p>Generator outputs are first averaged across their output-sample dimension.
+Spatial dimensions are flattened before covariance matrices are calculated
+across spatial features or channels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target values.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional target mask. This loss does not currently use the mask.</p></li>
+<li><p><strong>print_loss</strong> (<em>bool</em>) – Whether to print the calculated loss.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Reduced Frobenius norm of the prediction and target covariance difference.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>AssertionError</strong> – If prediction and target shapes do not match after generator samples are
+    resolved.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -557,40 +594,47 @@ The sizes must match that of the input and target data.</p>
 <dt class="sig sig-object py" id="S2D4P.loss.utils_loss.WeightedCRPS">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.utils_loss.</span></span><span class="sig-name descname"><span class="pre">WeightedCRPS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_ress_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.utils_loss.WeightedCRPS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.loss.loss_abc.lossABC" title="S2D4P.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Compute weighted continuous ranked probability score.</p>
+<p>CRPS is evaluated from an ensemble of generator predictions and supports
+spatial and variable weights, optional masking, and optional low-resolution
+pooling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>low_ress_kernel_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial and optional channel weights applied to CRPS values.</p></li>
+<li><p><strong>reduction</strong> (<em>Reduction</em>) – Reduction applied to weighted CRPS values.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Number of model output dimensions, including the channel dimension.</p></li>
+<li><p><strong>low_ress_kernel_size</strong> (<em>int</em><em> | </em><em>None</em>) – Kernel size used to downsample predictions, targets, masks, and weights
+before calculating CRPS.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Context describing generative-model and generator behavior.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments accepted for pipeline compatibility.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.utils_loss.WeightedCRPS.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#S2D4P.loss.utils_loss.WeightedCRPS.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Compute the weighted continuous ranked probability score.</p>
+<p>For a single ensemble member, CRPS reduces to absolute error. For multiple
+members, the ensemble is sorted and the empirical CRPS is calculated from its
+distance to the target and pairwise ensemble spacing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Ensemble predictions with a leading output-sample dimension.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target values.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask applied during loss aggregation.</p></li>
+<li><p><strong>print_loss</strong> (<em>bool</em>) – Whether to print the calculated loss.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Reduced weighted CRPS.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If generator-based output sampling is not enabled.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -601,43 +645,53 @@ The sizes must match that of the input and target data.</p>
 <dt class="sig sig-object py" id="S2D4P.loss.utils_loss.WeightedMSE">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.loss.utils_loss.</span></span><span class="sig-name descname"><span class="pre">WeightedMSE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sum'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_ress_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperparam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.loss.utils_loss.WeightedMSE" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.loss.loss_abc.lossABC" title="S2D4P.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Compute weighted mean squared error.</p>
+<p>Supports spatial and variable weights, optional masking, optional low-resolution
+pooling, threshold-dependent error scaling, and generator outputs. For
+generator models, predictions are averaged across the output-sample dimension
+before squared error is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>reduction</strong> (<em>Reduction</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>low_ress_kernel_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>hyperparam</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>min_threshold</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>max_threshold</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>weights</strong> (<em>xr.DataArray</em>) – Spatial and optional channel weights applied to squared errors.</p></li>
+<li><p><strong>reduction</strong> (<em>Reduction</em>) – Reduction applied to the weighted squared errors.</p></li>
+<li><p><strong>num_output_dimensions</strong> (<em>int</em>) – Number of model output dimensions, including the channel dimension.</p></li>
+<li><p><strong>low_ress_kernel_size</strong> (<em>int</em><em> | </em><em>None</em>) – Kernel size used to downsample predictions, targets, masks, and weights
+before calculating the loss. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no downsampling is applied.</p></li>
+<li><p><strong>generative_context</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.GenerativeContext" title="S2D4P.core.core_abc.GenerativeContext"><em>GenerativeContext</em></a><em> | </em><em>None</em>) – Context describing generative-model and generator behavior.</p></li>
+<li><p><strong>hyperparam</strong> (<em>float</em>) – Multiplicative penalty applied to errors that cross the configured
+thresholds.</p></li>
+<li><p><strong>min_threshold</strong> (<em>float</em>) – Lower target threshold used for asymmetric error weighting.</p></li>
+<li><p><strong>max_threshold</strong> (<em>float</em>) – Upper target threshold used for asymmetric error weighting.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments accepted for pipeline compatibility.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.loss.utils_loss.WeightedMSE.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#S2D4P.loss.utils_loss.WeightedMSE.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Compute weighted mean squared error.</p>
+<p>Generator outputs are averaged across their output-sample dimension. Optional
+low-resolution pooling and threshold-dependent penalties are applied before
+the weighted loss is reduced.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target values.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask applied during loss aggregation.</p></li>
+<li><p><strong>print_loss</strong> (<em>bool</em>) – Whether to print the calculated loss.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Reduced weighted mean squared error.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the prediction and target shapes do not match after generator samples
+    are resolved.</p>
 </dd>
 </dl>
 </dd></dl>

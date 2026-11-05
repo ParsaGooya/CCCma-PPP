@@ -122,31 +122,38 @@
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.cvae.cVAEPredictor">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.inference.predictors.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.inference.predictors.cvae.cVAEPredictorConfig" title="S2D4P.inference.predictors.cvae.cVAEPredictorConfig"><span class="pre">cVAEPredictorConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.inference.predictors.cvae.cVAEPredictor" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC" title="S2D4P.inference.predictors.predictor_abc.PredictorABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictorABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Run inference for a conditional variational autoencoder.</p>
+<p>Supports prior sampling, latent distributions estimated from training
+posteriors, output residual covariance sampling, latent-variable export, and
+temporary NetCDF prediction output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.inference.predictors.cvae.cVAEPredictorConfig" title="S2D4P.inference.predictors.cvae.cVAEPredictorConfig"><em>cVAEPredictorConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.inference.predictors.cvae.cVAEPredictorConfig" title="S2D4P.inference.predictors.cvae.cVAEPredictorConfig"><em>cVAEPredictorConfig</em></a>) – Configuration controlling latent sampling and output behavior.</p></li>
+<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Trained cVAE module used for inference.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used for device placement and rank information.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Directory in which inference outputs and training statistics are stored.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Number of output samples generated for each latent sample.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.cvae.cVAEPredictor.build_latent_sampler">
 <span class="sig-name descname"><span class="pre">build_latent_sampler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#S2D4P.inference.predictors.cvae.cVAEPredictor.build_latent_sampler" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build a sampler from training posterior statistics.</p>
+<p>The saved posterior mean and covariance matrix are loaded and used to create
+a callable that samples a multivariate latent distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Callable accepting a sample shape and standard-deviation multiplier and
+returning latent samples.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Callable[…, torch.Tensor]</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>ValueError</strong> – If training statistics have not been saved or the stored statistics do
+    not contain posterior sample mean and covariance values.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -154,13 +161,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.cvae.cVAEPredictor.extract_posterior_samples">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_posterior_samples</span></span><a class="headerlink" href="#S2D4P.inference.predictors.cvae.cVAEPredictor.extract_posterior_samples" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Indicate whether posterior latent statistics must be extracted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Whether inference uses a latent distribution estimated from training
+posterior samples.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -168,13 +176,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.cvae.cVAEPredictor.extract_training_residuals">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_residuals</span></span><a class="headerlink" href="#S2D4P.inference.predictors.cvae.cVAEPredictor.extract_training_residuals" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Indicate whether training residual statistics must be extracted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when multiple output samples require residual covariance
+sampling.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -182,13 +191,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.cvae.cVAEPredictor.extract_training_vars">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_vars</span></span><a class="headerlink" href="#S2D4P.inference.predictors.cvae.cVAEPredictor.extract_training_vars" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Indicate whether training-derived statistics must be extracted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when posterior latent statistics or training residual statistics
+are required.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -199,36 +209,38 @@
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.cvae.cVAEPredictorConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.inference.predictors.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictorConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_latent_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infer_latent_samples_from_training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_latent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.inference.predictors.cvae.cVAEPredictorConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configuration for conditional variational autoencoder inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>num_latent_samples</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>nstds</strong> (<em>float</em>) – Description not yet provided.</p></li>
-<li><p><strong>chunk_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>infer_latent_samples_from_training</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_latent</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_latent_samples</strong> (<em>int</em>) – Number of latent samples generated for each input sample.</p></li>
+<li><p><strong>nstds</strong> (<em>float</em>) – Standard-deviation multiplier used when sampling latent variables.</p></li>
+<li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of latent samples processed per generation chunk. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, all
+latent samples are processed together.</p></li>
+<li><p><strong>infer_latent_samples_from_training</strong> (<em>bool</em>) – Whether latent samples are drawn from a Gaussian distribution estimated
+from posterior samples collected on the training data.</p></li>
+<li><p><strong>save_latent</strong> (<em>bool</em>) – Whether latent variables are saved instead of model predictions.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.cvae.cVAEPredictorConfig.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.inference.predictors.cvae.cVAEPredictorConfig.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build a cVAE predictor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Trained cVAE module used for inference.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used for device placement and rank information.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Directory in which inference outputs and training statistics are stored.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Number of output samples generated for each latent sample.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Configured cVAE predictor.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.inference.predictors.cvae.cVAEPredictor" title="S2D4P.inference.predictors.cvae.cVAEPredictor">cVAEPredictor</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -267,25 +279,31 @@
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.inference.predictors.deterministic.</span></span><span class="sig-name descname"><span class="pre">DeterministicPredictorConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configuration for deterministic model inference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>chunk_output_samples</strong> (<em>bool</em>) – Whether multiple stochastic output samples are generated separately
+instead of repeating decoder features in a single pass.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build a deterministic predictor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Trained deterministic model module used for inference.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used for device placement and rank information.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Directory in which inference outputs and training statistics are stored.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Number of output samples generated for each input.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Configured deterministic predictor.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.inference.predictors.deterministic.DetermninisticPredictor" title="S2D4P.inference.predictors.deterministic.DetermninisticPredictor">DetermninisticPredictor</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -301,28 +319,31 @@
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.deterministic.DetermninisticPredictor">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.inference.predictors.deterministic.</span></span><span class="sig-name descname"><span class="pre">DetermninisticPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig" title="S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig"><span class="pre">DeterministicPredictorConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><span class="pre">moduleABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.inference.predictors.deterministic.DetermninisticPredictor" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC" title="S2D4P.inference.predictors.predictor_abc.PredictorABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictorABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Run inference for a deterministic model.</p>
+<p>Supports direct model prediction, generator-based output sampling, and
+sampling based on residual covariance estimated from training data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig" title="S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig"><em>DeterministicPredictorConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig" title="S2D4P.inference.predictors.deterministic.DeterministicPredictorConfig"><em>DeterministicPredictorConfig</em></a>) – Configuration controlling deterministic inference behavior.</p></li>
+<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><em>moduleABC</em></a>) – Trained deterministic model module used for inference.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used for device placement and rank information.</p></li>
+<li><p><strong>output_dir</strong> (<em>Path</em><em> | </em><em>str</em>) – Directory in which inference outputs and training statistics are stored.</p></li>
+<li><p><strong>num_output_sampling</strong> (<em>int</em>) – Number of output samples generated for each input.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.deterministic.DetermninisticPredictor.extract_training_vars">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_vars</span></span><a class="headerlink" href="#S2D4P.inference.predictors.deterministic.DetermninisticPredictor.extract_training_vars" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Indicate whether training residual statistics must be extracted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when multiple outputs require covariance statistics derived from
+training residuals.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -336,11 +357,13 @@
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.inference.predictors.predictor_abc.</span></span><span class="sig-name descname"><span class="pre">PredictorABC</span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Document this class.</p>
+<p>Abstract base class for inference predictors.</p>
+<p>Defines shared functionality for training-statistic extraction, covariance-
+based output sampling, batch inference, and temporary NetCDF output.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.output_dir">
 <span class="sig-name descname"><span class="pre">output_dir</span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.output_dir" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Directory in which inference outputs and training statistics are stored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str | Path</p>
@@ -351,7 +374,8 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.output_sampler">
 <span class="sig-name descname"><span class="pre">output_sampler</span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.output_sampler" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Sampler constructed from training residual statistics for generating
+stochastic output perturbations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Callable[…, torch.Tensor] | None</p>
@@ -362,7 +386,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling">
 <span class="sig-name descname"><span class="pre">num_output_covariance_sampling</span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Number of output samples generated from the training residual covariance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int | None</p>
@@ -373,18 +397,22 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.add_decoder_noise">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">add_decoder_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reshape_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.add_decoder_noise" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Add covariance-sampled noise to decoder predictions.</p>
+<p>A residual sampler is built lazily from saved training statistics. Independent
+noise samples are reshaped to the model output dimensions and added to the
+prediction tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><em>OutputABC</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_samples</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>sample_size</strong> (<em>tuple</em>) – Description not yet provided.</p></li>
-<li><p><strong>reshape_size</strong> (<em>tuple</em>) – Description not yet provided.</p></li>
+<li><p><strong>output</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><em>OutputABC</em></a>) – Model output whose prediction tensor is perturbed.</p></li>
+<li><p><strong>num_output_samples</strong> (<em>int</em>) – Number of noisy output samples to generate.</p></li>
+<li><p><strong>sample_size</strong> (<em>tuple</em>) – Leading sample dimensions used when drawing residual noise.</p></li>
+<li><p><strong>reshape_size</strong> (<em>tuple</em>) – Output dimensions into which each sampled residual vector is reshaped.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Model output with its prediction tensor replaced by the sampled output
+ensemble.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC">OutputABC</a></p>
@@ -395,16 +423,18 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.build_output_sampler">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build_output_sampler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.build_output_sampler" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build an output-noise sampler from training residual statistics.</p>
+<p>The saved residual covariance is used to construct a zero-mean multivariate
+distribution for stochastic perturbation of model outputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Callable accepting a sample shape and returning residual noise samples.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Callable[…, torch.Tensor]</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>ValueError</strong> – If training-derived statistics have not been saved.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -412,7 +442,15 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.extract_training_vars">
 <span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">extract_training_vars</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.extract_training_vars" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Indicate whether training-derived statistics must be extracted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the predictor requires statistics calculated from training data.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -433,13 +471,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.raw_module">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">raw_module</span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.raw_module" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the underlying unwrapped model module.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Module wrapped by distributed data parallel execution when applicable, or
+the original module otherwise.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC">moduleABC</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -447,13 +486,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.stats">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stats</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.aggregator.RunningCovariance" title="S2D4P.generic.aggregator.RunningCovariance"><span class="pre">RunningCovariance</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.stats" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return training-statistic accumulators.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Running covariance accumulators required by the predictor, or <code class="docutils literal notranslate"><span class="pre">None</span></code>
+when no training-derived statistics are required.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[str, <a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.aggregator.RunningCovariance" title="S2D4P.generic.aggregator.RunningCovariance">RunningCovariance</a>]</p>
+<dd class="field-even"><p>dict[str, <a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.aggregator.RunningCovariance" title="S2D4P.generic.aggregator.RunningCovariance">RunningCovariance</a>] | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -461,13 +501,13 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.PredictorABC.temp_save_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">temp_save_dir</span></span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.PredictorABC.temp_save_dir" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the directory used for temporary batch predictions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">_temp</span></code> directory under the configured output directory.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>Path</p>
 </dd>
 </dl>
 </dd></dl>
@@ -477,22 +517,29 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.inference.predictors.predictor_abc.save_batch_to_netcdf">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.inference.predictors.predictor_abc.</span></span><span class="sig-name descname"><span class="pre">save_batch_to_netcdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_dims_sorted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.inference.predictors.predictor_abc.save_batch_to_netcdf" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Save a batch of model predictions to NetCDF.</p>
+<p>Prediction tensors are converted to an xarray DataArray with explicit sample,
+channel, and output dimensions. Per-sample metadata are represented as a
+MultiIndex and unstacked into coordinate dimensions before saving.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>prediction</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_output_dims</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_name</strong> (<em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Description not yet provided.</p></li>
-<li><p><strong>extra_dims_sorted</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>assign_coords</strong> (<em>dict</em>) – Description not yet provided.</p></li>
-<li><p><strong>attrs</strong> (<em>dict</em>) – Description not yet provided.</p></li>
+<li><p><strong>prediction</strong> (<em>torch.Tensor</em>) – Prediction tensor containing optional leading sample dimensions followed
+by batch, channel, and model output dimensions.</p></li>
+<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – Per-sample coordinate metadata. Each dictionary must contain the same
+coordinate fields.</p></li>
+<li><p><strong>num_output_dims</strong> (<em>int</em>) – Number of model output dimensions, including the channel dimension.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em>) – Filename of the NetCDF output.</p></li>
+<li><p><strong>save_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Directory in which the NetCDF file is written.</p></li>
+<li><p><strong>extra_dims_sorted</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Names assigned to leading prediction dimensions, such as
+<code class="docutils literal notranslate"><span class="pre">&quot;output_samples&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;latent_samples&quot;</span></code>.</p></li>
+<li><p><strong>assign_coords</strong> (<em>dict</em><em> | </em><em>None</em>) – Additional coordinates assigned to the resulting DataArray.</p></li>
+<li><p><strong>attrs</strong> (<em>dict</em><em> | </em><em>None</em>) – Attributes attached to the resulting DataArray.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If the prediction tensor has an unexpected number of dimensions or the
+    metadata length does not match the prediction batch size.</p>
 </dd>
 </dl>
 </dd></dl>

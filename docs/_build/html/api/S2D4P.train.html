@@ -120,18 +120,22 @@
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.BatchData">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">BatchData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">share_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.BatchData" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="S2D4P.data.html#S2D4P.data.dataloader.BatchDataABC" title="S2D4P.data.dataloader.BatchDataABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchDataABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Container for a batch of training data.</p>
+<p>Input and target NaN values are replaced with zeros after optional spatial
+validity masks are constructed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>added_features</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>share_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>input_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Batched model input tensor.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Batched target tensor.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional additional features associated with the batch.</p></li>
+<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>] </em><em>| </em><em>None</em>) – Optional per-sample metadata.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Whether validity masks are constructed from non-NaN input and target
+values.</p></li>
+<li><p><strong>share_spatial_mask</strong> (<em>bool</em>) – Whether validity masks are reduced across the batch dimension and shared
+between batch instances.</p></li>
+<li><p><strong>input_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Validity mask derived from the input tensor.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Validity mask derived from the target tensor.</p></li>
 </ul>
 </dd>
 </dl>
@@ -178,16 +182,18 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.BatchData.to_device">
 <span class="sig-name descname"><span class="pre">to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">device</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.BatchData.to_device" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Move batch tensors to a device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em><em> | </em><em>str</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em><em> | </em><em>str</em>) – Device to which the input, target, masks, and additional features are
+moved.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>This batch instance with its applicable tensors moved to the requested
+device.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.train.dataloader.BatchData" title="S2D4P.train.dataloader.BatchData">BatchData</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -198,30 +204,35 @@
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">TrainDataloaderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.train.dataset.TrainDatasetConfig" title="S2D4P.train.dataset.TrainDatasetConfig"><span class="pre">TrainDatasetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_years_slice</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_validation_years</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefetch_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_last</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">share_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="S2D4P.data.html#S2D4P.data.dataloader.DataloaderConfigABC" title="S2D4P.data.dataloader.DataloaderConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataloaderConfigABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Configuration for training and validation data loaders.</p>
+<p>Defines batching, temporal feature generation, train-validation temporal
+splitting, worker settings, spatial-mask behavior, and distributed data
+loading.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> (<a class="reference internal" href="#S2D4P.train.dataset.TrainDatasetConfig" title="S2D4P.train.dataset.TrainDatasetConfig"><em>TrainDatasetConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>batch_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>time_features</strong> (<em>list</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>train_years_slice</strong> (<em>tuple</em><em> | </em><em>list</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_validation_years</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_data_workers</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>prefetch_factor</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>drop_last</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>load</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>share_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>dataset</strong> (<a class="reference internal" href="#S2D4P.train.dataset.TrainDatasetConfig" title="S2D4P.train.dataset.TrainDatasetConfig"><em>TrainDatasetConfig</em></a>) – Configuration used to construct training and validation datasets.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – Number of samples in each batch.</p></li>
+<li><p><strong>time_features</strong> (<em>list</em><em> | </em><em>None</em>) – Temporal features added to each dataset sample.</p></li>
+<li><p><strong>train_years_slice</strong> (<em>tuple</em><em> | </em><em>list</em><em> | </em><em>None</em>) – Optional start and stop years restricting the data used for training and
+validation.</p></li>
+<li><p><strong>num_validation_years</strong> (<em>int</em>) – Number of final years in the selected period reserved for validation.</p></li>
+<li><p><strong>num_data_workers</strong> (<em>int</em>) – Number of worker processes used for data loading.</p></li>
+<li><p><strong>prefetch_factor</strong> (<em>int</em><em> | </em><em>None</em>) – Number of batches prefetched by each data-loading worker.</p></li>
+<li><p><strong>drop_last</strong> (<em>bool</em>) – Whether the final incomplete batch is discarded.</p></li>
+<li><p><strong>load</strong> (<em>bool</em>) – Whether underlying xarray datasets are loaded into memory when opened.</p></li>
+<li><p><strong>share_spatial_mask</strong> (<em>bool</em>) – Whether spatial validity masks are reduced across the batch dimension and
+shared between batches.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig.available_times">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_times</span></span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig.available_times" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return initialization times available for training.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Initialization times available from the training dataset configuration.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Any</p>
@@ -237,23 +248,27 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig.build_train_loader">
 <span class="sig-name descname"><span class="pre">build_train_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig.build_train_loader" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the training data loader.</p>
+<p>A temporal mask prevents samples whose target times extend beyond the common
+data coverage. The resulting dataset is constructed from the selected
+training times and configured temporal features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>return_metadata</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>return_metadata</strong> (<em>bool</em>) – Whether samples include their sampling-coordinate metadata.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Whether batches contain spatial validity masks.</p></li>
+<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether training samples are shuffled. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the data loader
+selects the appropriate default.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Configured training data loader.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.data.html#S2D4P.data.dataloader.Dataloader" title="S2D4P.data.dataloader.Dataloader">Dataloader</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If distributed data-loader setup has not been completed.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -261,27 +276,32 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig.build_validation_loader">
 <span class="sig-name descname"><span class="pre">build_validation_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supress_error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig.build_validation_loader" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the validation data loader.</p>
+<p>Validation samples are restricted to the configured validation years and
+masked when their target times extend beyond the common data coverage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>return_metadata</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>supress_error</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>return_metadata</strong> (<em>bool</em>) – Whether samples include their sampling-coordinate metadata.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Whether batches contain spatial validity masks.</p></li>
+<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether validation samples are shuffled.</p></li>
+<li><p><strong>supress_error</strong> (<em>bool</em>) – Whether absence of configured validation years produces a warning instead
+of raising an exception.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Configured validation data loader, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when validation is disabled
+and <code class="docutils literal notranslate"><span class="pre">supress_error</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.data.html#S2D4P.data.dataloader.Dataloader" title="S2D4P.data.dataloader.Dataloader">Dataloader</a> | None</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If distributed setup has not been completed, or validation is unavailable
+    and <code class="docutils literal notranslate"><span class="pre">supress_error</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
 <dt class="field-odd">Warns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>UserWarning</strong> – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>UserWarning</strong> – If no validation years are configured and <code class="docutils literal notranslate"><span class="pre">supress_error</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -299,16 +319,19 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig.get_weights">
 <span class="sig-name descname"><span class="pre">get_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><span class="pre">WeightsConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig.get_weights" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build loss weights for the training target.</p>
+<p>Only the root process saves newly generated weights. Distributed processes are
+synchronized before the weights are returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><em>WeightsConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><em>WeightsConfig</em></a><em> | </em><em>None</em>) – Configuration controlling spatial and variable weighting. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+default weight settings are used.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Loss weights aligned with the training target.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>xr.DataArray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -316,13 +339,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig.input_var_metadata">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_var_metadata</span></span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig.input_var_metadata" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return metadata describing model input variables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Input-variable names, preprocessing operations, and neural-network
+dimensions.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -350,12 +374,16 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig.setup_distributed">
 <span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig.setup_distributed" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Configure training data loading for distributed execution.</p>
+<p>The root process fits and saves preprocessing pipelines when necessary.
+Processes are synchronized before fitted preprocessing state is loaded, and
+pinned memory is enabled for distributed execution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>load_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime containing rank and world-size information.</p></li>
+<li><p><strong>load_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory containing existing fitted preprocessing pipelines. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+preprocessors are fitted from the configured training data.</p></li>
 </ul>
 </dd>
 </dl>
@@ -369,13 +397,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.TrainDataloaderConfig.target_var_metadata">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">target_var_metadata</span></span><a class="headerlink" href="#S2D4P.train.dataloader.TrainDataloaderConfig.target_var_metadata" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return metadata describing model target variables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Target-variable names, preprocessing operations, and neural-network
+dimensions.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -395,20 +424,25 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.train.dataloader.collate_batch">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">collate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">share_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataloader.collate_batch" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Collate training samples into a batch.</p>
+<p>Input and target tensors are stacked along the batch dimension together with
+optional additional features. Per-sample metadata are retained when supplied
+by the dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>batch</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>share_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch</strong> (<em>Any</em>) – Sequence of training samples, optionally paired with per-sample metadata.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Whether input and target validity masks are constructed from missing
+values.</p></li>
+<li><p><strong>share_spatial_mask</strong> (<em>bool</em>) – Whether validity masks are reduced across the batch dimension and shared.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Collated training batch containing inputs, targets, optional additional
+features, metadata, and optional spatial validity masks.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.train.dataloader.BatchData" title="S2D4P.train.dataloader.BatchData">BatchData</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -420,16 +454,19 @@
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDataset">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.train.dataset.</span></span><span class="sig-name descname"><span class="pre">TrainDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.train.dataset.TrainDatasetConfig" title="S2D4P.train.dataset.TrainDatasetConfig"><span class="pre">TrainDatasetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><span class="pre">AddedTimeFeatures</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataset.TrainDataset" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC" title="S2D4P.data.dataset.dataset_abc.DatasetABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatasetABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Dataset for constructing model inputs and targets during training.</p>
+<p>Training samples are assembled from forecast, reference, and conditioning
+data according to the configured conditioning strategy. When reference data
+are absent, forecast data are used as reconstruction targets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.train.dataset.TrainDatasetConfig" title="S2D4P.train.dataset.TrainDatasetConfig"><em>TrainDatasetConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>requested_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>time_features</strong> (<a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><em>AddedTimeFeatures</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>return_metadata</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>load</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.train.dataset.TrainDatasetConfig" title="S2D4P.train.dataset.TrainDatasetConfig"><em>TrainDatasetConfig</em></a>) – Configuration defining training data sources and sampling behavior.</p></li>
+<li><p><strong>requested_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Initialization times requested for training.</p></li>
+<li><p><strong>time_features</strong> (<a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><em>AddedTimeFeatures</em></a>) – Temporal feature generator applied to samples.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Optional mask identifying sample combinations excluded from training.</p></li>
+<li><p><strong>return_metadata</strong> (<em>bool</em>) – Whether each sample is returned with its sampling-coordinate metadata.</p></li>
+<li><p><strong>load</strong> (<em>bool</em>) – Whether underlying xarray data are loaded into memory when opened.</p></li>
 </ul>
 </dd>
 </dl>
@@ -441,19 +478,23 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDataset.get_obs_indexes">
 <span class="sig-name descname"><span class="pre">get_obs_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#S2D4P.train.dataset.TrainDataset.get_obs_indexes" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Map forecast samples to positional reference-data indexes.</p>
+<p>Reference valid times are calculated from each forecast initialization time
+and lead time before being mapped to the reference dataset’s time index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>sample_coords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Sampling coordinates for all valid training samples.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Positional reference-data indexes for each sample, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when no
+reference dataset is configured.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, np.ndarray] | None</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If one or more calculated reference times cannot be found in the reference
+    dataset.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -461,13 +502,16 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDataset.get_target_shape">
 <span class="sig-name descname"><span class="pre">get_target_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataset.TrainDataset.get_target_shape" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Determine the shape of a target sample.</p>
+<p>Reference variables and spatial dimensions define the target shape when
+reference data are configured. A fitted flattener determines the flattened
+spatial size when applicable. Without reference data, the input shape is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Target shape excluding the batch dimension.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>tuple</p>
 </dd>
 </dl>
 </dd></dl>
@@ -503,27 +547,32 @@
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.train.dataset.</span></span><span class="sig-name descname"><span class="pre">TrainDatasetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forecast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig" title="S2D4P.data.data_configs.data_configs.ForecastDataConfig"><span class="pre">ForecastDataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig" title="S2D4P.data.data_configs.data_configs.RefDataConfig"><span class="pre">RefDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig" title="S2D4P.data.data_configs.data_configs.ConditionDataConfig"><span class="pre">ConditionDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config" title="S2D4P.data.dataset.dataset_abc.lead_time_config"><span class="pre">lead_time_config</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatasetConfigABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Configuration for a training dataset.</p>
+<p>Defines forecast inputs, optional reference targets, optional conditioning
+data, the conditioning strategy, and forecast lead times used to construct
+training samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forecast</strong> (<a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig" title="S2D4P.data.data_configs.data_configs.ForecastDataConfig"><em>ForecastDataConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>reference</strong> (<a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig" title="S2D4P.data.data_configs.data_configs.RefDataConfig"><em>RefDataConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig" title="S2D4P.data.data_configs.data_configs.ConditionDataConfig"><em>ConditionDataConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition_method</strong> (<em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>lead_times</strong> (<a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config" title="S2D4P.data.dataset.dataset_abc.lead_time_config"><em>lead_time_config</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>forecast</strong> (<a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig" title="S2D4P.data.data_configs.data_configs.ForecastDataConfig"><em>ForecastDataConfig</em></a>) – Forecast data configuration used to construct model inputs and, when no
+reference data are provided, training targets.</p></li>
+<li><p><strong>reference</strong> (<a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig" title="S2D4P.data.data_configs.data_configs.RefDataConfig"><em>RefDataConfig</em></a><em> | </em><em>None</em>) – Optional reference data configuration used to construct training targets.</p></li>
+<li><p><strong>condition</strong> (<a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig" title="S2D4P.data.data_configs.data_configs.ConditionDataConfig"><em>ConditionDataConfig</em></a><em> | </em><em>None</em>) – Optional auxiliary conditioning data configuration.</p></li>
+<li><p><strong>condition_method</strong> (<em>str</em><em> | </em><em>None</em>) – Method used to associate conditioning data with forecast inputs.</p></li>
+<li><p><strong>lead_times</strong> (<a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config" title="S2D4P.data.dataset.dataset_abc.lead_time_config"><em>lead_time_config</em></a><em> | </em><em>None</em>) – Forecast lead times included in training samples. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, all
+available input lead times are used.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.add_fitted_preprocessor">
 <span class="sig-name descname"><span class="pre">add_fitted_preprocessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.add_fitted_preprocessor" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Add a fitted preprocessing module to the active data pipelines.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>preprocessor</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>index</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>preprocessor</strong> (<a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><em>PreprocessModuleABC</em></a>) – Fitted preprocessing module to add.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – Position at which the preprocessing module is inserted.</p></li>
 </ul>
 </dd>
 </dl>
@@ -532,10 +581,15 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.available_times">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_times</span></span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.available_times" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return initialization times available for training.</p>
+<p>The common forecast and reference temporal coverage is restricted to the
+initialization period represented by the forecast data. Yearly and
+monthly-initialized forecasts are handled using their corresponding calendar
+resolution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Times within the common temporal coverage that are valid forecast
+initialization times.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Any</p>
@@ -546,22 +600,23 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.build_dataset">
 <span class="sig-name descname"><span class="pre">build_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><span class="pre">AddedTimeFeatures</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.build_dataset" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build a training dataset from this configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>time_features</strong> (<a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><em>AddedTimeFeatures</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>return_metadata</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>load</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Initialization times included in the training dataset.</p></li>
+<li><p><strong>time_features</strong> (<a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><em>AddedTimeFeatures</em></a>) – Temporal feature generator applied to training samples.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Optional mask identifying initialization-time and lead-time combinations
+excluded from sampling.</p></li>
+<li><p><strong>return_metadata</strong> (<em>bool</em>) – Whether each sample is returned with its sampling-coordinate metadata.</p></li>
+<li><p><strong>load</strong> (<em>bool</em>) – Whether underlying xarray data are loaded into memory when opened.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Constructed training dataset.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.train.dataset.TrainDataset" title="S2D4P.train.dataset.TrainDataset">TrainDataset</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -579,13 +634,14 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.ds_operator">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ds_operator</span></span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.ds_operator" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return an operator for this training dataset configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Dataset operator providing preprocessing, weighting, and metadata
+operations.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator" title="S2D4P.data.dataset.operator.DatasetOperator">DatasetOperator</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -593,13 +649,13 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.effective_input">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">effective_input</span></span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.effective_input" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the primary data source used for model input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Forecast data configuration.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig" title="S2D4P.data.data_configs.data_configs.ForecastDataConfig">ForecastDataConfig</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -607,14 +663,14 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.fit_preprocessors">
 <span class="sig-name descname"><span class="pre">fit_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime64</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.fit_preprocessors" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Fit preprocessing pipelines using selected training times.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em><em> | </em><em>slice</em>) – Description not yet provided.</p></li>
-<li><p><strong>save</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_path</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>train_times</strong> (<em>Sequence</em><em>[</em><em>np.datetime64</em><em> | </em><em>datetime.datetime</em><em> | </em><em>cftime.datetime</em><em>] </em><em>| </em><em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – Initialization times used to estimate preprocessing statistics.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether fitted preprocessing pipelines are saved.</p></li>
+<li><p><strong>save_path</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory in which fitted preprocessing pipelines are saved.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Optional filename used when saving fitted preprocessing pipelines.</p></li>
 </ul>
 </dd>
 </dl>
@@ -628,10 +684,13 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.get_common_time">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_common_time</span></span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.get_common_time" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the temporal coverage shared by forecast and target data.</p>
+<p>When no reference data are configured, the forecast temporal range is used
+directly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Intersection of forecast and reference temporal coverage, or forecast
+temporal coverage when no reference data are configured.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Any</p>
@@ -647,10 +706,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.dataset.TrainDatasetConfig.load_fitted_preprocessors">
 <span class="sig-name descname"><span class="pre">load_fitted_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.dataset.TrainDatasetConfig.load_fitted_preprocessors" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Load fitted preprocessing pipelines for the training data sources.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory containing saved preprocessing pipelines. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+default preprocessing location is used.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -668,10 +728,11 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.train.train.get_parser">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.train.train.</span></span><span class="sig-name descname"><span class="pre">get_parser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ArgumentParser</span></span></span><a class="headerlink" href="#S2D4P.train.train.get_parser" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the command-line argument parser for training.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Parser configured to accept the path to a training YAML configuration
+file.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>argparse.ArgumentParser</p>
@@ -682,10 +743,15 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.train.train.main">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.train.train.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yaml_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#S2D4P.train.train.main" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Run the training workflow from a YAML configuration file.</p>
+<p>Initializes distributed execution, loads and validates the training
+configuration, sets a rank-specific random seed, and prepares the experiment
+directories. Resource monitoring is enabled while the trainer is built,
+configured for distributed execution, and run. Distributed resources are
+cleaned up when training completes or an exception is raised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>yaml_config</strong> (<em>str</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>yaml_config</strong> (<em>str</em>) – Path to the YAML file containing the training configuration.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -697,32 +763,37 @@
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">TrainConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_loader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.train.dataloader.TrainDataloaderConfig" title="S2D4P.train.dataloader.TrainDataloaderConfig"><span class="pre">TrainDataloaderConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.ModuleSelector" title="S2D4P.core.selectors.ModuleSelector"><span class="pre">ModuleSelector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losspipeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.loss.html#S2D4P.loss.loss.LosspipelineConfig" title="S2D4P.loss.loss.LosspipelineConfig"><span class="pre">LosspipelineConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.trainer.TrainerConfig" title="S2D4P.core.trainer.TrainerConfig"><span class="pre">TrainerConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.optimization.OptimizerConfig" title="S2D4P.core.optimization.OptimizerConfig"><span class="pre">OptimizerConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><span class="pre">WeightsConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_every_n_epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configuration for a model training experiment.</p>
+<p>Coordinates data loading, model construction, loss configuration,
+optimization, trainer behavior, experiment directories, checkpoint
+resumption, and reproducibility settings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experiment_dir</strong> (<em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>max_epochs</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>train_loader</strong> (<a class="reference internal" href="#S2D4P.train.dataloader.TrainDataloaderConfig" title="S2D4P.train.dataloader.TrainDataloaderConfig"><em>TrainDataloaderConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.ModuleSelector" title="S2D4P.core.selectors.ModuleSelector"><em>ModuleSelector</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>losspipeline</strong> (<a class="reference internal" href="S2D4P.loss.html#S2D4P.loss.loss.LosspipelineConfig" title="S2D4P.loss.loss.LosspipelineConfig"><em>LosspipelineConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>trainer</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.trainer.TrainerConfig" title="S2D4P.core.trainer.TrainerConfig"><em>TrainerConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>optimization</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.optimization.OptimizerConfig" title="S2D4P.core.optimization.OptimizerConfig"><em>OptimizerConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>weights</strong> (<a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><em>WeightsConfig</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>log_every_n_epochs</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>save_checkpoint</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>seed</strong> (<em>int</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>resume_dir</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>experiment_dir</strong> (<em>str</em>) – Directory in which experiment outputs, checkpoints, logs, figures, and
+configuration files are stored.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Maximum number of training epochs.</p></li>
+<li><p><strong>train_loader</strong> (<a class="reference internal" href="#S2D4P.train.dataloader.TrainDataloaderConfig" title="S2D4P.train.dataloader.TrainDataloaderConfig"><em>TrainDataloaderConfig</em></a><em> | </em><em>None</em>) – Configuration used to construct training and validation data loaders.</p></li>
+<li><p><strong>module</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.ModuleSelector" title="S2D4P.core.selectors.ModuleSelector"><em>ModuleSelector</em></a><em> | </em><em>None</em>) – Model module and architecture configuration.</p></li>
+<li><p><strong>losspipeline</strong> (<a class="reference internal" href="S2D4P.loss.html#S2D4P.loss.loss.LosspipelineConfig" title="S2D4P.loss.loss.LosspipelineConfig"><em>LosspipelineConfig</em></a><em> | </em><em>None</em>) – Configuration defining the reconstruction loss pipeline.</p></li>
+<li><p><strong>trainer</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.trainer.TrainerConfig" title="S2D4P.core.trainer.TrainerConfig"><em>TrainerConfig</em></a><em> | </em><em>None</em>) – Configuration controlling the training loop.</p></li>
+<li><p><strong>optimization</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.optimization.OptimizerConfig" title="S2D4P.core.optimization.OptimizerConfig"><em>OptimizerConfig</em></a><em> | </em><em>None</em>) – Optimizer and learning-rate scheduler configuration.</p></li>
+<li><p><strong>weights</strong> (<a class="reference internal" href="S2D4P.data.html#S2D4P.data.weights.WeightsConfig" title="S2D4P.data.weights.WeightsConfig"><em>WeightsConfig</em></a><em> | </em><em>None</em>) – Configuration used to construct spatial and variable loss weights.</p></li>
+<li><p><strong>log_every_n_epochs</strong> (<em>int</em>) – Number of epochs between metric logging and plot updates.</p></li>
+<li><p><strong>save_checkpoint</strong> (<em>bool</em>) – Whether training checkpoints are saved.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em> | </em><em>None</em>) – Base random seed used for reproducible training.</p></li>
+<li><p><strong>resume_dir</strong> (<em>str</em><em> | </em><em>None</em>) – Directory of a halted experiment whose configuration and checkpoint state
+should be resumed.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig.checkpoint_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">checkpoint_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig.checkpoint_dir" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the experiment checkpoint directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Path to the <code class="docutils literal notranslate"><span class="pre">checkpoints</span></code> directory under the experiment directory.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -738,10 +809,11 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig.figures_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">figures_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig.figures_dir" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the experiment resource-monitoring directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Path to the <code class="docutils literal notranslate"><span class="pre">resource_monitoring</span></code> directory under the experiment
+directory.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -752,10 +824,10 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig.log_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">log_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig.log_dir" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the experiment logging directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Path to the <code class="docutils literal notranslate"><span class="pre">logs</span></code> directory under the experiment directory.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -786,10 +858,11 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig.monitoring_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">monitoring_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig.monitoring_dir" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the experiment resource-monitoring directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Path to the <code class="docutils literal notranslate"><span class="pre">resource_monitoring</span></code> directory under the experiment
+directory.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -805,12 +878,17 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig.prepare_directory">
 <span class="sig-name descname"><span class="pre">prepare_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaml_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig.prepare_directory" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Prepare experiment directories for training.</p>
+<p>For a resumed experiment targeting a new location, the previous experiment
+directory is copied to the new path. Otherwise, required experiment
+directories are created. The supplied YAML configuration is copied into the
+experiment directory by the root process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>yaml_config</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used for root-process detection and synchronization.</p></li>
+<li><p><strong>yaml_config</strong> (<em>str</em><em> | </em><em>None</em>) – Path to the source training configuration file to copy into the experiment
+directory.</p></li>
 </ul>
 </dd>
 </dl>
@@ -819,23 +897,26 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig.read_config_from_halted_experiment">
 <span class="sig-name descname"><span class="pre">read_config_from_halted_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resume_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#S2D4P.train.train_configs.TrainConfig" title="S2D4P.train.train_configs.TrainConfig"><span class="pre">TrainConfig</span></a></span></span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig.read_config_from_halted_experiment" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Load configuration from a halted training experiment.</p>
+<p>The saved configuration is updated with the newly requested experiment
+directory and maximum epoch count before being reconstructed as a training
+configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resume_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Description not yet provided.</p></li>
-<li><p><strong>experiment_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Description not yet provided.</p></li>
-<li><p><strong>max_epochs</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>resume_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Directory containing the halted experiment and its saved configuration.</p></li>
+<li><p><strong>experiment_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Experiment directory to use for resumed training.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Maximum number of epochs for resumed training.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Reconstructed configuration for the resumed experiment.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>‘TrainConfig’</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.train.train_configs.TrainConfig" title="S2D4P.train.train_configs.TrainConfig">TrainConfig</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">resume_dir</span></code> does not exist as a directory.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -858,10 +939,12 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.TrainConfig.set_random_seed">
 <span class="sig-name descname"><span class="pre">set_random_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.train_configs.TrainConfig.set_random_seed" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Set the process-specific training random seed.</p>
+<p>The configured base seed is offset by process rank so distributed processes
+use distinct deterministic seeds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>rank</strong> (<em>int</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>rank</strong> (<em>int</em>) – Distributed process rank added to the configured base seed.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -886,20 +969,24 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.build_trainer">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">build_trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.train.train_configs.TrainConfig" title="S2D4P.train.train_configs.TrainConfig"><span class="pre">TrainConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.train_configs.build_trainer" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the complete training workflow.</p>
+<p>Constructs training and validation data loaders, loss weights, the configured
+model module, reconstruction loss pipeline, optimizer, and trainer. Spatial
+masks are requested automatically when required by the selected architecture.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.train.train_configs.TrainConfig" title="S2D4P.train.train_configs.TrainConfig"><em>TrainConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>logger</strong> (<em>logging.Logger</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.train.train_configs.TrainConfig" title="S2D4P.train.train_configs.TrainConfig"><em>TrainConfig</em></a>) – Configuration defining the training experiment.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="S2D4P.generic.html#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used for data loading and model device placement.</p></li>
+<li><p><strong>logger</strong> (<em>logging.Logger</em><em> | </em><em>None</em>) – Logger used for root-process setup messages. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, messages are
+printed instead.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Fully configured trainer ready for distributed setup and training.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.trainer.Trainer" title="S2D4P.core.trainer.Trainer">Trainer</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -907,13 +994,13 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.prepare_config">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">prepare_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#S2D4P.train.train_configs.prepare_config" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Load a YAML configuration file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em><em> | </em><em>str</em>) – Path to the YAML configuration file.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Parsed configuration values.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
@@ -924,10 +1011,10 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.train.train_configs.set_seed">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.train.train_configs.set_seed" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Set NumPy and PyTorch random seeds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>seed</strong> (<em>Any</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em>) – Seed used to initialize NumPy and PyTorch random-number generators.</p>
 </dd>
 </dl>
 </dd></dl>

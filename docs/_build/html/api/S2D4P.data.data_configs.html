@@ -338,30 +338,33 @@ from <cite>DataConfigABC</cite>.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.data.data_configs.data_configs.build_time_range">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.data.data_configs.data_configs.</span></span><span class="sig-name descname"><span class="pre">build_time_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_lead_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'month'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">CFTimeIndex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#S2D4P.data.data_configs.data_configs.build_time_range" title="Link to this definition"></a></dt>
-<dd><p>Build a continuous temporal extent from init times and lead times.</p>
-<p>Returns the inclusive continuous range [min(init_time),
-max(init_time) + max_lead_time]. This is NOT a list of valid times
-in the data, only the temporal extent covered.</p>
-<p>Use for temporal validation (e.g., checking if all samples
-fall within expected range), not for exact time matching.</p>
+<dd><p>Build a continuous temporal range from initialization and lead times.</p>
+<p>The returned range spans from the earliest initialization time through the
+latest initialization time extended by the configured number of lead-time
+steps. The range represents temporal coverage rather than the exact valid
+times present in the source data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>init_time</strong> (<em>xr.DataArray</em>) – Description not yet provided.</p></li>
-<li><p><strong>n_lead_times</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>lead_time_resolution</strong> (<em>lead_time_unit</em>) – Description not yet provided.</p></li>
+<li><p><strong>init_time</strong> (<em>xr.DataArray</em>) – One-dimensional initialization-time coordinate containing NumPy datetime
+or CFTime values.</p></li>
+<li><p><strong>n_lead_times</strong> (<em>int</em>) – Number of temporal steps included in the range, including the latest
+initialization time as the first step.</p></li>
+<li><p><strong>lead_time_resolution</strong> (<em>lead_time_unit</em>) – Temporal resolution used to construct the range. Supported values are
+<code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Continuous sequence of times spanning the complete temporal extent.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xr.CFTimeIndex | np.ndarray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
-<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+<li><p><strong>TypeError</strong> – If <code class="docutils literal notranslate"><span class="pre">init_time</span></code> does not contain NumPy datetime or CFTime values.</p></li>
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">init_time</span></code> is empty or not one-dimensional, <code class="docutils literal notranslate"><span class="pre">n_lead_times</span></code> is
+    less than one, or <code class="docutils literal notranslate"><span class="pre">lead_time_resolution</span></code> is unsupported.</p></li>
 </ul>
 </dd>
 </dl>

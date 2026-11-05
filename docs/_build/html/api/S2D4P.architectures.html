@@ -429,11 +429,13 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">ArchABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Document this class.</p>
+<p>Abstract base class for model architectures.</p>
+<p>Provides shared checkpoint validation, parameter initialization, device
+resolution, and checkpoint-loading utilities.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchABC.generative_modeling">
 <span class="sig-name descname"><span class="pre">generative_modeling</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchABC.generative_modeling" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Whether the architecture performs generative modeling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -444,7 +446,15 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchABC.forward">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchABC.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Run the architecture forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Architecture-specific model output.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -458,11 +468,11 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">ArchConfigABC</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Document this class.</p>
+<p>Abstract base configuration for model architectures.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.activation">
 <span class="sig-name descname"><span class="pre">activation</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.activation" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Activation function used by the architecture.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ActivationName</p>
@@ -473,7 +483,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.GENERATOR">
 <span class="sig-name descname"><span class="pre">GENERATOR</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.GENERATOR" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Optional configuration for generator-based stochastic sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig">GENERATORConfig</a> | None</p>
@@ -484,7 +494,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.EXPECTS_MASK">
 <span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.EXPECTS_MASK" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Whether the architecture expects spatial validity masks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -495,16 +505,10 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="id1">
 <span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="id2">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Indicate whether the architecture expects spatial validity masks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Whether spatial validity masks are required by the architecture.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
@@ -513,12 +517,27 @@
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_INPUT_DIMS">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dt class="sig sig-object py" id="id2">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd><p>Return the generator configuration associated with the architecture.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Generator configuration, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when stochastic generator behavior
+is disabled.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig">GENERATORConfig</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_INPUT_DIMS">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
+<dd><p>Return the number of input dimensions expected by the architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of input dimensions expected by the architecture.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
@@ -529,10 +548,10 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_OUTPUT_DIMS">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_OUTPUT_DIMS" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the number of output dimensions produced by the architecture.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Number of output dimensions produced by the architecture.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
@@ -548,15 +567,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.build">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build an architecture from this configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
-<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Shape of each model input excluding the batch dimension.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Shape of each model output excluding the batch dimension.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional features supplied with each sample.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional architecture-specific keyword arguments.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed architecture.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -567,17 +592,18 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">CheckpointConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_input_var_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_output_var_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configuration for loading architecture weights from a checkpoint.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>load_path</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>checkpoint_input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
-<li><p><strong>checkpoint_output_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
-<li><p><strong>checkpoint_input_var_metadata</strong> (<em>dict</em>) – Description not yet provided.</p></li>
-<li><p><strong>checkpoint_output_var_metadata</strong> (<em>dict</em>) – Description not yet provided.</p></li>
-<li><p><strong>strict</strong> (<em>bool</em>) – Description not yet provided.</p></li>
-<li><p><strong>freeze_weights</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>load_path</strong> (<em>Path</em><em> | </em><em>str</em>) – Path to the checkpoint file.</p></li>
+<li><p><strong>checkpoint_input_shape</strong> (<em>np.ndarray</em>) – Input shape used by the checkpointed architecture.</p></li>
+<li><p><strong>checkpoint_output_shape</strong> (<em>np.ndarray</em>) – Output shape used by the checkpointed architecture.</p></li>
+<li><p><strong>checkpoint_input_var_metadata</strong> (<em>dict</em>) – Input-variable metadata associated with the checkpoint.</p></li>
+<li><p><strong>checkpoint_output_var_metadata</strong> (<em>dict</em>) – Output-variable metadata associated with the checkpoint.</p></li>
+<li><p><strong>strict</strong> (<em>bool</em>) – Whether checkpoint parameters must exactly match the current architecture
+state dictionary.</p></li>
+<li><p><strong>freeze_weights</strong> (<em>bool</em>) – Whether loaded architecture parameters are frozen after loading.</p></li>
 </ul>
 </dd>
 </dl>
@@ -622,14 +648,16 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.DeterministicRequest">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">DeterministicRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.DeterministicRequest" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Container for a deterministic architecture request.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>input_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>output_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Model input tensor.</p></li>
+<li><p><strong>input_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the input.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional additional features supplied with the input.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of stochastic output samples requested.</p></li>
+<li><p><strong>chunk_output_samples</strong> (<em>bool</em>) – Whether multiple stochastic outputs are generated separately rather than
+by repeating decoder features in a single pass.</p></li>
 </ul>
 </dd>
 </dl>
@@ -664,13 +692,14 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.GENERATORConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">GENERATORConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'full'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'medium'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'low'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_training_noise_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_validation_noise_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.GENERATORConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configuration for generator-based stochastic output sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>noise_level</strong> (<em>NoiseLevel</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_training_noise_samples</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_validation_noise_samples</strong> (<em>int</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>noise_level</strong> (<em>NoiseLevel</em>) – Level controlling where generator noise is injected into the architecture.</p></li>
+<li><p><strong>num_training_noise_samples</strong> (<em>int</em>) – Number of stochastic output samples generated during training.</p></li>
+<li><p><strong>num_validation_noise_samples</strong> (<em>int</em><em> | </em><em>None</em>) – Number of stochastic output samples generated during validation. If
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">num_training_noise_samples</span></code> is used.</p></li>
 </ul>
 </dd>
 </dl>
@@ -695,19 +724,28 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEArchABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="S2D4P.architectures.architecture_abc.cVAEArchConfigABC"><span class="pre">cVAEArchConfigABC</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchABC" title="S2D4P.architectures.architecture_abc.ArchABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArchABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Abstract base class for conditional variational autoencoder architectures.</p>
+<p>Provides shared latent sampling and prior-sampling behavior for cVAE
+architectures.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="S2D4P.architectures.architecture_abc.cVAEArchConfigABC"><em>cVAEArchConfigABC</em></a>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="S2D4P.architectures.architecture_abc.cVAEArchConfigABC"><em>cVAEArchConfigABC</em></a>) – cVAE architecture configuration.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchABC.forward">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="S2D4P.architectures.architecture_abc.cVAEForwardRequest"><span class="pre">cVAEForwardRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchABC.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Run the cVAE training forward pass.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="S2D4P.architectures.architecture_abc.cVAEForwardRequest"><em>cVAEForwardRequest</em></a>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="S2D4P.architectures.architecture_abc.cVAEForwardRequest"><em>cVAEForwardRequest</em></a>) – Request containing target, conditioning, masking, and sampling
+information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Architecture-specific cVAE output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC">OutputABC</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -715,10 +753,16 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchABC.predict">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="S2D4P.architectures.architecture_abc.cVAEPredictRequest"><span class="pre">cVAEPredictRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchABC.predict" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Generate predictions from the cVAE prior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="S2D4P.architectures.architecture_abc.cVAEPredictRequest"><em>cVAEPredictRequest</em></a>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="S2D4P.architectures.architecture_abc.cVAEPredictRequest"><em>cVAEPredictRequest</em></a>) – Request containing conditioning and latent sampling information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Architecture-specific generated output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC">OutputABC</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -729,11 +773,11 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEArchConfigABC</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArchConfigABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Abstract base configuration for cVAE architectures.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.latent_size">
 <span class="sig-name descname"><span class="pre">latent_size</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.latent_size" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Size of the latent representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
@@ -744,7 +788,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_dependant_latent">
 <span class="sig-name descname"><span class="pre">condition_dependant_latent</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_dependant_latent" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Whether the latent prior depends on the conditioning input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -755,7 +799,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_size">
 <span class="sig-name descname"><span class="pre">condition_embedding_size</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_size" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Size of the conditioning embedding.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
@@ -766,7 +810,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_dims">
 <span class="sig-name descname"><span class="pre">condition_embedding_dims</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_dims" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Dimensions used to construct the conditioning embedding.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list</p>
@@ -777,7 +821,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condemb_to_decoder">
 <span class="sig-name descname"><span class="pre">condemb_to_decoder</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condemb_to_decoder" title="Link to this definition"></a></dt>
-<dd><p>Description not yet provided.</p>
+<dd><p>Whether the conditioning embedding is supplied directly to the decoder.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -821,18 +865,18 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEForwardRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posterior_variance_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Container for a cVAE training forward request.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>output_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>posterior_variance_limits</strong> (<em>list</em><em>[</em><em>torch.Tensor</em><em>, </em><em>torch.Tensor</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target tensor used to infer the posterior latent distribution.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Conditioning tensor supplied to the cVAE.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the target.</p></li>
+<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the conditioning input.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional additional features supplied to the architecture.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Number of posterior latent samples to generate.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of stochastic outputs generated for each latent sample.</p></li>
+<li><p><strong>posterior_variance_limits</strong> (<em>list</em><em>[</em><em>torch.Tensor</em><em>, </em><em>torch.Tensor</em><em>] </em><em>| </em><em>None</em>) – Optional lower and upper limits applied to posterior log-variance.</p></li>
 </ul>
 </dd>
 </dl>
@@ -882,18 +926,20 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_flow</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><span class="pre">flowABC</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Container for a cVAE prediction request.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>prior_flow</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><em>flowABC</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>latent_samples</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>nstds</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>output_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Conditioning tensor supplied to the cVAE.</p></li>
+<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the conditioning input.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional additional features supplied to the architecture.</p></li>
+<li><p><strong>prior_flow</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><em>flowABC</em></a><em> | </em><em>None</em>) – Optional normalizing flow used to transform prior latent samples.</p></li>
+<li><p><strong>latent_samples</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional user-provided latent samples. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, samples are generated
+from the configured prior.</p></li>
+<li><p><strong>nstds</strong> (<em>int</em>) – Standard-deviation multiplier used during latent sampling.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Number of latent samples generated for each input.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of stochastic outputs generated for each latent sample.</p></li>
+<li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of latent samples processed per generation chunk.</p></li>
 </ul>
 </dd>
 </dl>
@@ -948,19 +994,26 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.deterministicArchABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">deterministicArchABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><span class="pre">ArchConfigABC</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.deterministicArchABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchABC" title="S2D4P.architectures.architecture_abc.ArchABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArchABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Abstract base class for deterministic model architectures.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><em>ArchConfigABC</em></a>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><em>ArchConfigABC</em></a>) – Architecture configuration.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.deterministicArchABC.forward">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><span class="pre">DeterministicRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.deterministicArchABC.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Run the deterministic architecture forward pass.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><em>DeterministicRequest</em></a>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><em>DeterministicRequest</em></a>) – Request containing inputs, masks, additional features, and output sampling
+settings.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Architecture-specific deterministic model output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC">OutputABC</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -971,17 +1024,23 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.flowABC">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">flowABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.flowABC" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Document this class.</p>
+<p>Abstract base class for invertible normalizing-flow transformations.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.flowABC.forward">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.flowABC.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the forward flow transformation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>x</strong> (<em>Any</em>) – Values to transform through the flow.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Optional conditioning information supplied to the flow.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Forward flow output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -989,13 +1048,19 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.flowABC.inverse">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.flowABC.inverse" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the inverse flow transformation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>z</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>z</strong> (<em>Any</em>) – Values to transform through the inverse flow.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Optional conditioning information supplied to the inverse flow.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inverse flow output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1005,16 +1070,19 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.weights_init">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">weights_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.weights_init" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Initialize parameters of supported neural-network layers.</p>
+<p>Only linear and one-, two-, or three-dimensional convolutional layers are
+modified. Biases are initialized to zero when trainable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>m</strong> (<em>nn.Module</em>) – Description not yet provided.</p></li>
-<li><p><strong>method</strong> (<em>InitMethod</em>) – Description not yet provided.</p></li>
+<li><p><strong>m</strong> (<em>nn.Module</em>) – Module whose parameters are initialized.</p></li>
+<li><p><strong>method</strong> (<em>InitMethod</em>) – Initialization method. <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> leaves existing parameters
+unchanged.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the requested initialization method is unsupported.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1026,29 +1094,30 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.FCNN">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">FCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.FCNN" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Document this class.</p>
+<p>Fully connected neural network used to parameterize flow transformations.</p>
+<p>The network contains two hidden layers with hyperbolic tangent activations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>in_dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>out_dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>hidden_dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>in_dim</strong> (<em>int</em>) – Number of input features.</p></li>
+<li><p><strong>out_dim</strong> (<em>int</em>) – Number of output features.</p></li>
+<li><p><strong>hidden_dim</strong> (<em>int</em>) – Number of features in each hidden layer.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.FCNN.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.FCNN.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the fully connected network.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Input feature tensor.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Network output.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1059,31 +1128,38 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">MAF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'S2D4P.architectures.normalized_flows.FCNN'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Masked autoregressive flow transformation.</p>
+<p>Each latent dimension is transformed using location and log-scale parameters
+conditioned on preceding latent dimensions and, optionally, external
+conditioning features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>hidden_dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>base_network</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>hidden_dim</strong> (<em>int</em>) – Number of hidden features used by the parameter networks.</p></li>
+<li><p><strong>base_network</strong> (<a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.UNetSelector.type" title="S2D4P.architectures.unet.cvae.UNetSelector.type"><em>type</em></a><em>[</em><em>nn.Module</em><em>]</em>) – Network class used to predict location and log-scale parameters.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the autoregressive transformation.</p>
+<p>A parameter network is created for each latent dimension after the first.
+For an unconditional flow, the first dimension uses directly learned
+parameters. For a conditional flow, its parameters are predicted from the
+conditioning features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>dim</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the flow is unconditional.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>This flow instance with its parameter networks constructed.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.MAF" title="S2D4P.architectures.normalized_flows.MAF">MAF</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1091,22 +1167,26 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the autoregressive flow transformation.</p>
+<p>Each output dimension is standardized using parameters predicted from the
+preceding input dimensions. The transformed feature order is reversed before
+being returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">dim)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Conditioning features required by a conditional flow.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Transformed samples and the forward log-determinant for each sample.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>tuple[torch.Tensor, torch.Tensor]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If the flow was constructed as conditional but no conditioning features
+    are provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1114,22 +1194,26 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.inverse">
 <span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.inverse" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the inverse autoregressive flow transformation.</p>
+<p>Input feature order is reversed before each original dimension is
+reconstructed sequentially from previously reconstructed dimensions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>z</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>z</strong> (<em>torch.Tensor</em>) – Transformed samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">dim)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Conditioning features required by a conditional flow.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Inverse-transformed samples and the inverse log-determinant for each
+sample.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>tuple[torch.Tensor, torch.Tensor]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If the flow was constructed as conditional but no conditioning features
+    are provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1137,7 +1221,9 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.reset_parameters">
 <span class="sig-name descname"><span class="pre">reset_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.reset_parameters" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Initialize the learnable first-dimension parameters.</p>
+<p>The location and log-scale parameters are initialized from a uniform
+distribution.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1146,31 +1232,32 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">NormalizedFlowConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_flows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.FlowSelector" title="S2D4P.core.selectors.FlowSelector"><span class="pre">FlowSelector</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flow_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Configuration for a sequence of normalizing-flow transformations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>list_flows</strong> (<em>list</em><em>[</em><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.FlowSelector" title="S2D4P.core.selectors.FlowSelector"><em>FlowSelector</em></a><em>]</em>) – Description not yet provided.</p></li>
-<li><p><strong>flow_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>list_flows</strong> (<em>list</em><em>[</em><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.FlowSelector" title="S2D4P.core.selectors.FlowSelector"><em>FlowSelector</em></a><em>]</em>) – Ordered flow configurations used to construct the normalizing-flow model.</p></li>
+<li><p><strong>flow_sample_size</strong> (<em>int</em>) – Number of samples used when estimating flow-based quantities.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowConfig.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latent_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build a normalizing-flow model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>latent_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>latent_size</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features supplied to each flow. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+flow is unconditional.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Constructed sequence of normalizing-flow transformations.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel" title="S2D4P.architectures.normalized_flows.NormalizedFlowModel">NormalizedFlowModel</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1191,32 +1278,36 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowModel">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">NormalizedFlowModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><span class="pre">NormalizedFlowConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Apply a sequence of normalizing-flow transformations.</p>
+<p>Individual flow steps are evaluated in configuration order during the forward
+transformation and in reverse order during the inverse transformation.
+Log-determinants are accumulated across all steps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><em>NormalizedFlowConfig</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>latent_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><em>NormalizedFlowConfig</em></a>) – Configuration defining the sequence of flow transformations.</p></li>
+<li><p><strong>latent_size</strong> (<em>int</em>) – Number of latent dimensions transformed by each flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features supplied to each flow. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+flow is unconditional.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowModel.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the normalizing flows in forward order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">latent_size)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional conditioning features supplied to each flow.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Transformed samples and accumulated forward log-determinants.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.flowOutput" title="S2D4P.architectures.normalized_flows.flowOutput">flowOutput</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1224,19 +1315,19 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowModel.inverse">
 <span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel.inverse" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the normalizing flows in reverse order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>z</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>z</strong> (<em>torch.Tensor</em>) – Transformed samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">latent_size)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional conditioning features supplied to each inverse flow.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Inverse-transformed samples and accumulated inverse log-determinants.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.flowOutput" title="S2D4P.architectures.normalized_flows.flowOutput">flowOutput</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1247,31 +1338,36 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">RealNVP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'S2D4P.architectures.normalized_flows.FCNN'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
-<p>Document this class.</p>
+<p>Real-valued non-volume-preserving coupling flow.</p>
+<p>The latent representation is divided into two parts that are transformed
+sequentially using learned translation and log-scale functions. The coupling
+networks can optionally depend on external conditioning features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>hidden_dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>base_network</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>hidden_dim</strong> (<em>int</em>) – Number of hidden features used by the coupling networks.</p></li>
+<li><p><strong>base_network</strong> (<a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.UNetSelector.type" title="S2D4P.architectures.unet.cvae.UNetSelector.type"><em>type</em></a><em>[</em><em>nn.Module</em><em>]</em>) – Network class used to construct translation and log-scale functions.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP.build" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the RealNVP coupling networks.</p>
+<p>Translation and log-scale networks are constructed for both coupling
+transformations and optionally include conditioning features in their inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>dim</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the flow is unconditional.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>This flow instance with its coupling networks constructed.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.RealNVP" title="S2D4P.architectures.normalized_flows.RealNVP">RealNVP</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1279,22 +1375,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP.forward" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Build the RealNVP coupling networks.</p>
+<p>Translation and log-scale networks are constructed for both coupling
+transformations and optionally include conditioning features in their inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>dim</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the flow is unconditional.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>This flow instance with its coupling networks constructed.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.RealNVP" title="S2D4P.architectures.normalized_flows.RealNVP">RealNVP</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1302,22 +1397,26 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP.inverse">
 <span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP.inverse" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Apply the inverse RealNVP coupling transformation.</p>
+<p>The two coupling transformations are inverted in reverse dependency order to
+recover the original latent samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>z</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>z</strong> (<em>torch.Tensor</em>) – Transformed samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">dim)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Conditioning features required by a conditional flow.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Inverse-transformed samples and the inverse log-determinant for each
+sample.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>tuple[torch.Tensor, torch.Tensor]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If the flow was constructed as conditional but no conditioning features
+    are provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1328,12 +1427,12 @@
 <dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.flowOutput">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">flowOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_det</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.flowOutput" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Container for the output of a normalizing-flow transformation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>e_samples</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>log_det</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>e_samples</strong> (<em>torch.Tensor</em>) – Samples produced by the flow transformation.</p></li>
+<li><p><strong>log_det</strong> (<em>torch.Tensor</em>) – Log-determinant of the transformation Jacobian for each sample.</p></li>
 </ul>
 </dd>
 </dl>

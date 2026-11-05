@@ -121,15 +121,18 @@
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.MetricsAggregator">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.generic.aggregator.</span></span><span class="sig-name descname"><span class="pre">MetricsAggregator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_metric_terms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs_seen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.MetricsAggregator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Accumulate and aggregate training or validation metrics.</p>
+<p>Batch-level losses, learning rates, and auxiliary scalar values are summed
+locally and can be reduced across distributed processes. Aggregated epoch
+metrics and elapsed times are retained for checkpointing and plotting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>distributed</strong> (<a class="reference internal" href="#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>epoch_metric_terms</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>float</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>epoch_times</strong> (<em>list</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>num_epochs_seen</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used to reduce metrics across processes.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name identifying the metric collection, such as training or validation.</p></li>
+<li><p><strong>epoch_metric_terms</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>float</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Previously recorded epoch-level metrics keyed by metric name.</p></li>
+<li><p><strong>epoch_times</strong> (<em>list</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – Previously recorded elapsed times for each epoch.</p></li>
+<li><p><strong>num_epochs_seen</strong> (<em>int</em>) – Number of epochs represented by the stored history.</p></li>
 </ul>
 </dd>
 </dl>
@@ -151,10 +154,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.MetricsAggregator.load_state_dict">
 <span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.MetricsAggregator.load_state_dict" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Restore stored epoch metric state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>state_dict</strong> (<em>Any</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>state_dict</strong> (<em>dict</em>) – Saved aggregator state containing metric histories, timing information,
+and epoch counts.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -172,18 +176,24 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.MetricsAggregator.plot">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aggregator_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#S2D4P.generic.aggregator.MetricsAggregator" title="S2D4P.generic.aggregator.MetricsAggregator"><span class="pre">MetricsAggregator</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_styles_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">5)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#S2D4P.generic.aggregator.MetricsAggregator.plot" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Plot and save recorded epoch metrics.</p>
+<p>A separate plot and CSV file are generated for each recorded metric. Epoch
+times are also plotted. Existing files for the same metrics are replaced.
+Training and validation aggregators receive default blue and orange styles
+when explicit styles are not provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>aggregator_list</strong> (<em>list</em><em>[</em><em>'MetricsAggregator'</em><em>]</em>) – Description not yet provided.</p></li>
-<li><p><strong>color_styles_list</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Description not yet provided.</p></li>
-<li><p><strong>plot_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>figsize</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>aggregator_list</strong> (<em>list</em><em>[</em><a class="reference internal" href="#S2D4P.generic.aggregator.MetricsAggregator" title="S2D4P.generic.aggregator.MetricsAggregator"><em>MetricsAggregator</em></a><em>]</em>) – Metric aggregators whose epoch histories are plotted together.</p></li>
+<li><p><strong>color_styles_list</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional color and line-style pair for each aggregator.</p></li>
+<li><p><strong>plot_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory in which plots and CSV files are saved. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the global
+figures directory is used.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em>) – Width and height of generated figures in inches.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If no aggregators are provided, aggregators contain different numbers of
+    epochs or history entries, or no epochs have been recorded.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -191,13 +201,16 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.MetricsAggregator.record">
 <span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#S2D4P.generic.aggregator.MetricsAggregator.record" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Accumulate metrics from one batch.</p>
+<p>Tensor values are detached, converted to floating point, averaged when
+necessary, and accumulated as Python scalars.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>loss_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>]</em>) – Description not yet provided.</p></li>
-<li><p><strong>lr</strong> (<em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>loss_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>]</em>) – Batch loss values keyed by metric name.</p></li>
+<li><p><strong>lr</strong> (<em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>None</em>) – Learning rate associated with the batch.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>] </em><em>| </em><em>None</em>) – Additional scalar values, such as annealing coefficients, to aggregate
+with the batch metrics.</p></li>
 </ul>
 </dd>
 </dl>
@@ -206,25 +219,31 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.MetricsAggregator.record_epoch">
 <span class="sig-name descname"><span class="pre">record_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_elapsed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.MetricsAggregator.record_epoch" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Store aggregated metrics for an epoch.</p>
+<p>Metrics are appended to the epoch history by default. When <code class="docutils literal notranslate"><span class="pre">replace_index</span></code>
+is provided, an existing epoch entry is replaced instead. Batch accumulators
+are reset after the epoch is recorded.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>logs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – Description not yet provided.</p></li>
-<li><p><strong>replace_index</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>time_elapsed</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>logs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – Distributed epoch metrics keyed by metric name.</p></li>
+<li><p><strong>replace_index</strong> (<em>int</em><em> | </em><em>None</em>) – Index of an existing epoch entry to replace. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a new epoch is
+appended.</p></li>
+<li><p><strong>time_elapsed</strong> (<em>float</em><em> | </em><em>None</em>) – Elapsed time for the epoch. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">NaN</span></code> is recorded.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>The recorded epoch metrics.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>dict[str, float]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>RuntimeError</strong> – Description not yet provided.</p></li>
-<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+<li><p><strong>RuntimeError</strong> – If distributed metric aggregation has not been performed before recording
+    the epoch.</p></li>
+<li><p><strong>ValueError</strong> – If replacement is requested for a metric that has not previously been
+    recorded.</p></li>
 </ul>
 </dd>
 </dl>
@@ -233,10 +252,12 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.MetricsAggregator.reset_batch_losses">
 <span class="sig-name descname"><span class="pre">reset_batch_losses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.MetricsAggregator.reset_batch_losses" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Reset accumulated batch-level metrics.</p>
+<p>Loss, auxiliary-value, learning-rate, and batch-count accumulators are cleared
+after at least one epoch has been submitted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Warns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>UserWarning</strong> – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>UserWarning</strong> – If batch metrics are reset before any epoch has been submitted.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -244,13 +265,14 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.MetricsAggregator.state_dict">
 <span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.MetricsAggregator.state_dict" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the stored epoch metric state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Aggregator name, epoch metric histories, epoch times, and number of
+recorded epochs.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -261,14 +283,18 @@
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.RunningCovariance">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.generic.aggregator.</span></span><span class="sig-name descname"><span class="pre">RunningCovariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_xxT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.RunningCovariance" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Accumulate statistics required to compute a covariance matrix.</p>
+<p>Maintains the running sum of observations, sum of outer products, and sample
+count. Statistics can be reduced across distributed processes before the
+final mean and unbiased sample covariance are calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>distributed</strong> (<a class="reference internal" href="#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
-<li><p><strong>sum_x</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>sum_xxT</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>count</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>distributed</strong> (<a class="reference internal" href="#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed"><em>Distributed</em></a>) – Distributed runtime used to reduce accumulated statistics across
+processes.</p></li>
+<li><p><strong>sum_x</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Running sum of observations.</p></li>
+<li><p><strong>sum_xxT</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Running sum of observation outer products.</p></li>
+<li><p><strong>count</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Number of observations accumulated.</p></li>
 </ul>
 </dd>
 </dl>
@@ -285,25 +311,31 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.RunningCovariance.distributed_reduce">
 <span class="sig-name descname"><span class="pre">distributed_reduce</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.RunningCovariance.distributed_reduce" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Sum accumulated covariance statistics across distributed processes.</p>
+<p>The running observation sum, outer-product sum, and sample count are reduced
+in place across all processes.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.RunningCovariance.finalize">
 <span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_checks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.RunningCovariance.finalize" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Compute the mean and unbiased sample covariance.</p>
+<p>The covariance matrix is explicitly symmetrized before being returned.
+Optional diagnostic output reports symmetry error, minimum eigenvalue, sample
+count, and feature dimension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>print_checks</strong> (<em>Any</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>print_checks</strong> (<em>bool</em>) – Whether to print numerical diagnostics for the calculated covariance
+matrix.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Mean vector and covariance matrix moved to CPU.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>tuple[torch.Tensor, torch.Tensor]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If fewer than two observations have been accumulated.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -321,10 +353,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.aggregator.RunningCovariance.update">
 <span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.aggregator.RunningCovariance.update" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Update running covariance statistics with a batch of observations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Two-dimensional tensor with samples along the first dimension and
+features along the second dimension.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -338,14 +371,19 @@
 <dt class="sig sig-object py" id="S2D4P.generic.distributed.Distributed">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.generic.distributed.</span></span><span class="sig-name descname"><span class="pre">Distributed</span></span><a class="headerlink" href="#S2D4P.generic.distributed.Distributed" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Manage distributed execution state and collective communication.</p>
+<p>The class initializes distributed training from standard rank environment
+variables when available. Otherwise, it configures single-process execution
+on CUDA when available or CPU as a fallback.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.distributed.Distributed.all_reduce_sum">
 <span class="sig-name descname"><span class="pre">all_reduce_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.distributed.Distributed.all_reduce_sum" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Sum a tensor across all distributed processes.</p>
+<p>The input tensor is modified in place with the globally reduced sum. Has no
+effect when distributed communication is not initialized.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Local tensor to sum across processes.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -353,18 +391,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.distributed.Distributed.barrier">
 <span class="sig-name descname"><span class="pre">barrier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.distributed.Distributed.barrier" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Synchronize all distributed processes.</p>
+<p>Has no effect during single-process execution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.distributed.Distributed.broadcast">
 <span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.distributed.Distributed.broadcast" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Broadcast a tensor from one process to all distributed processes.</p>
+<p>The input tensor is modified in place with the value from the source process.
+Has no effect when distributed communication is not initialized.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
-<li><p><strong>src</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Tensor containing the value to broadcast or receive.</p></li>
+<li><p><strong>src</strong> (<em>int</em>) – Rank of the source process.</p></li>
 </ul>
 </dd>
 </dl>
@@ -373,19 +414,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.distributed.Distributed.cleanup">
 <span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.distributed.Distributed.cleanup" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Clean up distributed communication resources.</p>
+<p>Destroys the active process group when distributed communication has been
+initialized.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.distributed.Distributed.get_instance">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.distributed.Distributed.get_instance" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Return the shared distributed runtime instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Singleton distributed runtime instance.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p><a class="reference internal" href="#S2D4P.generic.distributed.Distributed" title="S2D4P.generic.distributed.Distributed">Distributed</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -393,10 +436,10 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="S2D4P.generic.distributed.Distributed.is_root">
 <span class="sig-name descname"><span class="pre">is_root</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#S2D4P.generic.distributed.Distributed.is_root" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Indicate whether the current process is the root process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when the current process has rank zero.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
@@ -412,18 +455,23 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="S2D4P.generic.logger.setup_logger">
 <span class="sig-prename descclassname"><span class="pre">S2D4P.generic.logger.</span></span><span class="sig-name descname"><span class="pre">setup_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'trainer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="headerlink" href="#S2D4P.generic.logger.setup_logger" title="Link to this definition"></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Configure and return an application logger.</p>
+<p>The root process writes log messages to standard output and to a log file.
+Non-root processes receive the configured logger without adding output
+handlers. Existing handlers are reused to avoid duplicate log messages.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
-<li><p><strong>log_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
-<li><p><strong>level</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name assigned to the logger and its output log file.</p></li>
+<li><p><strong>log_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory in which the log file is created. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the directory
+is obtained from the <code class="docutils literal notranslate"><span class="pre">GLOBAL_LOG_DIR</span></code> environment variable.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – Process rank. Console and file handlers are configured only for rank
+zero.</p></li>
+<li><p><strong>level</strong> (<em>int</em>) – Logging level applied to the logger and its handlers.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Configured logger instance.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>logging.Logger</p>
@@ -825,18 +873,27 @@ while GPU UUIDs are matched against physical devices through NVML.</p>
 <dt class="sig sig-object py" id="S2D4P.generic.runtime.RuntimeContext">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.generic.runtime.</span></span><span class="sig-name descname"><span class="pre">RuntimeContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">GLOBAL_EXP_DIR</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_CHECKPOINT_DIR</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_FIGURES_DIR</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_LOG_DIR</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_MONITORING_DIR</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_OUTPUT_DIR</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INPUT_VAR_METADATA</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TARGET_VAR_METADATA</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.generic.runtime.RuntimeContext" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Store global runtime paths and variable metadata.</p>
+<p>Provides shared experiment directories and input and target metadata used
+across training, inference, logging, checkpointing, monitoring, and output
+workflows.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>GLOBAL_MONITORING_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Root directory for the current experiment.</p></li>
+<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory used to store model checkpoints. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, defaults to the
+<code class="docutils literal notranslate"><span class="pre">checkpoints</span></code> directory under <code class="docutils literal notranslate"><span class="pre">GLOBAL_EXP_DIR</span></code>.</p></li>
+<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory used to store generated figures. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, defaults to the
+<code class="docutils literal notranslate"><span class="pre">figures</span></code> directory under <code class="docutils literal notranslate"><span class="pre">GLOBAL_EXP_DIR</span></code>.</p></li>
+<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory used to store log files. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, defaults to the <code class="docutils literal notranslate"><span class="pre">logs</span></code>
+directory under <code class="docutils literal notranslate"><span class="pre">GLOBAL_EXP_DIR</span></code>.</p></li>
+<li><p><strong>GLOBAL_MONITORING_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory used to store resource-monitoring outputs. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+defaults to the <code class="docutils literal notranslate"><span class="pre">resource_monitoring</span></code> directory under
+<code class="docutils literal notranslate"><span class="pre">GLOBAL_EXP_DIR</span></code>.</p></li>
+<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory used to store inference outputs. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, defaults to the
+<code class="docutils literal notranslate"><span class="pre">inference</span></code> directory under <code class="docutils literal notranslate"><span class="pre">GLOBAL_EXP_DIR</span></code>.</p></li>
+<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Metadata describing model input variables and preprocessing.</p></li>
+<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Metadata describing model target variables and preprocessing.</p></li>
 </ul>
 </dd>
 </dl>
