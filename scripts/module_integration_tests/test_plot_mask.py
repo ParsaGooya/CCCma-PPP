@@ -23,11 +23,31 @@ from S2D4P.generic.runtime import RuntimeContext
 from S2D4P.train.train_configs import prepare_config
 from S2D4P.generic.distributed import Distributed
 
+
+# Import architecture modules
+from S2D4P.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from S2D4P.architectures.mlp import (
+    deterministic as _mlp_deterministic,  # noqa: F401
+)
+from S2D4P.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from S2D4P.architectures.unet import (
+    deterministic as _unet_deterministic,  # noqa: F401
+)
+from S2D4P.generic import registry_imports  # noqa: F401
+
+# Import loss modules
+from S2D4P.loss import kld as _loss_kld  # noqa: F401
+from S2D4P.loss import loss as _loss_pipeline  # noqa: F401
+from S2D4P.loss import utils_loss as _loss_utils  # noqa: F401
+
+# Import the training entry point
+from S2D4P.train.train_configs import TrainConfig
+
 warnings.filterwarnings("ignore")
 
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/scripts")
 BASE_CONFIG_FILE = ROOT / "module_integration_tests/deterministic_config.yaml"
-OUTPUT_DIR = ROOT / "../../output" / "plot_mask_test_results"
+OUTPUT_DIR = ROOT / "../../output" / "plot_mask_test_results_2"
 CONFIG_DIR = OUTPUT_DIR / "plot_test_configs"
 CASES_DIR = OUTPUT_DIR / "cases"
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
@@ -87,7 +107,7 @@ def generate_configs(
         full_config = copy.deepcopy(base_config)
 
         # Insert lead_times into dataset_config
-        full_config["train_loader"]["dataset_config"]["lead_times"] = lead_times
+        full_config["train_loader"]["dataset"]["lead_times"] = lead_times
 
         # Write to file
         config_path = output_dir / f"{config_name}.yaml"
@@ -142,7 +162,6 @@ def setup_train_loader(
 def load_train_config(config_path: Path) -> Any:
     """Load training config from file"""
     import dacite
-    from S2D4P.train.train_configs import TrainConfig
 
     data = prepare_config(config_path)
     if data is None:
@@ -153,6 +172,67 @@ def load_train_config(config_path: Path) -> Any:
         data=data,
         config=dacite.Config(strict=False),
     )
+
+
+def verify_ensemble_dimensions(config: Any, case_dir: Path) -> None:
+    """
+    Verify ensemble dimensions by setting ensemble_mean=False for the entire test.
+    Runs the full test case with ensemble_mean disabled and prints number of ensemble members.
+    """
+    print("  Verifying ensemble dimensions...")
+
+    try:
+        model_config = config.train_loader.dataset_config.model
+        if hasattr(model_config, "ensemble_mean"):
+            original_ensemble_mean = model_config.ensemble_mean
+            # Set ensemble_mean to False to get raw ensemble data
+            model_config.ensemble_mean = False
+            print(
+                f"    Modified config: ensemble_mean={original_ensemble_mean} → False"
+            )
+
+        # Rebuild loader with ensemble_mean=False
+        loader_with_ensemble = call_with_supported_arguments(
+            config.train_loader.build_train_loader,
+            return_metadata=True,
+            return_spatial_mask=True,
+            shuffle=False,
+        )
+
+        # Extract premade mask from dataset directly
+        if (
+            hasattr(loader_with_ensemble.dataset, "mask")
+            and loader_with_ensemble.dataset.mask is not None
+        ):
+            mask_data = loader_with_ensemble.dataset.mask
+
+            # Convert to numpy if needed (handle xarray, torch tensors, etc)
+            if hasattr(mask_data, "values"):  # xarray.DataArray
+                mask_np = mask_data.values
+            elif isinstance(mask_data, torch.Tensor):
+                mask_np = mask_data.detach().cpu().numpy()
+            else:
+                mask_np = np.asarray(mask_data)
+
+            print(f"    Mask shape: {mask_np.shape}, dtype: {mask_np.dtype}")
+
+            # Extract first ensemble dimension (dimension 0)
+            if mask_np.ndim > 0:
+                ensemble_dim = mask_np.shape[0]
+                print(
+                    f"  Ensemble verification complete: {ensemble_dim} ensemble members"
+                )
+                print(f"    Full mask shape: {mask_np.shape}")
+            else:
+                print("  Ensemble dimensions could not be determined - mask is 0D")
+        else:
+            print("  No premade mask found in dataset")
+
+    except Exception as e:
+        print(f"  Ensemble verification error: {str(e)[:100]}")
+        import traceback
+
+        traceback.print_exc()
 
 
 def run_plot_mask_case(config_file: Path, case_dir: Path) -> None:
@@ -219,6 +299,9 @@ def run_plot_mask_case(config_file: Path, case_dir: Path) -> None:
         print(f"DEBUG: Calling plot_premade_mask with lead_times={lead_times}")
         fetcher.plot_premade_mask(loader.dataset, lead_times=lead_times)
         print(f"  Mask plotted: {case_dir / 'raw_data' / 'masks' / 'premade_mask.png'}")
+
+        # Verify ensemble dimensions (sets ensemble_mean=False for the entire test)
+        verify_ensemble_dimensions(config, case_dir)
     else:
         print("  No premade mask in dataset")
 

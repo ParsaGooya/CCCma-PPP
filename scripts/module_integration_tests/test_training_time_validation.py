@@ -1,363 +1,477 @@
-import numpy as np
-import xarray as xr
-import cftime
-import pandas as pd
+import copy
+import json
+import logging
+import sys
+import traceback
+from datetime import datetime
 from pathlib import Path
 
-from S2D4Pdata.data.data_configs import (
-    ModelDataConfig,
-    ObsDataConfig,
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import xarray as xr
+import yaml
+
+from S2D4P.data.data_configs.data_configs import (
+    ForecastDataConfig,
+    RefDataConfig,
 )
 from S2D4P.train.dataset import TrainDatasetConfig
-from S2D4Pdata.utils import add_lead_times
+from S2D4P.preprocessing.selector import PreprocessingStepSelector
+from S2D4P.preprocessing.preprocessing import PreprocessingPipeline
+from S2D4P.data.utils import _create_train_mask
+
+BASE_CONFIG = (
+    "scripts/integration_suite_train_config.yaml"  # template YAML for all cases
+)
+CONFIGS_YAML = Path(
+    "/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/S2D4P/configs/configs.yaml"
+)  # library config; its lead_time_resolution is overridden by the profile at runtime
+
+MODEL_VAR = "tas"  # model variable name; must match the YAML "names" entry
+OBS_VAR = "tas"  # obs variable name; must match the YAML "names" entry
+N_LAT, N_LON = 4, 4  # small grid to keep files tiny
+
+# Each case: (name, model_start, model_end, obs_start, obs_end).
+# Model inits follow profile[0] between the model dates.
+# Obs follow profile[2] between the obs dates.
+CASES = [
+    ("case_obs_1995", "1980-01-01", "2000-01-01", "1980-01-01", "1995-12-01"),
+    ("case_obs_2000jun", "1980-01-01", "2000-01-01", "1980-01-01", "2000-01-12"),
+    (
+        "case_obs_2005mar",
+        "1980-01-01",
+        "2000-01-01",
+        "1980-01-01",
+        "2005-03-01",
+    ),
+    ("case_obs_2015", "1980-01-01", "2000-01-01", "1980-01-01", "2015-12-01"),
+]
+
+# Dummy-data and config profile.
+#   [0] Model init frequency, a pandas offset alias. "MS" = one init per month.
+#   [1] Exclusive upper bound for model leads. np.arange(1, 13) gives leads 1-12.
+#       Must equal profile[3] + 1 so the model provides every lead the config asks for.
+#   [2] Observation frequency, a pandas offset alias. "MS" = first day of each month.
+#   [3] Lead-time end written into the config's lead_times.end, so the mask covers leads 1 through this value.
+#   [4] Lead-time unit passed as lead_time_resolution to _create_train_mask. Must be a valid lead_time_unit value.
+
+profile = ["MS", 366, "D", 365, "day"]
+
+# ["YS", 121, "MS", 120, "month"]
+# ["MS", 13, "MS", 12, "month"]
+# ["MS", 366, "D", 365, "day"]
+
+FREQ_NAMES = {
+    "YS": "annual",
+    "MS": "monthly",
+    "D": "daily",
+}  # readable names for pandas aliases
+OFFSET_KWARG = {"month": "months", "day": "days"}  # DateOffset keyword per lead unit
+
+OUTPUT_PARENT = Path("/fs/site7/eccc/crd/cccma/users/rna002/output")
+BASE_DIR = OUTPUT_PARENT / (
+    f"training_time_validation_2_2_{FREQ_NAMES[profile[0]]}_init_{profile[3]}"
+)  # where dummy data is written; name follows profile
+OUTPUT_ROOT = BASE_DIR  # where validation outputs are written, one folder per case
 
 
-def create_synthetic_model_data(output_path: str, years: list = None) -> xr.Dataset:
-    """Create synthetic model data from years 1960-2000."""
-    if years is None:
-        years = list(range(1960, 2001))
+def _coverage(valid: int, total: int) -> float:
+    """Percent of valid pairs. Returns 0.0 for an empty mask instead of dividing by zero."""
+    return 100.0 * valid / total if total else 0.0
 
-    print("\n" + "=" * 80)
-    print("CREATING SYNTHETIC MODEL DATA (1960-2000)")
-    print("=" * 80)
 
-    # Create initialization times (monthly)
-    dates = []
-    for year in years:
-        for month in range(1, 13):
-            dates.append(cftime.DatetimeGregorian(year, month, 1, 0, 0, 0))
+def set_lead_time_resolution(value: str) -> None:
+    """Override the library's lead_time_resolution for this process.
 
-    init_times = np.array(dates, dtype=object)
+    The library reads configs.yaml once at import and copies the value into
+    module globals and class attributes, so every copy is updated here.
+    """
+    for mod in list(sys.modules.values()):
+        name = getattr(mod, "__name__", "") or ""
+        if not name.startswith("S2D4P"):
+            continue
+        if hasattr(mod, "lead_time_resolution"):
+            mod.lead_time_resolution = value
+        for obj in list(vars(mod).values()):
+            if isinstance(obj, type) and hasattr(obj, "lead_time_resolution"):
+                obj.lead_time_resolution = value
 
-    # Create lead times (1-6 months)
-    lead_times = np.arange(1, 7)
 
-    # Create spatial grid
-    lats = np.linspace(-90, 90, 10)
-    lons = np.linspace(-180, 180, 20)
+def make_grid():
+    """Return a small regular lat/lon grid for the dummy data."""
+    lat = np.linspace(-45, 45, N_LAT)
+    lon = np.linspace(0, 90, N_LON)
+    return lat, lon
 
-    # Create random temperature data
-    np.random.seed(42)
-    temp_data = np.random.normal(
-        280, 10, (len(init_times), len(lead_times), len(lats), len(lons))
+
+def make_model(start: str, end: str, lat, lon) -> xr.Dataset:
+    """Build dummy model output with dims (time, lead_time, lat, lon).
+
+    Inits use profile[0]. Leads run from 1 to profile[1] - 1.
+    """
+    init_times = pd.date_range(start, end, freq=profile[0])
+    lead_times = np.arange(1, profile[1])
+    data = np.random.default_rng(0).normal(  # seeded so runs are reproducible
+        size=(len(init_times), len(lead_times), N_LAT, N_LON)
     )
-
-    # Create dataset with time dimension (as expected by S2D4P)
-    ds = xr.Dataset(
-        {
-            "tas": (["time", "lead_time", "lat", "lon"], temp_data),
-        },
+    return xr.Dataset(
+        {MODEL_VAR: (("time", "lead_time", "lat", "lon"), data)},
         coords={
             "time": init_times,
             "lead_time": lead_times,
-            "lat": lats,
-            "lon": lons,
+            "lat": lat,
+            "lon": lon,
         },
     )
 
-    # Add attributes
-    ds["tas"].attrs["long_name"] = "Surface Air Temperature"
-    ds["tas"].attrs["units"] = "K"
-    ds["time"].attrs["long_name"] = "Initialization Time"
-    ds["lead_time"].attrs["long_name"] = "Lead Time"
 
-    # Create output directory
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-
-    # Save
-    ds.to_netcdf(output_path)
-    print("\nModel data saved")
-    print(f"  Path: {output_path}")
-    print(f"  Initialization times: {len(init_times)} (1960-01 to 2000-12)")
-    print(f"  Lead times: {len(lead_times)} months")
-    print(f"  Spatial grid: {len(lats)} x {len(lons)}")
-
-    return ds
-
-
-def create_synthetic_observations(output_path: str, dates: list = None) -> xr.Dataset:
-    """Create synthetic observation data at specific dates."""
-    print("\n" + "=" * 80)
-    print("CREATING SYNTHETIC OBSERVATIONS")
-    print("=" * 80)
-
-    if dates is None:
-        dates = []
-
-        # Before 2009: 1960-2008
-        for year in range(1960, 2009):
-            for month in range(1, 13):
-                dates.append(cftime.DatetimeGregorian(year, month, 1, 0, 0, 0))
-
-        # 2009 June
-        dates.append(cftime.DatetimeGregorian(2009, 6, 1, 0, 0, 0))
-
-        # 2015: all months
-        for month in range(1, 13):
-            dates.append(cftime.DatetimeGregorian(2015, month, 1, 0, 0, 0))
-
-        # 2023: all months
-        for month in range(1, 13):
-            dates.append(cftime.DatetimeGregorian(2023, month, 1, 0, 0, 0))
-
-    obs_times = np.array(dates, dtype=object)
-
-    # Create spatial grid (same as model)
-    lats = np.linspace(-90, 90, 10)
-    lons = np.linspace(-180, 180, 20)
-
-    # Create random observation data
-    np.random.seed(43)
-    obs_data = np.random.normal(280, 10, (len(obs_times), len(lats), len(lons)))
-
-    # Create dataset with time dimension (as expected by S2D4P)
-    ds_obs = xr.Dataset(
-        {
-            "tas": (["time", "lat", "lon"], obs_data),
-        },
-        coords={
-            "time": obs_times,
-            "lat": lats,
-            "lon": lons,
-        },
+def make_obs(start: str, end: str, lat, lon) -> xr.Dataset:
+    """Build dummy observations with dims (time, lat, lon). Uses profile[2]."""
+    times = pd.date_range(start, end, freq=profile[2])
+    data = np.random.default_rng(1).normal(  # separate seed from model
+        size=(len(times), N_LAT, N_LON)
+    )
+    return xr.Dataset(
+        {OBS_VAR: (("time", "lat", "lon"), data)},
+        coords={"time": times, "lat": lat, "lon": lon},
     )
 
-    # Add attributes
-    ds_obs["tas"].attrs["long_name"] = "Observed Surface Air Temperature"
-    ds_obs["tas"].attrs["units"] = "K"
-    ds_obs["time"].attrs["long_name"] = "Observation Time"
 
-    # Create output directory
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+def generate_cases() -> dict:
+    """Write the model and obs netCDF files for every case."""
+    lat, lon = make_grid()
+    case_dirs = {}
+    for name, m_start, m_end, o_start, o_end in CASES:
+        case_dir = BASE_DIR / name
+        model_dir, obs_dir = case_dir / "forecast", case_dir / "obs"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        obs_dir.mkdir(parents=True, exist_ok=True)
 
-    # Save
-    ds_obs.to_netcdf(output_path)
+        model_ds = make_model(m_start, m_end, lat, lon)
+        obs_ds = make_obs(o_start, o_end, lat, lon)
+        model_ds.to_netcdf(model_dir / f"{name}_model.nc")
+        obs_ds.to_netcdf(obs_dir / f"{name}_obs.nc")
 
-    print("\nObservation data saved")
-    print(f"  Path: {output_path}")
-    print(f"  Observation times: {len(obs_times)}")
-    print("  Coverage:")
-    print(f"    - Before 2009: 1960-2008 ({49 * 12} months)")
-    print("    - June 2009: 1 month")
-    print("    - Year 2015: 12 months")
-    print("    - Year 2023: 12 months")
-
-    return ds_obs
-
-
-def show_available_times(config: TrainDatasetConfig):
-    """Show available training times from TrainDatasetConfig."""
-    print("\n" + "=" * 80)
-    print("AVAILABLE TIMES FROM TrainDatasetConfig")
-    print("=" * 80)
-
-    if hasattr(config, "available_times"):
-        available_times = config.available_times
-
-        print(f"\nAvailable times found: {len(available_times)}")
-        print(f"  Type: {type(available_times)}")
-        print(f"  Range: {available_times[0]} to {available_times[-1]}")
-
-        print("\n  First 5:")
-        for i, t in enumerate(available_times[:5]):
-            print(f"    {i}: {t}")
-
-        if len(available_times) > 10:
-            print("    ...")
-            print("\n  Last 5:")
-            for i, t in enumerate(available_times[-5:]):
-                print(f"    {len(available_times) - 5 + i}: {t}")
-
-        return available_times
-    else:
-        print("No available_times attribute")
-        return None
+        print(
+            f"[{name}] model: {len(model_ds.time)} init steps, "
+            f"obs: {len(obs_ds.time)} steps"
+        )
+        case_dirs[name] = case_dir
+    return case_dirs
 
 
-def show_lead_time_calculation(init_times, lead_times_list):
-    """Show how add_lead_times calculates observation times."""
-    print("\n" + "=" * 80)
-    print("LEAD TIME CALCULATION (using add_lead_times)")
-    print("=" * 80)
+def load_config(config_path: str) -> dict:
+    """Load a YAML config file into a dict."""
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
 
+
+def setup_logging(output_dir: Path) -> logging.Logger:
+    """Send logs to a per-case file and to the console."""
+    log_file = output_dir / "training_validation.log"
+    root = logging.getLogger()
+    for h in list(root.handlers):
+        root.removeHandler(h)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(log_file, mode="w"), logging.StreamHandler()],
+    )
+    return logging.getLogger(__name__)
+
+
+def _build_pipeline(section: dict) -> PreprocessingPipeline:
+    """Build a preprocessing pipeline from a model or obs YAML section."""
+    preprocessors_list = section.get("preprocessing_pipeline", {}).get(
+        "preprocessors_list", []
+    )
+    steps = [
+        PreprocessingStepSelector(name=p["name"], args=p.get("args"))
+        for p in preprocessors_list
+    ]
+    return PreprocessingPipeline(steps)
+
+
+def create_config_from_yaml(config_dict: dict) -> TrainDatasetConfig:
+    """Build the model, obs, and training dataset configs from the YAML dict.
+
+    The YAML's lead_times.end is overwritten with profile[3] before the lead list is built.
+    """
+    logger = logging.getLogger(__name__)
+    dataset_dict = config_dict["train_loader"]["dataset"]
+
+    model_dict = dataset_dict["forecast"]
+    model_config = ForecastDataConfig(
+        paths=model_dict["paths"],
+        file_type="*.nc",
+        names=model_dict["names"],
+        preprocessing_pipeline=_build_pipeline(model_dict),
+        ensemble_mean=model_dict.get("ensemble_mean", False),
+        rename_dict=dict(
+            model_dict.get("rename_dict", {})
+        ),  # copy so the YAML dict is not mutated
+    )
+    logger.info("ModelDataConfig created")
+
+    obs_dict = dataset_dict["reference"]
+    obs_config = RefDataConfig(
+        paths=obs_dict["paths"],
+        file_type="*.nc",
+        names=obs_dict["names"],
+        preprocessing_pipeline=_build_pipeline(obs_dict),
+    )
+    logger.info("ObsDataConfig created")
+
+    lt = dataset_dict["lead_times"]
+    lt["end"] = profile[3]
+    lead_times = list(range(lt["start"], lt["end"] + 1))  # end is inclusive
+    train_config = TrainDatasetConfig(
+        forecast=model_config,
+        reference=obs_config,
+        condition_method=dataset_dict.get("condition_method", "ensemble_mean"),
+        lead_times=lead_times,
+    )
+    logger.info("TrainDatasetConfig created")
+    return train_config
+
+
+def verify_and_print_times(config: TrainDatasetConfig):
+    """Log the common, available, and input time sets, and return all three."""
+    logger = logging.getLogger(__name__)
+    common_times = config.get_common_time
+    available_times = config.available_times
+    input_times = config.get_input_times(available_times)
+
+    logger.info("COMMON TIMES (intersection of model and obs):")
+    logger.info(f"   Count: {len(common_times)}")
+    if len(common_times):
+        logger.info(f"   Range: {common_times[0]} to {common_times[-1]}")
+
+    logger.info("AVAILABLE TIMES (for training):")
+    logger.info(f"   Count: {len(available_times)}")
+    if len(available_times):
+        logger.info(f"   Range: {available_times[0]} to {available_times[-1]}")
+
+    logger.info("INPUT TIMES (intersection of model and available):")
+    logger.info(f"   Count: {len(input_times)}")
+    if len(input_times):
+        logger.info(f"   Range: {input_times[0].values} to {input_times[-1].values}")
+
+    logger.info("COMMON TIMES (first 5 and last 5):")
+    for i, t in enumerate(common_times):
+        if i < 5 or i >= len(common_times) - 5:
+            logger.info(f"   [{i}] {t}")
+        elif i == 5:
+            logger.info(f"   ... ({len(common_times) - 10} more) ...")
+
+    logger.info("AVAILABLE TIMES (first 5 and last 5):")
+    for i, t in enumerate(available_times):
+        if i < 5 or i >= len(available_times) - 5:
+            logger.info(f"   [{i}] {t}")
+        elif i == 5:
+            logger.info(f"   ... ({len(available_times) - 10} more) ...")
+
+    return common_times, available_times, input_times
+
+
+def create_training_mask(
+    config, available_times, max_allowed_time, output_dir: Path
+) -> np.ndarray:
+    """Build the boolean training mask and save it as training_mask.npy."""
+    logger = logging.getLogger(__name__)
+    model_init_times = (
+        config.get_input_times(available_times).to_series().index.unique()
+    )
+    lead_times = list(config.lead_times)
+
+    logger.info(f"Model init times: {len(model_init_times)}")
+    logger.info(f"Lead times: {len(lead_times)}")
+    logger.info(f"Total pairs: {len(model_init_times) * len(lead_times)}")
+
+    # _create_train_mask returns True where a target is invalid, so invert it.
+    model_valid = ~_create_train_mask(
+        init_times=model_init_times.values,
+        lead_times=lead_times,
+        lead_time_resolution=profile[4],  # must be a valid lead_time_unit value
+        max_allowed_time=max_allowed_time,
+    ).values
+
+    # The function never sees available_times, so keep the obs check separately.
+    available = set(
+        pd.DatetimeIndex(available_times)
+    )  # set gives fast membership tests
+    offset_kwarg = OFFSET_KWARG[profile[4]]
+    obs_valid = np.zeros_like(model_valid)
+    for i, init_time in enumerate(model_init_times):
+        for j, lead in enumerate(lead_times):
+            obs_valid[i, j] = (
+                init_time + pd.DateOffset(**{offset_kwarg: int(lead)}) in available
+            )
+
+    mask = model_valid & obs_valid
+
+    valid = int(mask.sum())
+    logger.info(f"Valid pairs: {valid}")
+    logger.info(f"Invalid pairs: {mask.size - valid}")
+    logger.info(f"Coverage: {_coverage(valid, mask.size):.1f}%")
+
+    np.save(output_dir / "training_mask.npy", mask)
+    return mask
+
+
+def plot_training_mask(mask: np.ndarray, output_dir: Path, lead_times=None) -> None:
+    """Save the mask as training_mask.png. Errors are logged, not raised."""
+    logger = logging.getLogger(__name__)
     try:
-        print("\nFormula: observation_time = init_time + (lead_time - 1) months")
-        print(f"\n{'Init Time':<20} {'Lead':<6} {'Observation Time':<20}")
-        print("-" * 80)
+        fig, ax = plt.subplots(figsize=(16, 10))
+        im = ax.imshow(
+            mask,
+            cmap="binary",
+            origin="lower",
+            aspect="auto",
+            interpolation="nearest",
+            vmin=0,
+            vmax=1,
+        )  # white = valid, black = masked
+        ax.set_title(
+            "Training Time Mask\n(white=valid sample, black=masked)",
+            fontsize=16,
+            fontweight="bold",
+        )
+        ax.set_ylabel("Initialization Time Index", fontsize=12)
+        ax.set_xlabel("Lead Time Index", fontsize=12)
+        cbar = fig.colorbar(im, ax=ax, shrink=0.8)
+        cbar.set_label("Valid (1) / Masked (0)", fontsize=11)
 
-        # Show a few examples with each lead time
-        for init_t in init_times[:5]:
-            for lead_t in lead_times_list[:6]:
-                # Convert pandas Timestamp to numpy datetime64
-                init_t_np = np.datetime64(pd.Timestamp(init_t))
+        if lead_times is not None and len(lead_times) == mask.shape[1]:
+            step = max(1, len(lead_times) // 20)  # label about 20 leads
+            ticks = np.arange(0, len(lead_times), step)
+            ax.set_xticks(ticks)
+            ax.set_xticklabels(
+                [str(lead_times[i]) for i in ticks], rotation=45, ha="right"
+            )
 
-                # Use the library's add_lead_times function
-                obs_time = add_lead_times(
-                    np.array([init_t_np]), np.array([lead_t]), "month"
-                )[0]
-
-                print(f"{str(init_t):<20} {lead_t:<6} {str(obs_time):<20}")
-
+        valid = int(mask.sum())
+        ax.text(
+            0.02,
+            0.98,
+            f"Valid pairs: {valid:,}\nTotal pairs: {mask.size:,}\n"
+            f"Coverage: {_coverage(valid, mask.size):.1f}%",
+            transform=ax.transAxes,
+            fontsize=11,
+            verticalalignment="top",
+            bbox=dict(
+                boxstyle="round", facecolor="wheat", alpha=0.8, edgecolor="black"
+            ),
+        )
+        fig.tight_layout()
+        fig.savefig(output_dir / "training_mask.png", dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        logger.info(f"Saved plot: {output_dir / 'training_mask.png'}")
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error plotting mask: {e}")
 
 
-def show_training_dataset_info(config: TrainDatasetConfig):
-    """Show information about the TrainDataset."""
-    print("\n" + "=" * 80)
-    print("TRAINING DATASET INFORMATION")
-    print("=" * 80)
-
-    try:
-        # Don't create TrainDataset - just show info from config
-        available_times = config.available_times
-        lead_times_arr = np.array(config.lead_times)
-
-        print("\nTrainDatasetConfig information:")
-        print(f"  Available init times: {len(available_times)}")
-        print(f"  Lead times: {config.lead_times}")
-        print(
-            f"  Expected samples: {len(available_times)} init_times × {len(config.lead_times)} lead_times"
-        )
-        print(
-            f"  = {len(available_times) * len(config.lead_times)} total training combinations"
-        )
-
-        print("\n  Sample training pairs (first 12):")
-        print(f"  {'Pair':<8} {'Init Time':<20} {'Lead':<6} {'Obs Time':<20}")
-        print("-" * 80)
-
-        # Show first 12 combinations
-        pair_count = 0
-        for init_idx, init_time in enumerate(available_times[:3]):
-            for lead_idx, lead_time in enumerate(lead_times_arr[:4]):
-                # Convert pandas Timestamp to numpy datetime64
-                init_time_np = np.datetime64(pd.Timestamp(init_time))
-
-                # Calculate observation time
-                obs_time = add_lead_times(
-                    np.array([init_time_np]), np.array([lead_time]), "month"
-                )[0]
-
-                print(
-                    f"  {pair_count:<8} {str(init_time):<20} {lead_time:<6} {str(obs_time):<20}"
-                )
-                pair_count += 1
-
-        print(
-            f"\n  ... and {len(available_times) * len(config.lead_times) - 12} more training pairs"
-        )
-
-    except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-
-        traceback.print_exc()
-
-
-def main(
-    output_dir: str = "/fs/site7/eccc/crd/cccma/users/rna002/output/training_time_validation",
-    model_filename: str = "model_data_1960_2000.nc",
-    obs_filename: str = "observations.nc",
-):
-    """Main function - creates data then shows training times using library."""
-
-    print("\n" + "=" * 80)
-    print("TRAINING TIMES VALIDATION - COMPLETE")
-    print("=" * 80)
-
-    # Create output directory
-    output_dir = Path(output_dir)
+def validate_case(config_path: Path, output_dir: Path) -> None:
+    """Run the full training-time validation for one case and write its outputs."""
+    set_lead_time_resolution(profile[4])  # the profile decides the library setting
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Build full paths
-    model_path = str(output_dir / model_filename)
-    obs_path = str(output_dir / obs_filename)
+    # Copy of the library config, with lead_time_resolution set to the value this run used
+    with open(CONFIGS_YAML) as f:
+        lib_config = yaml.safe_load(f)
+    lib_config["lead_time_resolution"] = profile[4]
+    with open(output_dir / "configs.yaml", "w") as f:
+        yaml.safe_dump(lib_config, f, sort_keys=False)
 
-    create_synthetic_model_data(model_path)
-    create_synthetic_observations(obs_path)
+    logger = setup_logging(output_dir)
+    logger.info("TRAINING TIME VALIDATION")
+    logger.info(f"Config: {config_path}")
 
-    print("\n" + "=" * 80)
-    print("LOADING WITH S2D4P LIBRARY")
-    print("=" * 80)
+    config_dict = load_config(str(config_path))
+    train_config = create_config_from_yaml(config_dict)
 
-    try:
-        # Create model data config
-        print("\nCreating ModelDataConfig...")
-        print(f"  Directory: {output_dir}")
+    # Overwrite the config with the dict as it was used (lead_times.end etc. applied)
+    with open(config_path, "w") as f:
+        yaml.safe_dump(config_dict, f, sort_keys=False)
 
-        model_config = ModelDataConfig(
-            paths=str(output_dir),
-            file_type="model_data_*.nc",
-            names=["tas"],
-        )
-        print("ModelDataConfig created")
+    common_times, available_times, input_times = verify_and_print_times(train_config)
+    max_allowed_time = common_times.max()
+    lead_times = list(train_config.lead_times)
+    mask = create_training_mask(
+        train_config, available_times, max_allowed_time, output_dir
+    )
+    plot_training_mask(mask, output_dir, lead_times=lead_times)
 
-        # Create observation data config
-        print("\nCreating ObsDataConfig...")
+    report = {  # summary written to training_validation_report.json
+        "timestamp": datetime.now().isoformat(),
+        "config_path": str(config_path),
+        "output_dir": str(output_dir),
+        "times": {
+            "common_times_count": len(common_times),
+            "common_times_range": [str(common_times[0]), str(common_times[-1])]
+            if len(common_times)
+            else [],  # empty when model and obs don't overlap
+            "input_times_count": len(input_times),
+            "input_times_range": [
+                str(input_times[0].values),
+                str(input_times[-1].values),
+            ]
+            if len(input_times)
+            else [],
+        },
+        "mask": {
+            "shape": list(mask.shape),
+            "valid_pairs": int(mask.sum()),
+            "invalid_pairs": int(mask.size - mask.sum()),
+            "coverage_percent": _coverage(int(mask.sum()), int(mask.size)),
+            "lead_times_count": len(lead_times),
+            "lead_times_range": [int(lead_times[0]), int(lead_times[-1])],
+        },
+    }
+    with (output_dir / "training_validation_report.json").open("w") as f:
+        json.dump(report, f, indent=2)
+    logger.info("SUCCESS")
 
-        obs_config = ObsDataConfig(
-            paths=str(output_dir),
-            file_type="observations*.nc",
-            names=["tas"],
-        )
-        print("ObsDataConfig created")
 
-        # Create TrainDatasetConfig
-        print("\nCreating TrainDatasetConfig...")
-        lead_times = [1, 2, 3, 4, 5, 6]
+def run_validation(case_dirs: dict) -> None:
+    """Run validate_case on every generated case."""
+    with open(BASE_CONFIG) as f:
+        base = yaml.safe_load(f)
 
-        config = TrainDatasetConfig(
-            model=model_config,
-            observation=obs_config,
-            condition_method=None,
-            lead_times=lead_times,
-        )
-        print("TrainDatasetConfig created")
-        print(f"  Lead times: {lead_times}")
+    for name, case_dir in case_dirs.items():
+        cfg = copy.deepcopy(base)  # deep copy so each case starts from the same base
+        dataset = cfg["train_loader"]["dataset"]
+        dataset["forecast"]["paths"] = str(case_dir / "forecast")
+        dataset["reference"]["paths"] = str(case_dir / "obs")
+        dataset["forecast"]["rename_dict"] = {}  # dummy model already uses 'time'
+        dataset["lead_times"]["end"] = profile[
+            3
+        ]  # keep the saved YAML in sync with the profile
 
-        available_times = show_available_times(config)
+        out_dir = OUTPUT_ROOT / name
+        out_dir.mkdir(parents=True, exist_ok=True)
+        cfg_path = out_dir / "config.yaml"
+        with open(cfg_path, "w") as f:
+            yaml.safe_dump(cfg, f, sort_keys=False)
 
-        if available_times is not None and len(available_times) > 0:
-            # Show lead time calculation
-            show_lead_time_calculation(available_times, lead_times)
+        print(f"\n=== {name} ===")
+        try:
+            validate_case(cfg_path, out_dir)
+        except Exception as e:
+            print(f"[{name}] failed: {type(e).__name__}: {e}")
+            traceback.print_exc()
 
-        # Show training dataset info
-        show_training_dataset_info(config)
 
-        print("\n" + "=" * 80)
-        print("SUMMARY")
-        print("=" * 80)
-        print("\nSynthetic data created:")
-        print(f"  Model: {model_path}")
-        print(f"  Observations: {obs_path}")
-        print("\nS2D4P Library used:")
-        print("  ModelDataConfig: loads model data from directory")
-        print("  ObsDataConfig: loads observation data from directory")
-        print("  TrainDatasetConfig: combines them and finds common times")
-        print("  TrainDataset: creates (forecast, observation) training pairs")
-        print(
-            "  add_lead_times(): calculates observation_time from init_time + lead_time"
-        )
-        print("\nTraining time formula:")
-        print("  observation_time = init_time + (lead_time - 1) months")
-        print("\n" + "=" * 80 + "\n")
-
-    except Exception as e:
-        print(f"\nError: {e}")
-        import traceback
-
-        traceback.print_exc()
+def main():
+    """Generate all dummy cases, then validate each one."""
+    case_dirs = generate_cases()
+    run_validation(case_dirs)
 
 
 if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) > 1:
-        output_dir = sys.argv[1]
-    else:
-        output_dir = (
-            "/fs/site7/eccc/crd/cccma/users/rna002/output/training_time_validation"
-        )
-
-    main(output_dir)
+    main()

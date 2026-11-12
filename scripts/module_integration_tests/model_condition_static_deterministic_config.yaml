@@ -1,8 +1,8 @@
 experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/S2D4P_tests/test9
 max_epochs: 1
 train_loader:
-  dataset_config:
-    model:
+  dataset:
+    forecast:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
       names:
         - tas
@@ -18,7 +18,7 @@ train_loader:
       rename_dict:
         year: time
       drop_vars_list: [height]
-    observation:
+    reference:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
       names:
         - tas
@@ -56,12 +56,12 @@ train_loader:
     - 2007
   num_validation_years: 0
   num_data_workers: 0
-  reduce_spatial_mask: true
+  share_spatial_mask: true
   load: false
 module:
   type: deterministic
   config:
-    ModelConfig:
+    Architecture:
       type: MLP
       config:
         encoder_hidden_dims:

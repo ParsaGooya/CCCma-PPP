@@ -1,8 +1,8 @@
 experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/S2D4P_tests/test9
 max_epochs: 1
 train_loader:
-  dataset_config:
-    model:
+  dataset:
+    forecast:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
       names: [tas]
       preprocessing_pipeline:
@@ -17,7 +17,7 @@ train_loader:
       rename_dict:
         year: time
 
-    observation:
+    reference:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
       names: [tas]
       preprocessing_pipeline:
@@ -46,13 +46,13 @@ train_loader:
   num_validation_years: 0
   prefetch_factor: 1
   num_data_workers: 0
-  reduce_spatial_mask: True
+  share_spatial_mask: True
   load: True
 
 module:
   type: cvae
   config:
-    ModelConfig:
+    Architecture:
       type: MLP
       config:
         encoder_hidden_dims: [8, 8, 8]

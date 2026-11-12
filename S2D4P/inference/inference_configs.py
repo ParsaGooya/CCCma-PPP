@@ -123,7 +123,7 @@ class InferenceConfig:
         Path
             Path to the fitted output preprocessing pipeline.
         """
-        if "reference" in self.train_config["train_loader"]["dataset_config"]:
+        if "reference" in self.train_config["train_loader"]["dataset"]:
             preprocessor_name = "reference"
         else:
             preprocessor_name = "forecast"
