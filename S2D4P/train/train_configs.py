@@ -22,6 +22,8 @@ from S2D4P.core.trainer import TrainerConfig
 from S2D4P.core.optimization import OptimizerConfig
 from S2D4P.core.core_abc import GenerativeContext
 
+from S2D4P.generic import registry_imports
+
 
 def set_seed(seed):
     """
