@@ -102,7 +102,7 @@ class InferenceConfig:
         Any
             Description not yet provided.
         """
-        if "reference" in self.train_config["train_loader"]["dataset_config"]:
+        if "reference" in self.train_config["train_loader"]["dataset"]:
             preprocessor_name = "reference"
         else:
             preprocessor_name = "forecast"
