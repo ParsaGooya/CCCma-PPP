@@ -227,7 +227,6 @@ def test_broadcast_mask_2d_adds_batch_and_channel_dimensions():
     assert result.shape == (1, 1, 8, 8)
 
 
-@pytest.mark.pruned
 def test_broadcast_mask_2d_expands_batch():
     mask = torch.ones(8, 8)
     reference = torch.randn(4, 3, 8, 8)
@@ -253,6 +252,7 @@ def test_broadcast_mask_3d_interpreted_as_channels_height_width():
     assert result.shape == (1, 3, 8, 8)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_3d_expands_batch():
     mask = torch.ones(3, 8, 8)
     reference = torch.randn(2, 3, 8, 8)

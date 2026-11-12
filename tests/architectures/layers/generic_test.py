@@ -27,6 +27,7 @@ def test_validate_dropout_accepts_valid_values(value):
     assert _validate_dropout(value) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -52,6 +53,7 @@ def test_build_activation_relu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 def test_build_activation_gelu():
     activation = _build_activation("gelu")
 
@@ -84,7 +86,6 @@ def test_build_activation_rejects_unsupported_name(name):
         _build_activation(name)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [

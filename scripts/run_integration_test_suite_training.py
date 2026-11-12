@@ -127,14 +127,14 @@ FULL_LEAD_MONTHS = {
 # Test cases for data loader and dataset configuration
 # These test different combinations of:
 # - Conditioning methods (None, ensemble_mean, same_member, cross_ensemble, static)
-# - Data presence (observation present/missing, condition present/missing)
+# - Data presence (reference present/missing, condition present/missing)
 # - Time features (none, init_time, production features, all)
 TRAIN_LOADER_CONFIG_CASES = [
     {
         "name": "tlc_condition_none_obs_present",
         "condition_method": None,
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -145,7 +145,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_ensemble_mean_obs_present",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -156,7 +156,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_same_member_model_not_mean",
         "condition_method": "same_member",
         "model_ensemble_mean": False,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -167,7 +167,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_cross_ensemble_model_not_mean",
         "condition_method": "cross_ensemble",
         "model_ensemble_mean": False,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -178,7 +178,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_same_member_invalid_model_mean",
         "condition_method": "same_member",
         "model_ensemble_mean": True,  # Invalid combo: ensemble_mean contradicts same_member
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -192,25 +192,25 @@ TRAIN_LOADER_CONFIG_CASES = [
         ),
     },
     {
-        "name": "tlc_observation_missing_condition_none",
+        "name": "tlc_reference_missing_condition_none",
         "condition_method": None,
         "model_ensemble_mean": True,
-        "remove_observation": True,  # Missing observation
+        "remove_reference": True,  # Missing reference
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "FAIL",
         "expected_failure_reason": (
-            "A training target is unavailable when observation is "
+            "A training target is unavailable when reference is "
             "missing and condition_method is None."
         ),
-        "expected_error_pattern": (r"observation|target|condition_method"),
+        "expected_error_pattern": (r"reference|target|condition_method"),
     },
     {
-        "name": "tlc_observation_missing_ensemble_mean",
+        "name": "tlc_reference_missing_ensemble_mean",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": True,  # Missing observation is OK with condition
+        "remove_reference": True,  # Missing reference is OK with condition
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -221,7 +221,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_time_features_none",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": None,  # No time features
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -232,7 +232,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_time_features_init_time",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],  # Only initialization time
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -243,7 +243,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_time_features_production",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [  # Production-ready time features
             LEAD_TIME_DIM,
@@ -258,7 +258,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_time_features_all",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [  # All possible time features
             INIT_TIME_DIM,
@@ -276,7 +276,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_lead_months_single",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": {
@@ -290,7 +290,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_lead_months_missing",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": None,  # No lead time specification
@@ -302,7 +302,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "condition_ensemble_mean": True,  # Explicit condition dataset
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": True,  # Include condition data
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -314,7 +314,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "condition_method": "cross_ensemble",
         "model_ensemble_mean": False,
         "condition_ensemble_mean": False,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": True,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -325,7 +325,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_static_without_condition",
         "condition_method": "static",  # Requires explicit condition dataset
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,  # But we didn't provide one
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -340,7 +340,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "condition_method": "static",
         "model_ensemble_mean": True,
         "condition_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": True,  # Condition is same as model data
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -440,7 +440,7 @@ CSV_COLUMNS = [
     "condition_method",
     "model_ensemble_mean",
     "condition_ensemble_mean",
-    "remove_observation",
+    "remove_reference",
     "add_condition",
     "time_features",
     "lead_months",
@@ -545,7 +545,7 @@ def cleanup_logging_handlers() -> None:
     logger_names.extend(
         logger_name
         for logger_name in logging.Logger.manager.loggerDict
-        if logger_name.startswith("cccma_ppp")
+        if logger_name.startswith("S2D4P")
     )
 
     # Remove all handlers from each logger
@@ -659,7 +659,7 @@ def log_result(
         "condition_method": params.get("condition_method"),
         "model_ensemble_mean": params.get("model_ensemble_mean"),
         "condition_ensemble_mean": params.get("condition_ensemble_mean"),
-        "remove_observation": params.get("remove_observation"),
+        "remove_reference": params.get("remove_reference"),
         "add_condition": params.get("add_condition"),
         "time_features": serialize_json(params.get("time_features")),
         "lead_months": serialize_json(params.get("lead_months")),
@@ -799,7 +799,7 @@ def normalize_nullable_fields(
         {},
     )
     dataset_cfg = train_loader_cfg.setdefault(
-        "dataset_config",
+        "dataset",
         {},
     )
 
@@ -850,7 +850,7 @@ def normalize_nullable_fields(
         )
 
     model_cfg = module_cfg.get(
-        "ModelConfig",
+        "Architecture",
         {},
     ).get(
         "config",
@@ -881,25 +881,13 @@ def validate_generated_config(
     """
     train_loader_cfg = cfg.get("train_loader")
 
-    if not isinstance(
-        train_loader_cfg,
-        dict,
-    ):
-        raise ValueError("train_loader must be configured as a mapping.")
-
-    dataset_cfg = train_loader_cfg.get("dataset_config")
-
-    if not isinstance(
-        dataset_cfg,
-        dict,
-    ):
-        raise ValueError("train_loader.dataset_config must be configured as a mapping.")
+    dataset_cfg = train_loader_cfg.get("dataset")
 
     # Check for deprecated field location
     if "time_features" in dataset_cfg:
         raise ValueError(
             "time_features must be configured under "
-            "train_loader, not train_loader.dataset_config."
+            "train_loader, not train_loader.dataset."
         )
 
     # Validate time features
@@ -924,12 +912,6 @@ def validate_generated_config(
     # Validate module configuration
     module_cfg = cfg.get("module")
 
-    if not isinstance(
-        module_cfg,
-        dict,
-    ):
-        raise ValueError("module must be configured as a mapping.")
-
     module_type = str(
         module_cfg.get(
             "type",
@@ -939,12 +921,6 @@ def validate_generated_config(
 
     raw_module_config = module_cfg.get("config")
 
-    if not isinstance(
-        raw_module_config,
-        dict,
-    ):
-        raise ValueError("module.config must be configured as a mapping.")
-
     # Check for deprecated fields
     if "min_posterior_variance" in raw_module_config:
         raise ValueError(
@@ -952,16 +928,10 @@ def validate_generated_config(
         )
 
     # Validate model selector
-    model_selector = raw_module_config.get("ModelConfig")
-
-    if not isinstance(
-        model_selector,
-        dict,
-    ):
-        raise ValueError("module.config.ModelConfig must be configured as a mapping.")
+    model_selector = raw_module_config.get("Architecture")
 
     if not model_selector.get("type"):
-        raise ValueError("module.config.ModelConfig.type must be configured.")
+        raise ValueError("module.config.Architecture.type must be configured.")
 
     model_config = model_selector.get("config")
 
@@ -969,7 +939,7 @@ def validate_generated_config(
         model_config,
         dict,
     ):
-        raise ValueError("module.config.ModelConfig.config must be a mapping.")
+        raise ValueError("module.config.Architecture.config must be a mapping.")
 
     model_type = str(model_selector["type"]).lower()
 
@@ -984,10 +954,10 @@ def validate_generated_config(
             block_config,
             dict,
         ):
-            raise ValueError("UNet ModelConfig requires block_config to be a mapping.")
+            raise ValueError("UNet Architecture requires block_config to be a mapping.")
 
         if not block_config.get("name"):
-            raise ValueError("UNet ModelConfig.block_config requires a nonempty name.")
+            raise ValueError("UNet Architecture.block_config requires a nonempty name.")
 
         # Check for deprecated UNet fields
         if "process_skip" in model_config:
@@ -1097,20 +1067,16 @@ def base_config() -> dict[str, Any]:
     ):
         raise ValueError("The base configuration must contain a train_loader mapping.")
 
-    dataset_cfg = train_loader_cfg.get("dataset_config")
+    dataset_cfg = train_loader_cfg.get("dataset")
 
     if not isinstance(
         dataset_cfg,
         dict,
     ):
-        raise ValueError(
-            "The base configuration must contain train_loader.dataset_config."
-        )
+        raise ValueError("The base configuration must contain train_loader.dataset.")
 
     if "time_features" in dataset_cfg:
-        raise ValueError(
-            "Move dataset_config.time_features to train_loader.time_features."
-        )
+        raise ValueError("Move dataset.time_features to train_loader.time_features.")
 
     # Configure minimal data loading for fast tests
     train_loader_cfg["batch_size"] = 1
@@ -1253,22 +1219,22 @@ def apply_train_loader_config_params(
     Modifies data loading, conditioning, and time feature settings.
     """
     train_loader_cfg = cfg["train_loader"]
-    dataset_cfg = train_loader_cfg["dataset_config"]
+    dataset_cfg = train_loader_cfg["dataset"]
 
     if "time_features" in dataset_cfg:
-        raise ValueError("time_features must not be configured inside dataset_config.")
+        raise ValueError("time_features must not be configured inside dataset.")
 
     # Apply model ensemble mean setting
     if "model_ensemble_mean" in params:
-        dataset_cfg["model"]["ensemble_mean"] = params["model_ensemble_mean"]
+        dataset_cfg["forecast"]["ensemble_mean"] = params["model_ensemble_mean"]
 
-    # Remove observation data if requested
+    # Remove reference data if requested
     if params.get(
-        "remove_observation",
+        "remove_reference",
         False,
     ):
         dataset_cfg.pop(
-            "observation",
+            "reference",
             None,
         )
 
@@ -1277,7 +1243,7 @@ def apply_train_loader_config_params(
         "add_condition",
         False,
     ):
-        dataset_cfg["condition"] = deepcopy(dataset_cfg["model"])
+        dataset_cfg["condition"] = deepcopy(dataset_cfg["forecast"])
 
         condition_ensemble_mean = params.get("condition_ensemble_mean")
 
@@ -1461,11 +1427,11 @@ def modify_preprocessors(
     Add or remove the flattener preprocessing step.
     MLPs need flattened inputs, but UNets work with spatial data.
     """
-    dataset_cfg = cfg["train_loader"]["dataset_config"]
+    dataset_cfg = cfg["train_loader"]["dataset"]
 
     for data_name in (
-        "model",
-        "observation",
+        "forecast",
+        "reference",
         "condition",
     ):
         data_cfg = dataset_cfg.get(data_name)
@@ -1577,7 +1543,7 @@ def build_cvae_config_from_params(
     )
 
     if architecture == "MLP":
-        module_cfg["ModelConfig"] = build_mlp_model_config(
+        module_cfg["Architecture"] = build_mlp_model_config(
             latent_size=params["latent_size"],
             condition_dependant_latent=params["condition_dependant_latent"],
             condemb_to_decoder=params.get(
@@ -1593,7 +1559,7 @@ def build_cvae_config_from_params(
             cvae=True,
         )
     elif architecture == "UNet":
-        module_cfg["ModelConfig"] = build_unet_model_config(
+        module_cfg["Architecture"] = build_unet_model_config(
             latent_size=params["latent_size"],
             condition_dependant_latent=params["condition_dependant_latent"],
             condemb_to_decoder=params.get(
@@ -1656,7 +1622,7 @@ def build_deterministic_config_from_params(
     cfg["module"] = {
         "type": "deterministic",
         "config": {
-            "ModelConfig": model_selector,
+            "Architecture": model_selector,
         },
     }
 
@@ -1675,7 +1641,7 @@ def common_training_params() -> dict[str, Any]:
     return {
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [
             LEAD_TIME_DIM,
@@ -2147,7 +2113,7 @@ def make_train_config(
         "model_type": "MLP",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": False,
+        "remove_reference": False,
         "add_condition": False,
         "time_features": [
             LEAD_TIME_DIM,

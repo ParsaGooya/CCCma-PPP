@@ -194,6 +194,7 @@ def test_forward_total_loss_branch():
     assert isinstance(loss, torch.Tensor)
 
 
+@pytest.mark.pruned
 def test_checked_dimensionality_cache():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -336,7 +337,7 @@ def test_config_build_forwards_all_arguments(
             captured["generative_context"] = generative_context
 
     monkeypatch.setattr(
-        "cccma_ppp.loss.loss.Losspipeline",
+        "S2D4P.loss.loss.Losspipeline",
         FakePipeline,
     )
 
@@ -653,7 +654,6 @@ def test_pt_mask_must_contain_tensor(
         )
 
 
-@pytest.mark.pruned
 def test_loads_mask_from_netcdf(
     tmp_path,
 ):
@@ -780,6 +780,7 @@ def test_resolve_output_mask_preserves_matching_channel_mask():
     assert config.output_mask is original
 
 
+@pytest.mark.pruned
 def test_resolve_output_mask_rejects_dimension_count():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -832,7 +833,6 @@ def test_resolve_output_mask_rejects_spatial_mismatch():
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_channels",
     [
@@ -916,7 +916,7 @@ def test_build_resolves_mask_before_constructing_pipeline(
 
     constructor = Mock(return_value=object())
     monkeypatch.setattr(
-        "cccma_ppp.loss.loss.Losspipeline",
+        "S2D4P.loss.loss.Losspipeline",
         constructor,
     )
 

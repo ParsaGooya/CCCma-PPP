@@ -38,7 +38,7 @@ class DummyTrainLoader:
     def __init__(self):
         self.dataset_config = type("DS", (), {})()
 
-        self.dataset_config.observation = DummyObservation()
+        self.dataset_config.reference = DummyObservation()
         self.dataset_config.model = DummyObservation()
         self.dataset_config.condition_method = "x"
 
@@ -80,21 +80,27 @@ class DummyModuleSelector:
     NUM_INPUT_DIMS = 4
     NUM_OUTPUT_DIMS = 1
     GENERATOR = None
+    arch_type = "mlp"
+    architecture_config = SimpleNamespace(
+        batch_normalization=False,
+        GENERATOR=None,
+    )
 
     def build_module(self, **kwargs):
         class M:
-            model_config = SimpleNamespace(GENERATOR=None)
-            model = SimpleNamespace(
-                generative_modeling=False, config=SimpleNamespace(NUM_OUTPUT_DIMS=1)
-            )
-
             def __init__(self):
+                self.arch = SimpleNamespace(generative_modeling=False)
+                self.architecture_config = SimpleNamespace(
+                    GENERATOR=None,
+                )
                 self.model_config = SimpleNamespace(
                     GENERATOR=None,
                 )
                 self.model = SimpleNamespace(
                     generative_modeling=False,
-                    config=SimpleNamespace(),
+                    config=SimpleNamespace(
+                        NUM_OUTPUT_DIMS=1,
+                    ),
                 )
 
             def to(self, device):
@@ -196,7 +202,7 @@ def test_negative_epochs_assert(tmp_path):
 @pytest.mark.pruned
 def test_deterministic_observation_required(tmp_path):
     loader = DummyTrainLoader()
-    loader.dataset_config.observation = None
+    loader.dataset_config.reference = None
 
     module = DummyModuleSelector()
     module.type = "deterministic"
@@ -447,7 +453,7 @@ def test_generator_with_crps_valid(tmp_path):
 
 def test_deterministic_with_observation_valid(tmp_path):
     loader = DummyTrainLoader()
-    loader.dataset_config.observation = DummyObservation()
+    loader.dataset_config.reference = DummyObservation()
 
     module = DummyModuleSelector()
     module.type = "deterministic"
@@ -705,7 +711,7 @@ def test_optimization_exists(tmp_path):
 @pytest.mark.pruned
 def test_deterministic_beta_finder_warning(tmp_path):
     loader = DummyTrainLoader()
-    loader.dataset_config.observation = DummyObservation()
+    loader.dataset_config.reference = DummyObservation()
 
     trainer = DummyTrainer()
     trainer.beta_finder = None
@@ -724,7 +730,6 @@ def test_deterministic_beta_finder_warning(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_non_mlp_with_flattener_raises(tmp_path):
     loader = DummyTrainLoader()
 
@@ -901,6 +906,8 @@ def test_module_to_called(tmp_path):
     called = {"x": False}
 
     class M:
+        architecture_config = SimpleNamespace(GENERATOR=None)
+        arch = SimpleNamespace(generative_modeling=False)
         model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
@@ -934,6 +941,8 @@ def test_module_init_loss_called(tmp_path):
     called = {"x": False}
 
     class M:
+        architecture_config = SimpleNamespace(GENERATOR=None)
+        arch = SimpleNamespace(generative_modeling=False)
         model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
@@ -966,6 +975,8 @@ def test_build_trainer_num_output_dims_fallback(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class M:
+        architecture_config = SimpleNamespace(GENERATOR=None)
+        arch = SimpleNamespace(generative_modeling=False)
         model_config = SimpleNamespace(GENERATOR=None)
         model = type("X", (), {"config": type("C", (), {})()})
 
@@ -1041,7 +1052,7 @@ def test_resolve_resuming_sets_experiment_dir_path(tmp_path):
 def test_missing_flattener_for_mlp(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
-    cfg.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    cfg.train_loader.dataset_config.reference.preprocessing_pipeline.pipeline = []
     cfg.train_loader.input_var_metadata["preprocessors"] = []
     cfg.train_loader.input_var_metadata["NN_dims"] = [10, 10, 10]
 
@@ -1137,6 +1148,7 @@ def test_prepare_runtime_sets_target_metadata(tmp_path):
     assert RuntimeContext.TARGET_VAR_METADATA == cfg.train_loader.target_var_metadata
 
 
+@pytest.mark.pruned
 def test_checkpoint_dir_exists_after_prepare(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1571,6 +1583,8 @@ def test_module_to_executes(tmp_path):
     called = {"x": False}
 
     class M:
+        architecture_config = SimpleNamespace(GENERATOR=None)
+        arch = SimpleNamespace(generative_modeling=False)
         model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
@@ -1605,6 +1619,8 @@ def test_init_loss_function_executes(tmp_path):
     called = {"x": False}
 
     class M:
+        architecture_config = SimpleNamespace(GENERATOR=None)
+        arch = SimpleNamespace(generative_modeling=False)
         model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
@@ -1831,6 +1847,7 @@ def test_prepare_runtime_variables_all_fields(tmp_path):
     assert RuntimeContext.GLOBAL_FIGURES_DIR
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_copy_flag_true(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -2127,6 +2144,8 @@ def test_build_trainer_num_output_dims_fallback_len(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class M:
+        architecture_config = SimpleNamespace(GENERATOR=None)
+        arch = SimpleNamespace(generative_modeling=False)
         model_config = SimpleNamespace(
             GENERATOR=None,
         )
@@ -2492,7 +2511,7 @@ def test_num_output_dims_equals_one_branch(tmp_path):
 def test_num_output_dims_not_one_branch(tmp_path):
     loader = DummyTrainLoader()
 
-    loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    loader.dataset_config.reference.preprocessing_pipeline.pipeline = []
 
     module = DummyModuleSelector()
     module.NUM_INPUT_DIMS = 2
@@ -2532,7 +2551,6 @@ def test_generator_branch_false(tmp_path):
     assert cfg is not None
 
 
-@pytest.mark.pruned
 def test_generator_branch_true_valid(tmp_path):
     module = DummyModuleSelector()
 
@@ -2553,6 +2571,7 @@ def test_generator_branch_true_valid(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_cvae_requires_beta_finder(tmp_path):
     trainer = DummyTrainer()
     trainer.beta_finder = None
@@ -2573,7 +2592,7 @@ def test_cvae_requires_beta_finder(tmp_path):
 
 def test_default_model_without_observation_raises(tmp_path):
     loader = DummyTrainLoader()
-    loader.dataset_config.observation = None
+    loader.dataset_config.reference = None
 
     module = DummyModuleSelector()
     module.type = "default"
@@ -2591,7 +2610,7 @@ def test_default_model_without_observation_raises(tmp_path):
 
 def test_default_model_beta_warning(tmp_path):
     loader = DummyTrainLoader()
-    loader.dataset_config.observation = DummyObservation()
+    loader.dataset_config.reference = DummyObservation()
 
     trainer = DummyTrainer()
     trainer.beta_finder = None
@@ -2917,7 +2936,6 @@ def test_prepare_directory_barrier_called(tmp_path):
     assert calls["n"] == 2
 
 
-@pytest.mark.pruned
 def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     calls = {"n": 0}
 
@@ -3048,7 +3066,7 @@ def test_generative_model_requires_condition_without_observation(
     tmp_path,
 ):
     loader = DummyTrainLoader()
-    loader.dataset_config.observation = None
+    loader.dataset_config.reference = None
     loader.dataset_config.condition_method = None
 
     module = DummyModuleSelector()
@@ -3073,7 +3091,7 @@ def test_generative_model_allows_condition_without_observation(
     tmp_path,
 ):
     loader = DummyTrainLoader()
-    loader.dataset_config.observation = None
+    loader.dataset_config.reference = None
     loader.dataset_config.condition_method = "ensemble_mean"
 
     module = DummyModuleSelector()
@@ -3392,6 +3410,7 @@ def test_check_io_2d_rejects_non_2d_data_without_flattener():
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "which",
     [

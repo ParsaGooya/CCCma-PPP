@@ -40,7 +40,7 @@ def make_coord(
 
 def make_data_config(
     *,
-    name="model",
+    name="forecast",
     times=None,
     time_range=None,
     init_time_freq="year",
@@ -117,20 +117,20 @@ class StubTrainDatasetConfig(TrainDatasetConfig):
 
 def make_config(
     *,
-    model=None,
-    observation=None,
+    forecast=None,
+    reference=None,
     condition=None,
     condition_method="static",
-    using_model_as_condition=False,
+    using_forecast_as_condition=False,
     effective_condition=None,
 ):
-    if model is None:
-        model = make_data_config()
+    if forecast is None:
+        forecast = make_data_config()
 
     config = object.__new__(StubTrainDatasetConfig)
 
-    config.model = model
-    config.observation = observation
+    config.forecast = forecast
+    config.reference = reference
     config.condition = condition
     config.condition_method = condition_method
     config.lead_times = None
@@ -143,7 +143,7 @@ def make_config(
         "lon",
     )
 
-    config._using_model_data_as_condition = using_model_as_condition
+    config._using_model_data_as_condition = using_forecast_as_condition
     config.effective_condition = effective_condition
 
     return config
@@ -240,23 +240,23 @@ def make_indexed_data(
 class TestTrainDatasetConfigObservationChecks:
     def test_observation_none_requires_condition_method(self):
         config = make_config(
-            observation=None,
+            reference=None,
             condition_method=None,
         )
 
         with pytest.raises(
             ValueError,
-            match=("No target observation is specified. Specify condition_method"),
+            match=("No target reference is specified. Specify condition_method"),
         ):
-            config._check_observation()
+            config._check_reference()
 
     def test_observation_none_accepts_condition_method(self):
         config = make_config(
-            observation=None,
+            reference=None,
             condition_method="static",
         )
 
-        result = config._check_observation()
+        result = config._check_reference()
 
         assert result is config
 
@@ -277,14 +277,14 @@ class TestTrainDatasetConfigObservationChecks:
             dim="lon",
         )
 
-        model = make_data_config(
+        forecast = make_data_config(
             spatial_coords={
                 "lat": lat,
                 "lon": lon,
             }
         )
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             spatial_coords={
                 "lat": lat.copy(),
                 "lon": lon.copy(),
@@ -292,12 +292,12 @@ class TestTrainDatasetConfigObservationChecks:
         )
 
         config = make_config(
-            model=model,
-            observation=observation,
+            forecast=forecast,
+            reference=reference,
         )
 
         with warnings_capture() as caught:
-            result = config._check_observation()
+            result = config._check_reference()
 
         assert result is config
         assert caught == []
@@ -328,30 +328,29 @@ class TestTrainDatasetConfigObservationChecks:
             dim=dimension,
         )
 
-        model = make_data_config(
+        forecast = make_data_config(
             spatial_coords={
                 dimension: model_coord,
             }
         )
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             spatial_coords={
                 dimension: observation_coord,
             },
         )
 
         config = make_config(
-            model=model,
-            observation=observation,
+            forecast=forecast,
+            reference=reference,
         )
 
         with pytest.warns(
             UserWarning,
             match=(f"do not have the same {dimension}"),
         ):
-            config._check_observation()
+            config._check_reference()
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [
@@ -363,9 +362,9 @@ class TestTrainDatasetConfigObservationChecks:
         self,
         dimension,
     ):
-        model = make_data_config()
-        observation = make_data_config(
-            name="observation",
+        forecast = make_data_config()
+        reference = make_data_config(
+            name="reference",
             spatial_coords={
                 dimension: make_coord(
                     [
@@ -378,18 +377,18 @@ class TestTrainDatasetConfigObservationChecks:
         )
 
         config = make_config(
-            model=model,
-            observation=observation,
+            forecast=forecast,
+            reference=reference,
         )
 
         with pytest.warns(
             UserWarning,
             match=(f"NN dim {dimension}.*not present"),
         ):
-            config._check_observation()
+            config._check_reference()
 
     def test_time_coordinate_type_mismatch_raises(self):
-        model = make_data_config(
+        forecast = make_data_config(
             time_coords_type="datetime",
             spatial_coords={
                 "lat": make_coord(
@@ -400,8 +399,8 @@ class TestTrainDatasetConfigObservationChecks:
                 )
             },
         )
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             time_coords_type="cftime",
             spatial_coords={
                 "lat": make_coord(
@@ -414,24 +413,24 @@ class TestTrainDatasetConfigObservationChecks:
         )
 
         config = make_config(
-            model=model,
-            observation=observation,
+            forecast=forecast,
+            reference=reference,
         )
 
         with pytest.raises(
             ValueError,
             match=("must have the same.*time coordinates"),
         ):
-            config._check_observation()
+            config._check_reference()
 
 
 class TestTrainDatasetConfigProperties:
     @pytest.mark.pruned
     def test_effective_input_is_model(self):
-        model = make_data_config()
-        config = make_config(model=model)
+        forecast = make_data_config()
+        config = make_config(forecast=forecast)
 
-        assert config.effective_input is model
+        assert config.effective_input is forecast
 
     @pytest.mark.pruned
     def test_dataset_operator_is_constructed(self):
@@ -450,7 +449,7 @@ class TestTrainDatasetConfigProperties:
 
     @pytest.mark.pruned
     def test_common_time_without_observation(self):
-        model = make_data_config(
+        forecast = make_data_config(
             time_range=make_datetime_index(
                 2000,
                 2001,
@@ -458,24 +457,24 @@ class TestTrainDatasetConfigProperties:
             )
         )
         config = make_config(
-            model=model,
-            observation=None,
+            forecast=forecast,
+            reference=None,
         )
 
         result = config.get_common_time
 
-        assert result.equals(model.time_range)
+        assert result.equals(forecast.time_range)
 
     def test_common_time_intersects_observation(self):
-        model = make_data_config(
+        forecast = make_data_config(
             time_range=make_datetime_index(
                 2000,
                 2001,
                 2002,
             )
         )
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             time_range=make_datetime_index(
                 2001,
                 2002,
@@ -484,8 +483,8 @@ class TestTrainDatasetConfigProperties:
         )
 
         config = make_config(
-            model=model,
-            observation=observation,
+            forecast=forecast,
+            reference=reference,
         )
 
         result = config.get_common_time
@@ -498,7 +497,7 @@ class TestTrainDatasetConfigProperties:
         )
 
     def test_available_times_for_yearly_initializations(self):
-        model = make_data_config(
+        forecast = make_data_config(
             times=make_datetime_index(
                 2001,
                 2002,
@@ -513,8 +512,8 @@ class TestTrainDatasetConfigProperties:
         )
 
         config = make_config(
-            model=model,
-            observation=None,
+            forecast=forecast,
+            reference=None,
         )
 
         result = config.available_times
@@ -542,13 +541,13 @@ class TestTrainDatasetConfigProperties:
             ]
         )
 
-        model = make_data_config(
+        forecast = make_data_config(
             times=model_times,
             time_range=common_times,
             init_time_freq="month",
         )
         config = make_config(
-            model=model,
+            forecast=forecast,
         )
 
         result = config.available_times
@@ -664,7 +663,7 @@ class TestTrainDatasetConfigDelegation:
 class TestTrainDatasetBehaviorProperties:
     @pytest.mark.pruned
     @pytest.mark.parametrize(
-        "observation,expected",
+        "reference,expected",
         [
             (
                 None,
@@ -678,159 +677,21 @@ class TestTrainDatasetBehaviorProperties:
     )
     def test_autoencoding_model_data(
         self,
-        observation,
+        reference,
         expected,
     ):
         config = make_config(
-            observation=observation,
+            reference=reference,
         )
         dataset = make_dataset(config=config)
 
-        assert dataset._autoencoding_model_data is expected
-
-    @pytest.mark.pruned
-    @pytest.mark.parametrize(
-        (
-            "observation",
-            "using_model_as_condition",
-            "expected",
-        ),
-        [
-            (
-                None,
-                False,
-                True,
-            ),
-            (
-                None,
-                True,
-                True,
-            ),
-            (
-                object(),
-                False,
-                True,
-            ),
-            (
-                object(),
-                True,
-                False,
-            ),
-        ],
-    )
-    def test_load_model(
-        self,
-        observation,
-        using_model_as_condition,
-        expected,
-    ):
-        config = make_config(
-            observation=observation,
-            using_model_as_condition=(using_model_as_condition),
-        )
-        dataset = make_dataset(config=config)
-
-        assert dataset._load_model is expected
-
-    @pytest.mark.pruned
-    @pytest.mark.parametrize(
-        (
-            "observation",
-            "using_model_as_condition",
-            "expected",
-        ),
-        [
-            (
-                None,
-                False,
-                True,
-            ),
-            (
-                None,
-                True,
-                True,
-            ),
-            (
-                object(),
-                False,
-                False,
-            ),
-            (
-                object(),
-                True,
-                True,
-            ),
-        ],
-    )
-    def test_write_condition_to_input(
-        self,
-        observation,
-        using_model_as_condition,
-        expected,
-    ):
-        config = make_config(
-            observation=observation,
-            using_model_as_condition=(using_model_as_condition),
-        )
-        dataset = make_dataset(config=config)
-
-        assert dataset._write_condition_to_input is expected
-
-    @pytest.mark.parametrize(
-        (
-            "observation",
-            "using_model_as_condition",
-            "effective_condition",
-            "expected",
-        ),
-        [
-            (
-                object(),
-                False,
-                object(),
-                True,
-            ),
-            (
-                object(),
-                False,
-                None,
-                False,
-            ),
-            (
-                object(),
-                True,
-                object(),
-                False,
-            ),
-            (
-                None,
-                False,
-                object(),
-                False,
-            ),
-        ],
-    )
-    def test_concat_condition_to_input(
-        self,
-        observation,
-        using_model_as_condition,
-        effective_condition,
-        expected,
-    ):
-        config = make_config(
-            observation=observation,
-            using_model_as_condition=(using_model_as_condition),
-            effective_condition=(effective_condition),
-        )
-        dataset = make_dataset(config=config)
-
-        assert dataset._concat_condition_to_input is expected
+        assert dataset._autoencoding_forecast_data is expected
 
 
 class TestTrainDatasetPostInit:
     def test_skips_observation_loading_when_absent(self):
         config = make_config(
-            observation=None,
+            reference=None,
         )
         dataset = make_dataset(config=config)
 
@@ -894,7 +755,7 @@ class TestObservationIndexes:
             coords={INIT_TIME_DIM: (observation_times)},
         )
 
-        dataset.config.observation = SimpleNamespace(
+        dataset.config.reference = SimpleNamespace(
             indexes=dataset.observation_dataset.indexes,
             dims=dataset.observation_dataset.dims,
         )
@@ -942,7 +803,7 @@ class TestObservationIndexes:
             },
         )
 
-        dataset.config.observation = SimpleNamespace(
+        dataset.config.reference = SimpleNamespace(
             indexes=dataset.observation_dataset.indexes,
             dims=dataset.observation_dataset.dims,
         )
@@ -964,14 +825,14 @@ class TestObservationIndexes:
 
         with pytest.raises(
             ValueError,
-            match=("Some observation coordinates were not found"),
+            match=("Some reference coordinates were not found"),
         ):
             dataset.get_obs_indexes(sample_coords)
 
 
 class TestTargetShape:
     def test_without_observation_uses_input_shape(self):
-        dataset = make_dataset(config=make_config(observation=None))
+        dataset = make_dataset(config=make_config(reference=None))
 
         with patch.object(
             dataset,
@@ -992,8 +853,8 @@ class TestTargetShape:
         get_input_shape.assert_called_once_with()
 
     def test_observation_shape_without_flattener(self):
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             names=[
                 "tas",
                 "pr",
@@ -1017,11 +878,11 @@ class TestTargetShape:
             },
         )
         config = make_config(
-            observation=observation,
+            reference=reference,
         )
-        observation.preprocessing_pipeline.has_flattener = False
+        reference.preprocessing_pipeline.has_flattener = False
         dataset = make_dataset(config=config)
-        observation.coords = observation.info.coords
+        reference.coords = reference.info.coords
         dataset.observation_dataset = object()
 
         result = dataset.get_target_shape()
@@ -1050,8 +911,8 @@ class TestTargetShape:
             get_preprocessors=Mock(return_value=flattener),
             get_flattener=Mock(return_value=flattener),
         )
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             names=[
                 "tas",
                 "pr",
@@ -1059,14 +920,14 @@ class TestTargetShape:
             preprocessing_pipeline=pipeline,
         )
         config = make_config(
-            observation=observation,
+            reference=reference,
         )
         dataset = make_dataset(config=config)
-        observation.coords = observation.info.coords
+        reference.coords = reference.info.coords
         dataset.observation_dataset = object()
 
         monkeypatch.setattr(
-            "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
+            "S2D4P.preprocessing.utils_preprocessing.Flattennanremove",
             FakeFlattennanremove,
         )
 
@@ -1084,7 +945,7 @@ class TestIndexObservationDataset:
         dataset = make_dataset()
         dataset.observation_dataset = None
 
-        assert dataset._index_observation_dataset(0) is None
+        assert dataset._index_reference_dataset(0) is None
 
     def test_selects_observation_and_applies_preprocessor(
         self,
@@ -1093,12 +954,12 @@ class TestIndexObservationDataset:
             fitted_preprocessors=[],
             transform=Mock(side_effect=lambda value: value),
         )
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             preprocessing_pipeline=pipeline,
         )
         config = make_config(
-            observation=observation,
+            reference=reference,
         )
         dataset = make_dataset(config=config)
 
@@ -1135,11 +996,11 @@ class TestIndexObservationDataset:
                 ],
             },
         )
-        observation.data = dataset.observation_dataset
-        observation.isel = dataset.observation_dataset.isel
-        observation.dims = dataset.observation_dataset.dims
-        observation.sizes = dataset.observation_dataset.sizes
-        observation.ensemble_mean = False
+        reference.data = dataset.observation_dataset
+        reference.isel = dataset.observation_dataset.isel
+        reference.dims = dataset.observation_dataset.dims
+        reference.sizes = dataset.observation_dataset.sizes
+        reference.ensemble_mean = False
         dataset.obs_indexes = {
             INIT_TIME_DIM: np.asarray(
                 [
@@ -1153,7 +1014,7 @@ class TestIndexObservationDataset:
             "_unwrap_data_variables",
             side_effect=lambda value: value["tas"],
         ) as unwrap:
-            result = dataset._index_observation_dataset(0)
+            result = dataset._index_reference_dataset(0)
 
         pipeline.transform.assert_not_called()
         unwrap.assert_called_once()
@@ -1166,12 +1027,12 @@ class TestIndexObservationDataset:
             fitted_preprocessors=[],
             transform=Mock(side_effect=lambda value: value),
         )
-        observation = make_data_config(
-            name="observation",
+        reference = make_data_config(
+            name="reference",
             preprocessing_pipeline=pipeline,
         )
         config = make_config(
-            observation=observation,
+            reference=reference,
         )
         dataset = make_dataset(config=config)
 
@@ -1207,11 +1068,11 @@ class TestIndexObservationDataset:
                 ],
             },
         )
-        observation.data = dataset.observation_dataset
-        observation.isel = dataset.observation_dataset.isel
-        observation.dims = dataset.observation_dataset.dims
-        observation.sizes = dataset.observation_dataset.sizes
-        observation.ensemble_mean = False
+        reference.data = dataset.observation_dataset
+        reference.isel = dataset.observation_dataset.isel
+        reference.dims = dataset.observation_dataset.dims
+        reference.sizes = dataset.observation_dataset.sizes
+        reference.ensemble_mean = False
         dataset.obs_indexes = {
             INIT_TIME_DIM: np.asarray(
                 [
@@ -1232,7 +1093,7 @@ class TestIndexObservationDataset:
                 side_effect=lambda value: value["tas"],
             ),
         ):
-            result = dataset._index_observation_dataset(0)
+            result = dataset._index_reference_dataset(0)
 
         randint.assert_called_once_with(3)
         assert result.item() == pytest.approx(3.0)
@@ -1242,15 +1103,15 @@ class TestGetItem:
     def make_getitem_dataset(
         self,
         *,
-        observation=object(),
-        using_model_as_condition=False,
+        reference=object(),
+        using_forecast_as_condition=False,
         effective_condition=None,
         return_metadata=False,
         time_features_result=None,
     ):
         config = make_config(
-            observation=observation,
-            using_model_as_condition=(using_model_as_condition),
+            reference=reference,
+            using_forecast_as_condition=(using_forecast_as_condition),
             effective_condition=(effective_condition),
         )
         time_features = Mock(return_value=time_features_result)
@@ -1283,7 +1144,7 @@ class TestGetItem:
                 },
             )
         )
-        dataset._index_observation_dataset = Mock(
+        dataset._index_reference_dataset = Mock(
             return_value=xr.DataArray(
                 np.asarray(
                     [
@@ -1298,7 +1159,7 @@ class TestGetItem:
                 },
             )
         )
-        dataset._index_model_dataset = Mock(
+        dataset._index_forecast_dataset = Mock(
             return_value=xr.DataArray(
                 np.asarray(
                     [
@@ -1308,7 +1169,7 @@ class TestGetItem:
                 dims=("channels",),
                 coords={
                     "channels": [
-                        "model",
+                        "forecast",
                     ]
                 },
             )
@@ -1326,12 +1187,12 @@ class TestGetItem:
         dataset[0]
 
         dataset._index_condition_dataset.assert_called_once_with(0)
-        dataset._index_observation_dataset.assert_called_once_with(0)
-        dataset._index_model_dataset.assert_called_once_with(0)
+        dataset._index_reference_dataset.assert_called_once_with(0)
+        dataset._index_forecast_dataset.assert_called_once_with(0)
 
     def test_autoencoding_uses_model_as_target(self):
         dataset = self.make_getitem_dataset(
-            observation=None,
+            reference=None,
         )
 
         result = dataset[0]
@@ -1354,29 +1215,10 @@ class TestGetItem:
         )
 
     @pytest.mark.pruned
-    def test_model_condition_replaces_input(self):
-        dataset = self.make_getitem_dataset(
-            observation=object(),
-            using_model_as_condition=True,
-            effective_condition=object(),
-        )
-
-        result = dataset[0]
-
-        torch.testing.assert_close(
-            result["input"],
-            torch.tensor(
-                [
-                    10.0,
-                ]
-            ),
-        )
-
-    @pytest.mark.pruned
     def test_condition_is_concatenated_to_input(self):
         dataset = self.make_getitem_dataset(
-            observation=object(),
-            using_model_as_condition=False,
+            reference=object(),
+            using_forecast_as_condition=False,
             effective_condition=object(),
         )
 
@@ -1400,44 +1242,6 @@ class TestGetItem:
 
         assert result["input"].dtype == torch.float32
         assert result["target"].dtype == torch.float32
-
-    @pytest.mark.pruned
-    def test_time_features_are_called_with_final_input(self):
-        features = np.asarray(
-            [
-                2000.0,
-                1.0,
-            ]
-        )
-        dataset = self.make_getitem_dataset(
-            using_model_as_condition=True,
-            effective_condition=object(),
-            time_features_result=features,
-        )
-
-        result = dataset[0]
-
-        dataset.time_features.assert_called_once()
-        feature_index, feature_input = dataset.time_features.call_args.args
-
-        assert feature_index == 0
-        torch.testing.assert_close(
-            torch.as_tensor(feature_input.values, dtype=torch.float32),
-            torch.tensor(
-                [
-                    10.0,
-                ]
-            ),
-        )
-        torch.testing.assert_close(
-            result["added_features"],
-            torch.tensor(
-                [
-                    2000.0,
-                    1.0,
-                ]
-            ),
-        )
 
     @pytest.mark.pruned
     def test_none_time_features_are_preserved(self):
@@ -1504,7 +1308,7 @@ class TestCftimeObservationIndexes:
             coords={INIT_TIME_DIM: (observation_times)},
         )
 
-        dataset.config.observation = SimpleNamespace(
+        dataset.config.reference = SimpleNamespace(
             indexes=dataset.observation_dataset.indexes,
             dims=dataset.observation_dataset.dims,
         )

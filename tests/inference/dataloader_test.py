@@ -44,7 +44,7 @@ class DummyDatasetConfig:
         self.get_common_time = self.available_times
         self.lead_times = np.asarray([1, 2, 3])
         self.ds_operator = DummyDSOperator()
-        self.model = None
+        self.forecast = None
         self.condition = None
         self.load_called = False
         self.load_dir = None
@@ -146,7 +146,7 @@ def dataset_config():
 @pytest.fixture
 def patched_dataloader(monkeypatch):
     monkeypatch.setattr(
-        "cccma_ppp.inference.dataloader.Dataloader",
+        "S2D4P.inference.dataloader.Dataloader",
         FakeDataloader,
     )
 
@@ -205,7 +205,7 @@ def test_batchdata_creates_spatial_mask():
     batch = BatchData(
         input=torch.tensor([[1.0, float("nan")]]),
         return_spatial_mask=True,
-        reduce_spatial_mask=False,
+        share_spatial_mask=False,
     )
 
     torch.testing.assert_close(
@@ -228,7 +228,7 @@ def test_batchdata_reduces_spatial_mask():
             ]
         ),
         return_spatial_mask=True,
-        reduce_spatial_mask=True,
+        share_spatial_mask=True,
     )
 
     torch.testing.assert_close(
@@ -254,7 +254,7 @@ def test_batchdata_to_device(
         input=torch.ones(2, 2),
         added_features=(torch.ones(3) if with_features else None),
         return_spatial_mask=with_mask,
-        reduce_spatial_mask=False,
+        share_spatial_mask=False,
     )
 
     result = batch.to_device("cpu")
@@ -273,6 +273,7 @@ def test_batchdata_to_device(
         assert batch.added_features is None
 
 
+@pytest.mark.pruned
 def test_batchdata_metadata_survives_to_device():
     metadata = [{"year": 2000}]
     batch = BatchData(
@@ -311,7 +312,6 @@ def make_collate_item(
     return data, metadata
 
 
-@pytest.mark.pruned
 def test_collate_batch_plain_inputs():
     result = collate_batch(
         [
@@ -333,6 +333,7 @@ def test_collate_batch_single_item():
     assert result.input.shape == (1, 2)
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_metadata():
     result = collate_batch(
         [
@@ -353,6 +354,7 @@ def test_collate_batch_with_metadata():
     ]
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_features():
     result = collate_batch(
         [
@@ -378,7 +380,6 @@ def test_collate_batch_with_features():
     )
 
 
-@pytest.mark.pruned
 def test_collate_batch_metadata_features_and_mask():
     result = collate_batch(
         [
@@ -389,7 +390,7 @@ def test_collate_batch_metadata_features_and_mask():
             )
         ],
         return_spatial_mask=True,
-        reduce_spatial_mask=False,
+        share_spatial_mask=False,
     )
 
     assert result.metadata == [{"year": 2000}]
@@ -406,15 +407,15 @@ def test_collate_batch_metadata_features_and_mask():
 
 
 def make_loader_config(
-    dataset_config=None,
+    dataset=None,
     time_features=(),
     **kwargs,
 ):
     config = InferenceDataloaderConfig(
-        dataset_config=None,
+        dataset=None,
         **kwargs,
     )
-    config.dataset_config = dataset_config
+    config.dataset_config = dataset
     config.time_features = time_features
     return config
 
@@ -423,7 +424,7 @@ def make_loader_config(
 def test_init_without_dataset_config():
     config = make_loader_config()
 
-    assert config.dataset_config is None
+    assert config.dataset is None
     assert config._setup is False
     assert config.train_dataset_config is None
 
@@ -438,11 +439,12 @@ def test_init_workers_zero_removes_prefetch():
     assert config.prefetch_factor is None
 
 
+@pytest.mark.pruned
 def test_init_workers_positive_preserves_prefetch(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         num_data_workers=2,
         prefetch_factor=8,
     )
@@ -460,7 +462,7 @@ def test_available_times_requires_config():
 @pytest.mark.pruned
 def test_available_times(dataset_config):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     np.testing.assert_array_equal(
@@ -480,18 +482,19 @@ def test_input_metadata_requires_config():
 @pytest.mark.pruned
 def test_input_metadata(dataset_config):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     assert config.input_var_metadata == {"tas": {}}
     assert dataset_config.ds_operator.input_calls == 1
 
 
+@pytest.mark.pruned
 def test_target_metadata_requires_train_config(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     with pytest.raises(RuntimeError):
@@ -501,7 +504,7 @@ def test_target_metadata_requires_train_config(
 @pytest.mark.pruned
 def test_target_metadata_success(dataset_config):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
     train_config = DummyTrainDatasetConfig()
     config.train_dataset_config = train_config
@@ -510,6 +513,7 @@ def test_target_metadata_success(dataset_config):
     assert train_config.ds_operator.target_calls == 1
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("model_name", "condition_name", "existing", "expected"),
     [
@@ -537,7 +541,7 @@ def test_input_preprocessor_exists_matrix(
     existing,
     expected,
 ):
-    dataset_config.model = (
+    dataset_config.forecast = (
         DummyDataSource(model_name) if model_name is not None else None
     )
     dataset_config.condition = (
@@ -548,7 +552,7 @@ def test_input_preprocessor_exists_matrix(
         (tmp_path / f"{name}_preprocessing_pipeline.joblib").touch()
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     assert config._input_preprocessor_exists(tmp_path) is expected
@@ -572,19 +576,20 @@ def test_input_preprocessor_exists_default_directory(
     directory = tmp_path / "preprocessing_pipeline"
     directory.mkdir()
 
-    dataset_config.model = DummyDataSource("model")
+    dataset_config.forecast = DummyDataSource("forecast")
     dataset_config.condition = None
 
-    (directory / "model_preprocessing_pipeline.joblib").touch()
+    (directory / "forecast_preprocessing_pipeline.joblib").touch()
 
     monkeypatch.setattr(
         RuntimeContext,
         "GLOBAL_EXP_DIR",
         str(tmp_path),
+        raising=False,
     )
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     assert config._input_preprocessor_exists() is True
@@ -607,7 +612,7 @@ def test_setup_existing_preprocessors_skips_fit(
     monkeypatch,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     monkeypatch.setattr(
@@ -632,7 +637,7 @@ def test_build_loader_requires_setup(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     with pytest.raises(RuntimeError):
@@ -651,13 +656,13 @@ def reset_shared_input_mask():
 @pytest.mark.pruned
 def test_check_config_rejects_missing_dataset_first():
     config = make_loader_config(
-        dataset_config=None,
+        dataset=None,
         time_features=None,
     )
 
     with pytest.raises(
         RuntimeError,
-        match="dataset_config must be provided",
+        match="dataset config must be provided",
     ):
         config._check_config()
 
@@ -667,7 +672,7 @@ def test_check_config_rejects_missing_time_features(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=None,
     )
 
@@ -683,7 +688,7 @@ def test_check_config_accepts_empty_time_features(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -695,7 +700,7 @@ def test_check_config_accepts_nonempty_time_features(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=("year",),
     )
 
@@ -705,10 +710,10 @@ def test_check_config_accepts_nonempty_time_features(
 @pytest.mark.pruned
 def test_post_init_without_dataset_does_not_read_years():
     config = InferenceDataloaderConfig(
-        dataset_config=None,
+        dataset=None,
     )
 
-    assert config.dataset_config is None
+    assert config.dataset is None
     assert config.train_dataset_config is None
     assert config._setup is False
 
@@ -721,7 +726,7 @@ def test_post_init_with_dataset_requires_time_features(
         match="time_features must be read",
     ):
         InferenceDataloaderConfig(
-            dataset_config=dataset_config,
+            dataset=dataset_config,
         )
 
 
@@ -743,7 +748,7 @@ def test_post_init_with_dataset_and_preseeded_features(
     )
 
     config = InferenceDataloaderConfig(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
     )
 
     assert config.dataset_config is dataset_config
@@ -761,7 +766,7 @@ def test_batchdata_reduced_mask_initializes_shared_mask():
             ]
         ),
         return_spatial_mask=True,
-        reduce_spatial_mask=True,
+        share_spatial_mask=True,
     )
 
     expected = torch.tensor([True, False])
@@ -788,7 +793,7 @@ def test_batchdata_reduced_mask_reuses_shared_mask():
             ]
         ),
         return_spatial_mask=True,
-        reduce_spatial_mask=True,
+        share_spatial_mask=True,
     )
 
     assert batch.input_mask is shared
@@ -801,7 +806,7 @@ def test_batchdata_unreduced_mask_does_not_set_shared_mask():
     batch = BatchData(
         input=torch.tensor([[1.0, float("nan")]]),
         return_spatial_mask=True,
-        reduce_spatial_mask=False,
+        share_spatial_mask=False,
     )
 
     assert batch.input_mask is not None
@@ -843,7 +848,7 @@ def test_batchdata_to_device_moves_all_optional_tensors():
         input=torch.ones(2),
         added_features=torch.ones(1),
         return_spatial_mask=True,
-        reduce_spatial_mask=False,
+        share_spatial_mask=False,
     )
 
     result = batch.to_device("cpu")
@@ -946,7 +951,7 @@ def test_collate_passes_mask_options():
             }
         ],
         return_spatial_mask=True,
-        reduce_spatial_mask=False,
+        share_spatial_mask=False,
     )
 
     torch.testing.assert_close(
@@ -960,7 +965,7 @@ def test_available_times_rejects_missing_features(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=None,
     )
 
@@ -976,7 +981,7 @@ def test_available_times_returns_dataset_values(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -993,7 +998,7 @@ def test_read_configs_copies_time_features_when_missing(
     train_loader = DummyTrainLoader()
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=None,
     )
 
@@ -1011,7 +1016,7 @@ def test_read_configs_preserves_existing_time_features(
 
     existing = ["month_sin"]
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=existing,
     )
 
@@ -1034,12 +1039,12 @@ def test_read_configs_builds_missing_dataset_config(
         return converted
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.dataloader._from_train",
+        "S2D4P.inference.dataloader._from_train",
         fake_from_train,
     )
 
     config = make_loader_config(
-        dataset_config=None,
+        dataset=None,
         time_features=None,
     )
 
@@ -1061,12 +1066,12 @@ def test_read_configs_preserves_existing_dataset_config(
         pytest.fail("_from_train should not be called")
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.dataloader._from_train",
+        "S2D4P.inference.dataloader._from_train",
         fail_from_train,
     )
 
     config = make_loader_config(
-        dataset_config=None,
+        dataset=None,
         time_features=None,
     )
     config.dataset_config = dataset_config
@@ -1082,7 +1087,7 @@ def test_read_configs_always_records_train_dataset(
     train_loader = DummyTrainLoader()
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1096,11 +1101,11 @@ def test_input_preprocessor_exists_no_sources(
     dataset_config,
     tmp_path,
 ):
-    dataset_config.model = None
+    dataset_config.forecast = None
     dataset_config.condition = None
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1112,13 +1117,13 @@ def test_input_preprocessor_exists_model_only_true(
     dataset_config,
     tmp_path,
 ):
-    dataset_config.model = DummyDataSource("model")
+    dataset_config.forecast = DummyDataSource("model")
     dataset_config.condition = None
 
     (tmp_path / "model_preprocessing_pipeline.joblib").touch()
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1130,11 +1135,11 @@ def test_input_preprocessor_exists_model_only_false(
     dataset_config,
     tmp_path,
 ):
-    dataset_config.model = DummyDataSource("model")
+    dataset_config.forecast = DummyDataSource("model")
     dataset_config.condition = None
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1146,29 +1151,28 @@ def test_input_preprocessor_exists_condition_only_true(
     dataset_config,
     tmp_path,
 ):
-    dataset_config.model = None
+    dataset_config.forecast = None
     dataset_config.condition = DummyDataSource("condition")
 
     (tmp_path / "condition_preprocessing_pipeline.joblib").touch()
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
     assert config._input_preprocessor_exists(tmp_path) is True
 
 
-@pytest.mark.pruned
 def test_input_preprocessor_exists_condition_only_false(
     dataset_config,
     tmp_path,
 ):
-    dataset_config.model = None
+    dataset_config.forecast = None
     dataset_config.condition = DummyDataSource("condition")
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1180,20 +1184,21 @@ def test_input_preprocessor_exists_both_true(
     dataset_config,
     tmp_path,
 ):
-    dataset_config.model = DummyDataSource("model")
+    dataset_config.forecast = DummyDataSource("model")
     dataset_config.condition = DummyDataSource("condition")
 
     (tmp_path / "model_preprocessing_pipeline.joblib").touch()
     (tmp_path / "condition_preprocessing_pipeline.joblib").touch()
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
     assert config._input_preprocessor_exists(tmp_path) is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("model_exists", "condition_exists"),
     [
@@ -1208,7 +1213,7 @@ def test_input_preprocessor_exists_both_partial(
     model_exists,
     condition_exists,
 ):
-    dataset_config.model = DummyDataSource("model")
+    dataset_config.forecast = DummyDataSource("model")
     dataset_config.condition = DummyDataSource("condition")
 
     if model_exists:
@@ -1218,7 +1223,7 @@ def test_input_preprocessor_exists_both_partial(
         (tmp_path / "condition_preprocessing_pipeline.joblib").touch()
 
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1230,7 +1235,7 @@ def test_setup_distributed_missing_preprocessors_nonroot_skips_fit(
     monkeypatch,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1263,7 +1268,7 @@ def test_setup_distributed_existing_preprocessors_root_skips_fit(
     monkeypatch,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1293,7 +1298,7 @@ def test_setup_distributed_enables_pin_memory(
     monkeypatch,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1322,7 +1327,7 @@ def test_setup_distributed_leaves_pin_memory_default(
     monkeypatch,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
     original_pin_memory = config.pin_memory
@@ -1352,7 +1357,7 @@ def test_setup_distributed_records_rank_and_world_size(
     monkeypatch,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1383,7 +1388,7 @@ def test_input_metadata_calls_operator_each_time(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
 
@@ -1396,7 +1401,7 @@ def test_target_metadata_calls_train_operator_each_time(
     dataset_config,
 ):
     config = make_loader_config(
-        dataset_config=dataset_config,
+        dataset=dataset_config,
         time_features=(),
     )
     train_config = DummyTrainDatasetConfig()

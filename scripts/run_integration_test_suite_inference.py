@@ -143,9 +143,9 @@ def get_inference_main():
     Returns the callable main function from the inference module.
     """
     candidates = [
-        "cccma_ppp.inference.inference",
-        "cccma_ppp.inference.main",
-        "cccma_ppp.inference.predict",
+        "S2D4P.inference.inference",
+        "S2D4P.inference.main",
+        "S2D4P.inference.predict",
     ]
 
     errors = []
@@ -194,7 +194,7 @@ def cleanup_logging_handlers():
 
     # Collect all loggers that start with the package name
     for logger_name in list(logging.Logger.manager.loggerDict):
-        if logger_name.startswith("cccma_ppp"):
+        if logger_name.startswith("S2D4P"):
             logger_names.append(logger_name)
 
     # Remove all handlers from each logger
@@ -328,19 +328,14 @@ def validate_time_features(loader_config, *, loader_name):
     Validate that time_features configuration is correct.
     Ensures time_features are in the right location and have valid values.
     """
-    dataset_config = loader_config.get("dataset_config")
-
-    if not isinstance(dataset_config, dict):
-        raise ValueError(
-            f"{loader_name}.dataset_config must be configured as a mapping."
-        )
+    dataset = loader_config.get("dataset")
 
     # time_features should be at loader level, not dataset level
-    if "time_features" in dataset_config:
+    if "time_features" in dataset:
         raise ValueError(
             "time_features must be configured "
             f"under {loader_name}, not "
-            f"{loader_name}.dataset_config."
+            f"{loader_name}.dataset."
         )
 
     time_features = loader_config.get("time_features")
@@ -388,10 +383,10 @@ def ensure_flattener(data_config):
         preprocessors.append({"name": "flattener"})
 
 
-def ensure_mlp_preprocessing(dataset_config):
+def ensure_mlp_preprocessing(dataset):
     """Ensure all data sources have flattener preprocessing for MLP models."""
-    for data_name in ("model", "observation", "condition"):
-        ensure_flattener(dataset_config.get(data_name))
+    for data_name in ("forecast", "reference", "condition"):
+        ensure_flattener(dataset.get(data_name))
 
 
 def normalize_training_config(config):
@@ -401,30 +396,27 @@ def normalize_training_config(config):
     """
     train_loader = config.get("train_loader")
 
-    if not isinstance(train_loader, dict):
-        raise ValueError("train_loader must be configured as a mapping.")
-
     validate_time_features(train_loader, loader_name="train_loader")
 
-    dataset_config = train_loader.get("dataset_config")
+    dataset = train_loader.get("dataset")
 
-    if not isinstance(dataset_config, dict):
-        raise ValueError("train_loader.dataset_config must be a mapping.")
+    if not isinstance(dataset, dict):
+        raise ValueError("train_loader.dataset must be a mapping.")
 
     # Check for deprecated field names
-    if "lead_months" in dataset_config:
+    if "lead_months" in dataset:
         raise ValueError(
             "lead_months is no longer a "
             "DatasetConfig field. Use "
-            "train_loader.dataset_config.lead_times."
+            "train_loader.dataset.lead_times."
         )
 
     # Remove None values
-    if dataset_config.get("condition_method") is None:
-        dataset_config.pop("condition_method", None)
+    if dataset.get("condition_method") is None:
+        dataset.pop("condition_method", None)
 
-    if dataset_config.get("lead_times") is None:
-        dataset_config.pop("lead_times", None)
+    if dataset.get("lead_times") is None:
+        dataset.pop("lead_times", None)
 
     if train_loader.get("time_features") is None:
         train_loader.pop("time_features", None)
@@ -437,7 +429,7 @@ def normalize_training_config(config):
     if module_config.get("prior_flow_config") is None:
         module_config.pop("prior_flow_config", None)
 
-    model_config = module_config.get("ModelConfig", {}).get("config", {})
+    model_config = module_config.get("Architecture", {}).get("config", {})
 
     if model_config.get("dropout_rate") is None:
         model_config.pop("dropout_rate", None)
@@ -465,26 +457,18 @@ def validate_training_config(config):
 
     train_loader = config.get("train_loader")
 
-    if not isinstance(train_loader, dict):
-        raise ValueError("train_loader must be configured as a mapping.")
-
     validate_time_features(train_loader, loader_name="train_loader")
 
-    dataset_config = train_loader.get("dataset_config")
+    dataset = train_loader.get("dataset")
 
-    if not isinstance(dataset_config, dict):
-        raise ValueError("train_loader.dataset_config must be configured as a mapping.")
+    if "lead_months" in dataset:
+        raise ValueError("train_loader.dataset.lead_months is invalid. Use lead_times.")
 
-    if "lead_months" in dataset_config:
-        raise ValueError(
-            "train_loader.dataset_config.lead_months is invalid. Use lead_times."
-        )
-
-    lead_times = dataset_config.get("lead_times")
+    lead_times = dataset.get("lead_times")
 
     if lead_times is not None and not isinstance(lead_times, (dict, list)):
         raise TypeError(
-            "train_loader.dataset_config.lead_times must be a mapping, list, or null."
+            "train_loader.dataset.lead_times must be a mapping, list, or null."
         )
 
     num_data_workers = train_loader.get("num_data_workers")
@@ -500,13 +484,7 @@ def validate_training_config(config):
 
     module = config.get("module")
 
-    if not isinstance(module, dict):
-        raise ValueError("module must be configured as a mapping.")
-
     module_config = module.get("config")
-
-    if not isinstance(module_config, dict):
-        raise ValueError("module.config must be configured as a mapping.")
 
     if "min_posterior_variance" in module_config:
         raise ValueError(
@@ -514,17 +492,14 @@ def validate_training_config(config):
             "supported by the current schema."
         )
 
-    model_selector = module_config.get("ModelConfig")
-
-    if not isinstance(model_selector, dict):
-        raise ValueError("module.config.ModelConfig must be configured as a mapping.")
+    model_selector = module_config.get("Architecture")
 
     # Ensure we're using an MLP model (required for this test)
     if str(model_selector.get("type", "")).lower() != "mlp":
         raise ValueError("The shared inference fixture must use an MLP model.")
 
     if not isinstance(model_selector.get("config"), dict):
-        raise ValueError("module.config.ModelConfig.config must be a mapping.")
+        raise ValueError("module.config.Architecture.config must be a mapping.")
 
     return config
 
@@ -548,21 +523,20 @@ def build_training_fixture_config():
     if not isinstance(train_loader, dict):
         raise ValueError("The base training configuration must contain train_loader.")
 
-    dataset_config = train_loader.get("dataset_config")
+    dataset = train_loader.get("dataset")
 
-    if not isinstance(dataset_config, dict):
+    if not isinstance(dataset, dict):
         raise ValueError(
-            "The base training configuration must contain train_loader.dataset_config."
+            "The base training configuration must contain train_loader.dataset."
         )
 
-    if "time_features" in dataset_config:
+    if "time_features" in dataset:
         raise ValueError(
-            "Move train_loader.dataset_config.time_features to "
-            "train_loader.time_features."
+            "Move train_loader.dataset.time_features to train_loader.time_features."
         )
 
     # Clean up deprecated fields
-    dataset_config.pop("lead_months", None)
+    dataset.pop("lead_months", None)
 
     # Configure minimal training setup
     train_loader["time_features"] = [INIT_TIME_DIM]
@@ -570,28 +544,23 @@ def build_training_fixture_config():
     train_loader["num_validation_years"] = 0
     train_loader["train_years_slice"] = [1961, 1962]
 
-    dataset_config["condition_method"] = "ensemble_mean"
-    dataset_config["lead_times"] = {"start": 1, "end": 1}
+    dataset["condition_method"] = "ensemble_mean"
+    dataset["lead_times"] = {"start": 1, "end": 1}
 
-    model_data_config = dataset_config.get("model")
-
-    if not isinstance(model_data_config, dict):
-        raise ValueError(
-            "train_loader.dataset_config.model must be configured as a mapping."
-        )
+    model_data_config = dataset.get("forecast")
 
     model_data_config["ensemble_mean"] = True
 
     # Remove condition data for simplicity
-    dataset_config.pop("condition", None)
+    dataset.pop("condition", None)
 
-    ensure_mlp_preprocessing(dataset_config)
+    ensure_mlp_preprocessing(dataset)
 
     # Configure the neural network architecture
     config["module"] = {
         "type": "cVAE",
         "config": {
-            "ModelConfig": {
+            "Architecture": {
                 "type": "MLP",
                 "config": {
                     "encoder_hidden_dims": deepcopy(TEST_ENCODER_HIDDEN_DIMS),
@@ -723,18 +692,9 @@ def normalize_inference_config(config):
 
     inference_loader = config.get("inference_loader")
 
-    if not isinstance(inference_loader, dict):
-        raise ValueError("inference_loader must be configured as a mapping.")
-
     writer = config.get("writer")
 
-    if not isinstance(writer, dict):
-        raise ValueError("writer must be configured as a mapping.")
-
     predictor = writer.get("predictor")
-
-    if not isinstance(predictor, dict):
-        raise ValueError("writer.predictor must be configured as a mapping.")
 
     # Handle nested predictor config (flatten it)
     nested_config = predictor.pop("config", None)
@@ -766,9 +726,6 @@ def validate_inference_config(config):
         raise ValueError("experiment_dir must be configured.")
 
     inference_loader = config.get("inference_loader")
-
-    if not isinstance(inference_loader, dict):
-        raise ValueError("inference_loader must be configured as a mapping.")
 
     batch_size = inference_loader.get("batch_size")
 
@@ -812,9 +769,6 @@ def validate_inference_config(config):
 
     writer = config.get("writer")
 
-    if not isinstance(writer, dict):
-        raise ValueError("writer must be configured as a mapping.")
-
     num_output_sampling = writer.get("num_output_sampling")
 
     if (
@@ -825,9 +779,6 @@ def validate_inference_config(config):
         raise ValueError("writer.num_output_sampling must be a positive integer.")
 
     predictor = writer.get("predictor")
-
-    if not isinstance(predictor, dict):
-        raise ValueError("writer.predictor must be configured as a mapping.")
 
     # Predictor config should be flattened, not nested
     if "config" in predictor:

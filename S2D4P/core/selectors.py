@@ -20,14 +20,14 @@ from S2D4P.architectures.architecture_abc import (
 @dataclasses.dataclass
 class ModuleSelector:
     """
-    Document this class.
+    Select and configure a registered model module.
 
     Parameters
     ----------
     type : str
-        Description not yet provided.
+        Name of the registered module type.
     config : Mapping[str, Any]
-        Description not yet provided.
+        Configuration used to construct the selected module configuration.
     """
 
     type: str
@@ -36,108 +36,110 @@ class ModuleSelector:
 
     def __post_init__(self):
         """
-        Document this function.
+        Resolve the selected module configuration from the registry.
         """
         self._module_config = self.registery.get(self.type.lower(), self.config)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., moduleABC]:
         """
-        Document this function.
+        Create a decorator that registers a model module configuration.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name under which the module configuration is registered.
 
         Returns
         -------
         Callable[..., moduleABC]
-            Description not yet provided.
+            Decorator used to register the module configuration class.
         """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        Document this function.
+        Return the names of all registered module types.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list[str]
+            Names currently available in the module registry.
         """
         return cls.registery.available()
 
     @property
     def NUM_INPUT_DIMS(self) -> int:
         """
-        Document this function.
+        Return the number of input dimensions expected by the architecture.
 
         Returns
         -------
         int
-            Description not yet provided.
+            Number of input dimensions expected by the selected architecture.
         """
         return self.architecture_config.NUM_INPUT_DIMS
 
     @property
     def NUM_OUTPUT_DIMS(self) -> int:
         """
-        Document this function.
+        Return the number of input dimensions expected by the architecture.
 
         Returns
         -------
         int
-            Description not yet provided.
+            Number of input dimensions expected by the selected architecture.
         """
         return self.architecture_config.NUM_OUTPUT_DIMS
 
     @property
     def GENERATOR(self) -> bool:
         """
-        Document this function.
+        Return the generator configuration of the selected architecture.
 
         Returns
         -------
-        bool
-            Description not yet provided.
+        GENERATORConfig | None
+            Generator configuration, or ``None`` when generator-based sampling is
+            disabled.
         """
         return self.architecture_config.GENERATOR
 
     @property
     def EXPECTS_MASK(self) -> bool:
         """
-        Document this function.
+        Indicate whether the selected architecture expects spatial masks.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            Whether spatial validity masks are required by the architecture.
         """
         return self.architecture_config.EXPECTS_MASK
 
     @property
     def arch_type(self) -> str:
         """
-        Document this function.
+        Return the selected architecture type.
 
         Returns
         -------
-        bool
-            Description not yet provided.
+        str
+            Registered type name of the selected architecture.
         """
+
         return self._module_config.Architecture.type
 
     @property
     def architecture_config(self) -> ArchConfigABC:
         """
-        Document this function.
+        Return the resolved architecture configuration.
 
         Returns
         -------
-        bool
-            Description not yet provided.
+        ArchConfigABC
+            Architecture configuration associated with the selected module.
         """
         return self._module_config.architecture_config
 
@@ -148,21 +150,21 @@ class ModuleSelector:
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Build the selected model module.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape of each model input excluding the batch dimension.
         output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of each model output excluding the batch dimension.
+        added_features_dim : int | None
+            Number of additional features supplied with each sample.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        moduleABC
+            Constructed model module.
         """
         return self._module_config.build(
             input_shape=input_shape,
@@ -174,18 +176,23 @@ class ModuleSelector:
 @dataclasses.dataclass
 class ArchSelector:
     """
-    Document this class.
+    Select and configure a registered model architecture.
+
+    An architecture can be configured directly or reconstructed from a saved
+    checkpoint. Checkpoint settings replace the explicitly supplied configuration
+    when ``load_dir`` is provided.
 
     Parameters
     ----------
     type : str
-        Description not yet provided.
+        Name of the registered architecture type.
     config : Mapping[str, Any] | None
-        Description not yet provided.
+        Configuration used to construct the architecture.
     load_dir : Path | str | None
-        Description not yet provided.
+        Path to a checkpoint from which architecture configuration and metadata
+        are loaded.
     freeze_weights : bool | None
-        Description not yet provided.
+        Whether weights restored from the checkpoint are frozen.
     """
 
     type: str
@@ -197,21 +204,28 @@ class ArchSelector:
 
     def __post_init__(self):
         """
-        Document this function.
+        Resolve and validate the architecture selection.
+
+        When a checkpoint is supplied, its saved architecture configuration replaces
+        the explicitly configured values and checkpoint compatibility information is
+        retained for architecture construction.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If the architecture type stored in the checkpoint differs from the
+            requested architecture type.
         RuntimeError
-            Description not yet provided.
+            If neither an architecture configuration nor a checkpoint path is
+            provided.
         ValueError
-            Description not yet provided.
+            If weight freezing is requested without a checkpoint.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If checkpoint configuration replaces the supplied architecture settings,
+            or checkpoint weights are configured to be frozen.
         """
         self.checkpoint_config = None
 
@@ -240,45 +254,50 @@ class ArchSelector:
                 f"all architecture config overwritten by the saved model from {self.load_dir}"
             )
             if self._freeze_weights:
-                warnings.warn(f"Checkpoint {self.type} architecture weights will be frozen.")
+                warnings.warn(
+                    f"Checkpoint {self.type} architecture weights will be frozen."
+                )
 
     @classmethod
     def register(cls, name: str) -> Callable[..., ArchABC]:
         """
-        Document this function.
+        Create a decorator that registers an architecture configuration.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name under which the architecture configuration is registered.
 
         Returns
         -------
         Callable[..., ArchABC]
-            Description not yet provided.
+            Decorator used to register the architecture configuration class.
         """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        Document this function.
+        Return the names of all registered architectures.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list[str]
+            Names currently available in the architecture registry.
         """
         return cls.registery.available()
 
     def get_architecture_config(self):
         """
-        Document this function.
+        Construct the selected architecture configuration.
+
+        Checkpoint compatibility information is attached to the resulting
+        configuration when the selector was initialized from a checkpoint.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        ArchConfigABC
+            Resolved architecture configuration.
         """
         architecture_config = self.registery.get(self.type.lower(), self.config)
         if self.checkpoint_config is not None:
@@ -289,7 +308,9 @@ class ArchSelector:
 
 class cVAEArchSelector(ArchSelector):
     """
-    Document this class.
+    Selector for registered conditional variational autoencoder architectures.
+
+    Uses an architecture registry independent from deterministic architectures.
     """
 
     registery: ClassVar[Registery] = Registery()
@@ -297,7 +318,9 @@ class cVAEArchSelector(ArchSelector):
 
 class deterministicArchSelector(ArchSelector):
     """
-    Document this class.
+    Selector for registered deterministic architectures.
+
+    Uses an architecture registry independent from cVAE architectures.
     """
 
     registery: ClassVar[Registery] = Registery()
@@ -306,14 +329,14 @@ class deterministicArchSelector(ArchSelector):
 @dataclasses.dataclass
 class FlowSelector:
     """
-    Document this class.
+    Select and configure a registered normalizing-flow transformation.
 
     Parameters
     ----------
     type : str
-        Description not yet provided.
+        Name of the registered flow type.
     args : dict[str, object]
-        Description not yet provided.
+        Arguments used to construct the selected flow.
     """
 
     type: str
@@ -322,47 +345,47 @@ class FlowSelector:
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize the flow selector.
         """
         pass
 
     @classmethod
     def register(cls, name: str) -> Callable[..., flowABC]:
         """
-        Document this function.
+        Create a decorator that registers a normalizing-flow transformation.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name under which the flow is registered.
 
         Returns
         -------
         Callable[..., flowABC]
-            Description not yet provided.
+            Decorator used to register the flow class.
         """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        Document this function.
+        Return the names of all registered flow transformations.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list[str]
+            Names currently available in the flow registry.
         """
         return cls.registery.available()
 
     def get_flow(self):
         """
-        Document this function.
+        Construct the selected normalizing-flow transformation.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        flowABC
+            Flow instance constructed from the configured arguments.
         """
         return self.registery.get(self.type.lower(), self.args)
 
@@ -371,26 +394,31 @@ def _load_config_from_checkpoint(
     load_path: Path | str, freeze_weights: bool = False, strict: bool = True
 ):
     """
-    Document this function.
+    Load module configuration and compatibility metadata from a checkpoint.
+
+    The saved module configuration is returned together with a checkpoint
+    configuration containing the input and output shapes, variable metadata,
+    strict-loading setting, and weight-freezing behavior.
 
     Parameters
     ----------
     load_path : Path | str
-        Description not yet provided.
+        Path to the checkpoint file.
     freeze_weights : bool
-        Description not yet provided.
+        Whether architecture weights loaded from the checkpoint should be frozen.
     strict : bool
-        Description not yet provided.
+        Whether checkpoint parameters must exactly match the architecture state
+        dictionary when loaded.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    tuple[dict, CheckpointConfig]
+        Saved module configuration and checkpoint compatibility configuration.
 
     Raises
     ------
     FileNotFoundError
-        Description not yet provided.
+        If the checkpoint file does not exist.
     """
     if not Path(load_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")

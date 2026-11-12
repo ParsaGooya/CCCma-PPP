@@ -12,7 +12,7 @@ SOURCE_DIR = DOCS_DIR / "source" / "api"  # Where auto-generated API docs go
 BUILD_DIR = DOCS_DIR / "_build"  # Where Sphinx outputs built HTML
 
 # The package we're documenting
-PACKAGE_NAME = "cccma_ppp"
+PACKAGE_NAME = "S2D4P"
 PACKAGE_DIR = PROJECT_ROOT / PACKAGE_NAME
 
 # Metadata for the documentation

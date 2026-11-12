@@ -1,0 +1,936 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S2D4P.data package &mdash; S2D4P  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="S2D4P.data.data_configs package" href="S2D4P.data.data_configs.html" />
+    <link rel="prev" title="S2D4P.core.models package" href="S2D4P.core.models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            S2D4P
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">S2D4P</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="S2D4P.html">S2D4P package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="S2D4P.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.html">S2D4P.architectures package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.configs.html">S2D4P.configs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html">S2D4P.core package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">S2D4P.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.generic.html">S2D4P.generic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.inference.html">S2D4P.inference package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.loss.html">S2D4P.loss package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html">S2D4P.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.train.html">S2D4P.train package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.html#module-S2D4P">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">S2D4P</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">S2D4P</a></li>
+          <li class="breadcrumb-item"><a href="S2D4P.html">S2D4P package</a></li>
+      <li class="breadcrumb-item active">S2D4P.data package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/S2D4P.data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="s2d4p-data-package">
+<h1>S2D4P.data package<a class="headerlink" href="#s2d4p-data-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="S2D4P.data.data_configs.html">S2D4P.data.data_configs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.data_configs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.data_configs.html#module-S2D4P.data.data_configs.data_configs">S2D4P.data.data_configs.data_configs module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.TYPE"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.concat_dim"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.drop_vars_list"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.drop_vars_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.ensemble_mean"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.file_type"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.names"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.paths"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.realization_list"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.realization_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ConditionDataConfig.rename_dict"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.rename_dict</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.TYPE"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.concat_dim"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.drop_vars_list"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.drop_vars_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.ensemble_mean"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.file_type"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.names"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.paths"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.realization_list"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.realization_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.ForecastDataConfig.rename_dict"><code class="docutils literal notranslate"><span class="pre">ForecastDataConfig.rename_dict</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig"><code class="docutils literal notranslate"><span class="pre">RefDataConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.TYPE"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.concat_dim"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.drop_vars_list"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.drop_vars_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.ensemble_mean"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.file_type"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.names"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.paths"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.realization_list"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.realization_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.RefDataConfig.rename_dict"><code class="docutils literal notranslate"><span class="pre">RefDataConfig.rename_dict</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs.build_time_range"><code class="docutils literal notranslate"><span class="pre">build_time_range()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.data_configs.html#module-S2D4P.data.data_configs.data_configs_abc">S2D4P.data.data_configs.data_configs_abc module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC"><code class="docutils literal notranslate"><span class="pre">DataConfigABC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.paths"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.names"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.realization_list"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.realization_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.ensemble_mean"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.concat_dim"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.file_type"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.rename_dict"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.rename_dict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.TYPE"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.close_data"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.close_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id0"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.coords"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.coords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.dims"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.drop_vars_list"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.drop_vars_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id1"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id2"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.fit_preprocessor_pipeline"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.fit_preprocessor_pipeline()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.indexes"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.indexes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.init_time_dim"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.init_time_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.init_time_frequency"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.init_time_frequency</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.isel"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.isel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.lead_time_dim"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.lead_time_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.lead_time_resolution"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.lead_time_resolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.load_preprocessor_pipeline"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.load_preprocessor_pipeline()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id3"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.open_xarray_data"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.open_xarray_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id4"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id5"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.realization_dim"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.realization_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id6"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.realization_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#id7"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.rename_dict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.sizes"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.sizes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.supported_NN_dimensions"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.supported_NN_dimensions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass"><code class="docutils literal notranslate"><span class="pre">infoclass</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.coords"><code class="docutils literal notranslate"><span class="pre">infoclass.coords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.dims"><code class="docutils literal notranslate"><span class="pre">infoclass.dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.final_time"><code class="docutils literal notranslate"><span class="pre">infoclass.final_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.init_time_freq"><code class="docutils literal notranslate"><span class="pre">infoclass.init_time_freq</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.sizes"><code class="docutils literal notranslate"><span class="pre">infoclass.sizes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.start_time"><code class="docutils literal notranslate"><span class="pre">infoclass.start_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.time_coords_type"><code class="docutils literal notranslate"><span class="pre">infoclass.time_coords_type</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.data_configs.html#module-S2D4P.data.data_configs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="S2D4P.data.dataset.html">S2D4P.data.dataset package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.dataset.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.dataset.html#module-S2D4P.data.dataset.dataset_abc">S2D4P.data.dataset.dataset_abc module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><code class="docutils literal notranslate"><span class="pre">AddedTimeFeatures</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures.build_time_features"><code class="docutils literal notranslate"><span class="pre">AddedTimeFeatures.build_time_features()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures.reference_config"><code class="docutils literal notranslate"><span class="pre">AddedTimeFeatures.reference_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures.time_features"><code class="docutils literal notranslate"><span class="pre">AddedTimeFeatures.time_features</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC"><code class="docutils literal notranslate"><span class="pre">DatasetABC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.config"><code class="docutils literal notranslate"><span class="pre">DatasetABC.config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.requested_times"><code class="docutils literal notranslate"><span class="pre">DatasetABC.requested_times</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.mask"><code class="docutils literal notranslate"><span class="pre">DatasetABC.mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.time_features"><code class="docutils literal notranslate"><span class="pre">DatasetABC.time_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.return_metadata"><code class="docutils literal notranslate"><span class="pre">DatasetABC.return_metadata</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.load"><code class="docutils literal notranslate"><span class="pre">DatasetABC.load</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id0"><code class="docutils literal notranslate"><span class="pre">DatasetABC.config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.get_added_features_dim"><code class="docutils literal notranslate"><span class="pre">DatasetABC.get_added_features_dim()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.get_cond_indexes"><code class="docutils literal notranslate"><span class="pre">DatasetABC.get_cond_indexes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.get_forecast_indexes"><code class="docutils literal notranslate"><span class="pre">DatasetABC.get_forecast_indexes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.get_input_shape"><code class="docutils literal notranslate"><span class="pre">DatasetABC.get_input_shape()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetABC.get_sampling_coords"><code class="docutils literal notranslate"><span class="pre">DatasetABC.get_sampling_coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id1"><code class="docutils literal notranslate"><span class="pre">DatasetABC.load</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id2"><code class="docutils literal notranslate"><span class="pre">DatasetABC.mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id3"><code class="docutils literal notranslate"><span class="pre">DatasetABC.requested_times</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id4"><code class="docutils literal notranslate"><span class="pre">DatasetABC.return_metadata</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id5"><code class="docutils literal notranslate"><span class="pre">DatasetABC.time_features</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.forecast"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.forecast</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.condition"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.condition_method"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.lead_times"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.lead_times</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.available_times"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.available_times</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.build_dataset"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.build_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id6"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id7"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.ds_operator"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.ds_operator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.effective_condition"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.effective_condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.effective_condition_method"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.effective_condition_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.effective_input"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.effective_input</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id8"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.forecast</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.get_input_times"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.get_input_times()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.init_time_dim"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.init_time_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.input_lead_times"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.input_lead_times</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.lead_time_dim"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.lead_time_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.lead_time_resolution"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.lead_time_resolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#id9"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.lead_times</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.realization_dim"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.realization_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.supported_NN_dimensions"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.supported_NN_dimensions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config"><code class="docutils literal notranslate"><span class="pre">lead_time_config</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config.build_lead_times"><code class="docutils literal notranslate"><span class="pre">lead_time_config.build_lead_times()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config.end"><code class="docutils literal notranslate"><span class="pre">lead_time_config.end</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config.list_lead_times"><code class="docutils literal notranslate"><span class="pre">lead_time_config.list_lead_times</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.lead_time_config.start"><code class="docutils literal notranslate"><span class="pre">lead_time_config.start</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.dataset.html#module-S2D4P.data.dataset.operator">S2D4P.data.dataset.operator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator"><code class="docutils literal notranslate"><span class="pre">DatasetOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator.add_fitted_preprocessor"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.add_fitted_preprocessor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator.config_reference"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.config_reference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator.fit_preprocessors"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.fit_preprocessors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator.get_input_var_metadata"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.get_input_var_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator.get_target_var_metadata"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.get_target_var_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator.get_weights"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.get_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.operator.DatasetOperator.load_fitted_preprocessors"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.load_fitted_preprocessors()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.data.dataset.html#module-S2D4P.data.dataset">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-S2D4P.data.dataloader">
+<span id="s2d4p-data-dataloader-module"></span><h2>S2D4P.data.dataloader module<a class="headerlink" href="#module-S2D4P.data.dataloader" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.BatchDataABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.data.dataloader.</span></span><span class="sig-name descname"><span class="pre">BatchDataABC</span></span><a class="headerlink" href="#S2D4P.data.dataloader.BatchDataABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for batched dataset samples.</p>
+<p>Defines the common interface for storing batched model inputs, targets,
+additional features, metadata, and shared spatial validity masks.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.BatchDataABC.input">
+<span class="sig-name descname"><span class="pre">input</span></span><a class="headerlink" href="#S2D4P.data.dataloader.BatchDataABC.input" title="Link to this definition"></a></dt>
+<dd><p>Batched model input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.BatchDataABC.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#S2D4P.data.dataloader.BatchDataABC.target" title="Link to this definition"></a></dt>
+<dd><p>Batched target tensor, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when targets are unavailable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.BatchDataABC.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><a class="headerlink" href="#S2D4P.data.dataloader.BatchDataABC.added_features" title="Link to this definition"></a></dt>
+<dd><p>Optional additional features associated with the batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.BatchDataABC.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#S2D4P.data.dataloader.BatchDataABC.metadata" title="Link to this definition"></a></dt>
+<dd><p>Optional per-sample metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">added_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">input</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">target</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.BatchDataABC.to_device">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">device</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataloader.BatchDataABC.to_device" title="Link to this definition"></a></dt>
+<dd><p>Move batch data to a device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em><em> | </em><em>str</em>) – Device to which the batch tensors are moved.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Batch instance with applicable tensors moved to the requested device.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.data.dataloader.BatchDataABC" title="S2D4P.data.dataloader.BatchDataABC">BatchDataABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.data.dataloader.</span></span><span class="sig-name descname"><span class="pre">Dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.data.dataloader.DataloaderConfigABC" title="S2D4P.data.dataloader.DataloaderConfigABC"><span class="pre">DataloaderConfigABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collate_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper around a PyTorch data loader with distributed sampling support.</p>
+<p>Constructs a PyTorch <code class="docutils literal notranslate"><span class="pre">DataLoader</span></code> from the dataset and loader configuration,
+using a distributed sampler when multiple processes participate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.data.dataloader.DataloaderConfigABC" title="S2D4P.data.dataloader.DataloaderConfigABC"><em>DataloaderConfigABC</em></a>) – Configuration defining batching, workers, memory, and sampling behavior.</p></li>
+<li><p><strong>dataset</strong> (<em>Dataset</em>) – Dataset providing individual samples.</p></li>
+<li><p><strong>collate_fn</strong> (<em>Callable</em>) – Function used to combine individual samples into batches.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – Rank of the current distributed process.</p></li>
+<li><p><strong>world_size</strong> (<em>int</em>) – Number of distributed processes participating in data loading.</p></li>
+<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether samples are shuffled. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, an appropriate default is
+selected from the distributed configuration.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Whether the collation function constructs spatial validity masks.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.added_features_dim">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">added_features_dim</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.added_features_dim" title="Link to this definition"></a></dt>
+<dd><p>Return the number of additional features associated with each sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of additional features.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.collate_fn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#S2D4P.data.dataloader.DataloaderConfigABC" title="S2D4P.data.dataloader.DataloaderConfigABC"><span class="pre">DataloaderConfigABC</span></a></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.dataset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.input_shape">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_shape</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.input_shape" title="Link to this definition"></a></dt>
+<dd><p>Return the shape of an input sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model input shape excluding the batch dimension.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.rank">
+<span class="sig-name descname"><span class="pre">rank</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.rank" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.return_spatial_mask">
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.return_spatial_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.set_epoch">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">set_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.set_epoch" title="Link to this definition"></a></dt>
+<dd><p>Set the current epoch for distributed sampling.</p>
+<p>Updating the distributed sampler epoch allows deterministic reshuffling to
+change between training epochs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>epoch</strong> (<em>int</em>) – Epoch index assigned to the distributed sampler.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This data-loader instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.data.dataloader.Dataloader" title="S2D4P.data.dataloader.Dataloader">Dataloader</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.shuffle">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.shuffle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.subset_loader">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">subset_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#S2D4P.data.dataloader.BatchDataABC" title="S2D4P.data.dataloader.BatchDataABC"><span class="pre">BatchDataABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.subset_loader" title="Link to this definition"></a></dt>
+<dd><p>Return an iterator beginning at a specified batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_batch</strong> (<em>int</em>) – Zero-based index of the first batch to yield.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Iterator over batches beginning at <code class="docutils literal notranslate"><span class="pre">start_batch</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterator[<a class="reference internal" href="#S2D4P.data.dataloader.BatchDataABC" title="S2D4P.data.dataloader.BatchDataABC">BatchDataABC</a>]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If <code class="docutils literal notranslate"><span class="pre">start_batch</span></code> is not an integer.</p></li>
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">start_batch</span></code> is negative.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.target_shape">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">target_shape</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.target_shape" title="Link to this definition"></a></dt>
+<dd><p>Return the shape of a target sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model target shape excluding the batch dimension.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.Dataloader.world_size">
+<span class="sig-name descname"><span class="pre">world_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#S2D4P.data.dataloader.Dataloader.world_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.data.dataloader.</span></span><span class="sig-name descname"><span class="pre">DataloaderConfigABC</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base configuration for data loaders.</p>
+<p>Defines common dataset, worker, memory, temporal-feature, and spatial-mask
+settings used to construct training and inference data loaders.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.dataset" title="Link to this definition"></a></dt>
+<dd><p>Configuration used to construct the underlying dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC">DatasetConfigABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.pin_memory">
+<span class="sig-name descname"><span class="pre">pin_memory</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.pin_memory" title="Link to this definition"></a></dt>
+<dd><p>Whether data-loader batches are allocated in pinned host memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.time_features">
+<span class="sig-name descname"><span class="pre">time_features</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.time_features" title="Link to this definition"></a></dt>
+<dd><p>Temporal features generated for dataset samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures">AddedTimeFeatures</a> | list[str] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.prefetch_factor">
+<span class="sig-name descname"><span class="pre">prefetch_factor</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.prefetch_factor" title="Link to this definition"></a></dt>
+<dd><p>Number of batches prefetched by each worker process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.return_spatial_mask">
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.return_spatial_mask" title="Link to this definition"></a></dt>
+<dd><p>Whether batches include spatial validity masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.share_spatial_mask">
+<span class="sig-name descname"><span class="pre">share_spatial_mask</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.share_spatial_mask" title="Link to this definition"></a></dt>
+<dd><p>Whether spatial validity masks are reduced and shared across samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.available_times">
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_times</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.available_times" title="Link to this definition"></a></dt>
+<dd><p>Return initialization times available to the data loader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Initialization times available from the configured dataset.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">dataset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC" title="S2D4P.data.dataset.dataset_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.init_time_dim">
+<span class="sig-name descname"><span class="pre">init_time_dim</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'time'</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.init_time_dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.lead_time_dim">
+<span class="sig-name descname"><span class="pre">lead_time_dim</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lead_time'</span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.lead_time_dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">pin_memory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">prefetch_factor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id6" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.select_requested_times">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">select_requested_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requested_slice</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">slice</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span></span></span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.select_requested_times" title="Link to this definition"></a></dt>
+<dd><p>Select available initialization times within a requested year range.</p>
+<p>Available times are sorted before selection. Requested start and stop years
+are validated against the temporal coverage of the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>requested_slice</strong> (<em>slice</em>) – Inclusive year range used to select initialization times. Slice bounds may
+be integers, integer strings, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Available initialization times falling within the requested year range.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the requested range extends beyond available years, contains no
+    available times, or contains an invalid year string.</p></li>
+<li><p><strong>TypeError</strong> – If a year bound is neither an integer, string, nor <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.data.dataloader.DataloaderConfigABC.setup_distributed">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.dataloader.DataloaderConfigABC.setup_distributed" title="Link to this definition"></a></dt>
+<dd><p>Configure the data loader for distributed execution.</p>
+<p>Subclasses must implement distributed rank, world-size, preprocessing, and
+device-specific data-loader setup.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">share_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.AddedTimeFeatures" title="S2D4P.data.dataset.dataset_abc.AddedTimeFeatures"><span class="pre">AddedTimeFeatures</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id9" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.data.utils">
+<span id="s2d4p-data-utils-module"></span><h2>S2D4P.data.utils module<a class="headerlink" href="#module-S2D4P.data.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="S2D4P.data.utils.add_lead_times">
+<span class="sig-prename descclassname"><span class="pre">S2D4P.data.utils.</span></span><span class="sig-name descname"><span class="pre">add_lead_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'month'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#S2D4P.data.utils.add_lead_times" title="Link to this definition"></a></dt>
+<dd><p>Calculate target times from paired initialization and lead times.</p>
+<p>Lead times are one-based, so a lead time of one corresponds to the
+initialization time itself. NumPy datetime and CFTime calendars are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>init_times</strong> (<em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – One-dimensional initialization times.</p></li>
+<li><p><strong>lead_times</strong> (<em>np.ndarray</em><em> | </em><em>xr.DataArray</em>) – One-dimensional integer-valued lead times paired element-wise with
+<code class="docutils literal notranslate"><span class="pre">init_times</span></code>.</p></li>
+<li><p><strong>lead_time_resolution</strong> (<em>lead_time_unit</em>) – Temporal unit used to interpret lead-time offsets.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Target times corresponding element-wise to initialization and lead times.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If initialization times are neither NumPy datetime nor CFTime values.</p></li>
+<li><p><strong>ValueError</strong> – If inputs are not one-dimensional, have different shapes, lead times are
+    not integer-valued or positive, or the lead-time resolution is
+    unsupported.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="S2D4P.data.utils.assign_datetime_init_time">
+<span class="sig-prename descclassname"><span class="pre">S2D4P.data.utils.</span></span><span class="sig-name descname"><span class="pre">assign_datetime_init_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_time_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calendar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></span><a class="headerlink" href="#S2D4P.data.utils.assign_datetime_init_time" title="Link to this definition"></a></dt>
+<dd><p>Replace integer initialization years with datetime coordinates.</p>
+<p>Integer year coordinates are converted to January 1 timestamps. Standard
+NumPy datetime values are used by default, while specifying a calendar
+produces CFTime coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data containing an integer initialization-year coordinate.</p></li>
+<li><p><strong>init_time_dim</strong> (<em>str</em>) – Name of the initialization-time coordinate.</p></li>
+<li><p><strong>calendar</strong> (<em>str</em><em> | </em><em>None</em>) – CFTime calendar used to construct timestamps. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, NumPy
+<code class="docutils literal notranslate"><span class="pre">datetime64</span></code> values are created.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data with initialization years replaced by datetime coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset | xr.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If the initialization-time coordinate does not contain integer years.</p></li>
+<li><p><strong>ValueError</strong> – If the initialization-time coordinate is absent.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="S2D4P.data.utils.get_time_representation">
+<span class="sig-prename descclassname"><span class="pre">S2D4P.data.utils.</span></span><span class="sig-name descname"><span class="pre">get_time_representation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DatetimeIndex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">CFTimeIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'datetime'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cftime'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#S2D4P.data.utils.get_time_representation" title="Link to this definition"></a></dt>
+<dd><p>Identify the datetime representation used by a time coordinate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time</strong> (<em>xr.DataArray</em><em> | </em><em>pd.DatetimeIndex</em><em> | </em><em>xr.CFTimeIndex</em>) – Time coordinate or index to inspect.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">&quot;datetime&quot;</span></code> for NumPy, Python, or pandas datetime values, or
+<code class="docutils literal notranslate"><span class="pre">&quot;cftime&quot;</span></code> for CFTime values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>TimeTypes</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If the input does not use a supported datetime representation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="S2D4P.data.utils.infer_time_resolution">
+<span class="sig-prename descclassname"><span class="pre">S2D4P.data.utils.</span></span><span class="sig-name descname"><span class="pre">infer_time_resolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatetimeIndex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">CFTimeIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#S2D4P.data.utils.infer_time_resolution" title="Link to this definition"></a></dt>
+<dd><p>Infer temporal resolution from consecutive timestamps.</p>
+<p>The minimum spacing between consecutive times determines the reported
+resolution. Spacings below 28 days are considered daily, spacings below 365
+days are considered monthly, and larger spacings are considered yearly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>times</strong> (<em>pd.DatetimeIndex</em><em> | </em><em>xr.CFTimeIndex</em>) – Ordered timestamps from which temporal resolution is inferred.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inferred <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code> resolution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>TimeFrequency</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If fewer than two timestamps are provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="S2D4P.data.utils.suppress_stderr">
+<span class="sig-prename descclassname"><span class="pre">S2D4P.data.utils.</span></span><span class="sig-name descname"><span class="pre">suppress_stderr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#S2D4P.data.utils.suppress_stderr" title="Link to this definition"></a></dt>
+<dd><p>Temporarily suppress process-level standard error output.</p>
+<p>The standard-error file descriptor is redirected to the operating system null
+device for the duration of the context and restored afterward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Yields<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>None</em> – Control to the code executed while standard error is suppressed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.data.weights">
+<span id="s2d4p-data-weights-module"></span><h2>S2D4P.data.weights module<a class="headerlink" href="#module-S2D4P.data.weights" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.data.weights.WeightsConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.data.weights.</span></span><span class="sig-name descname"><span class="pre">WeightsConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spatial_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'uniform'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cosine_lat'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'uniform'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.weights.WeightsConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for spatial and variable loss weights.</p>
+<p>Weights can be generated from target coordinates or loaded from an existing
+NetCDF file. Spatial weighting can be uniform or scaled by the cosine of
+latitude, and optional variable-specific weights can be applied along the
+channel dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spatial_method</strong> (<em>Spatialmethod</em>) – Spatial weighting method. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;uniform&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&quot;cosine_lat&quot;</span></code>.</p></li>
+<li><p><strong>variable_weights</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>] </em><em>| </em><em>None</em>) – Mapping from target variable names to multiplicative weights. If
+provided, entries must match the target channels exactly.</p></li>
+<li><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Path to a previously saved weights file. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, weights are
+generated from the target coordinates.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.data.weights.WeightsConfig.build_weights">
+<span class="sig-name descname"><span class="pre">build_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Flattennanremover</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Flattennanremove" title="S2D4P.preprocessing.utils_preprocessing.Flattennanremove"><span class="pre">Flattennanremove</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.data.weights.WeightsConfig.build_weights" title="Link to this definition"></a></dt>
+<dd><p>Build or load weights for target variables and spatial coordinates.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">load_dir</span></code> is configured, stored weights are loaded and validated
+against the target coordinates. Otherwise, weights are initialized uniformly
+and optional cosine-latitude and variable-specific weighting are applied.
+Generated weights can be saved to disk and optionally transformed to a fitted
+flattened representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_coords</strong> (<em>dict</em>) – Mapping from target dimension names to their coordinate values.</p></li>
+<li><p><strong>Flattennanremover</strong> (<a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Flattennanremove" title="S2D4P.preprocessing.utils_preprocessing.Flattennanremove"><em>Flattennanremove</em></a><em> | </em><em>None</em>) – Optional fitted flattening preprocessor applied to the final weights.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether newly generated weights are saved to disk.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory in which generated weights are saved. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the current
+experiment directory is used.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Filename used when saving generated weights. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;spatial_weights.nc&quot;</span></code> is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Weight array aligned with the target coordinates and optionally
+transformed to the flattened target representation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If loaded weights do not match the target coordinates, cosine-latitude
+    weighting is requested without a latitude coordinate, variable weights do
+    not exactly match the target channels, or the resulting weights contain
+    negative, missing, or infinite values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.weights.WeightsConfig.load_dir">
+<span class="sig-name descname"><span class="pre">load_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.data.weights.WeightsConfig.load_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.weights.WeightsConfig.spatial_method">
+<span class="sig-name descname"><span class="pre">spatial_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'uniform'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cosine_lat'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'uniform'</span></span><a class="headerlink" href="#S2D4P.data.weights.WeightsConfig.spatial_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.data.weights.WeightsConfig.variable_weights">
+<span class="sig-name descname"><span class="pre">variable_weights</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.data.weights.WeightsConfig.variable_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.data">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-S2D4P.data" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="S2D4P.core.models.html" class="btn btn-neutral float-left" title="S2D4P.core.models package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="S2D4P.data.data_configs.html" class="btn btn-neutral float-right" title="S2D4P.data.data_configs package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -32,24 +32,29 @@ AppendMode = Literal[1, 2, 3]
 @dataclasses.dataclass
 class AutoencoderConfig(ArchConfigABC):
     """
-    Document this class.
+    Configuration for an MLP-based deterministic autoencoder.
 
     Parameters
     ----------
     encoder_hidden_dims : list
-        Description not yet provided.
-    decoder_hidden_dims : list
-        Description not yet provided.
+        Hidden-layer sizes used by the encoder. The final value determines the
+        latent representation size.
+    decoder_hidden_dims : list | None
+        Hidden-layer sizes used by the decoder. If ``None``, they are derived
+        from the encoder hidden dimensions in reverse order.
     batch_normalization : bool
-        Description not yet provided.
-    dropout_rate : float
-        Description not yet provided.
+        Whether MLP layers use batch normalization.
+    dropout_rate : float | None
+        Dropout probability applied within MLP layers. If ``None``, dropout is
+        disabled.
     append_mode : AppendMode
-        Description not yet provided.
+        Controls where additional features are concatenated. Mode 1 adds them to
+        the encoder input, mode 2 adds them to the decoder input, and mode 3 adds
+        them to both.
     init_method : InitMethod
-        Description not yet provided.
+        Weight initialization method used when a checkpoint is not loaded.
     activation : ActivationName
-        Description not yet provided.
+        Activation function used by the encoder and decoder.
     """
 
     encoder_hidden_dims: list
@@ -67,7 +72,10 @@ class AutoencoderConfig(ArchConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Resolve defaults and validate the autoencoder configuration.
+
+        When decoder dimensions are omitted, they are derived from the encoder hidden
+        dimensions in reverse order.
         """
         _validate_dropout(self.dropout_rate)
 
@@ -80,12 +88,12 @@ class AutoencoderConfig(ArchConfigABC):
     @property
     def EXPECTS_MASK(self) -> bool:
         """
-        Document this function.
+        Indicate whether the architecture expects spatial masks.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            ``False`` because the MLP architecture does not require spatial masks.
         """
         return False
 
@@ -96,21 +104,22 @@ class AutoencoderConfig(ArchConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Build an MLP-based deterministic autoencoder.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape of each model input excluding the batch dimension.
         output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of each model output excluding the batch dimension. If ``None``,
+            the input shape is used.
+        added_features_dim : int | None
+            Number of additional features supplied alongside each sample.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Autoencoder
+            Constructed deterministic autoencoder.
         """
         return Autoencoder(
             config=self,
@@ -122,18 +131,24 @@ class AutoencoderConfig(ArchConfigABC):
 
 class Autoencoder(deterministicArchABC):
     """
-    Document this class.
+    MLP-based deterministic autoencoder architecture.
+
+    The architecture flattens each input sample, encodes it into a latent
+    representation, and decodes that representation into the requested output
+    shape. Additional features can be supplied to the encoder, decoder, or both.
 
     Parameters
     ----------
     config : AutoencoderConfig
-        Description not yet provided.
+        Configuration defining the encoder, decoder, feature-appending behavior,
+        and initialization.
     input_shape : np.ndarray | tuple
-        Description not yet provided.
+        Shape of each model input excluding the batch dimension.
     output_shape : np.ndarray | tuple | None
-        Description not yet provided.
-    added_features_dim : int
-        Description not yet provided.
+        Shape of each model output excluding the batch dimension. If ``None``,
+        the input shape is used.
+    added_features_dim : int | None
+        Number of additional features supplied alongside each sample.
     """
 
     def __init__(
@@ -144,24 +159,31 @@ class Autoencoder(deterministicArchABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Initialize the MLP-based deterministic autoencoder.
+
+        Encoder and decoder dimensions are constructed according to ``append_mode``.
+        Model parameters are restored from a configured checkpoint when available;
+        otherwise, the requested initialization method is applied.
 
         Parameters
         ----------
         config : AutoencoderConfig
-            Description not yet provided.
+            Configuration defining the architecture.
         input_shape : np.ndarray | tuple
-            Description not yet provided.
+            Shape of each model input excluding the batch dimension.
         output_shape : np.ndarray | tuple | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of each model output excluding the batch dimension. If ``None``,
+            the input shape is used.
+        added_features_dim : int | None
+            Number of additional features supplied alongside each sample.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If ``output_shape`` does not have the number of dimensions required by
+            the MLP architecture.
         """
+
         super().__init__(config)
 
         self.batch_normalization = config.batch_normalization
@@ -236,17 +258,23 @@ class Autoencoder(deterministicArchABC):
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
         """
-        Document this function.
+        Run the deterministic autoencoder forward pass.
+
+        An optional input mask is applied before the input is flattened. Additional
+        features are then concatenated to the encoder input, decoder input, or both
+        according to ``append_mode``.
 
         Parameters
         ----------
         request : DeterministicRequest
-            Description not yet provided.
+            Forward request containing the model input, optional input mask, and
+            optional additional features.
 
         Returns
         -------
         deterministicOutput
-            Description not yet provided.
+            Deterministic model output reshaped to batch, channel, and flattened
+            output dimensions.
         """
         x = request.input
         x_mask = request.input_mask

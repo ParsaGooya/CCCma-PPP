@@ -33,7 +33,7 @@ class DummyModule:
         generator=None,
         num_output_dims=1,
     ):
-        self.model_config = SimpleNamespace(
+        self.architecture_config = SimpleNamespace(
             GENERATOR=generator,
             NUM_OUTPUT_DIMS=num_output_dims,
         )
@@ -319,6 +319,7 @@ def test_update_train_stats_updates_posterior_samples(
     )
 
 
+@pytest.mark.pruned
 def test_update_train_stats_requires_samples(
     tmp_path,
     monkeypatch,
@@ -456,6 +457,7 @@ def test_build_latent_sampler_requires_stats_file(
         predictor.build_latent_sampler()
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "stats",
     [
@@ -531,7 +533,6 @@ def test_build_latent_sampler_uses_loaded_statistics(
     assert result is expected
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_requires_target_for_stats(
     tmp_path,
     monkeypatch,
@@ -560,6 +561,7 @@ def test_infer_on_batch_requires_target_for_stats(
     assert model.eval_called is True
 
 
+@pytest.mark.pruned
 def test_infer_on_batch_returns_training_stats(
     tmp_path,
     monkeypatch,
@@ -951,7 +953,6 @@ def test_infer_on_batch_save_latent_requires_target(
     assert model.predict_kwargs is None
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_save_latent_forwards_and_returns(
     tmp_path,
     monkeypatch,
@@ -996,7 +997,6 @@ def test_infer_on_batch_save_latent_forwards_and_returns(
     )
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_training_stats_takes_precedence_over_save_latent(
     tmp_path,
     monkeypatch,

@@ -70,7 +70,7 @@ class DummySelector:
     def __init__(self, model):
         self.model = model
 
-    def get_model(self):
+    def get_flow(self):
         return self.model
 
 
@@ -247,7 +247,7 @@ def test_normalized_flow_empty_flow_list_inverse():
 def test_flow_selector_maf_registered():
     selector = FlowSelector(type="maf", args={"hidden_dim": 8})
 
-    flow = selector.get_model()
+    flow = selector.get_flow()
 
     assert isinstance(flow, MAF)
     assert flow.hidden_dim == 8
@@ -257,7 +257,7 @@ def test_flow_selector_maf_registered():
 def test_flow_selector_realnvp_registered():
     selector = FlowSelector(type="realnvp", args={"hidden_dim": 8})
 
-    flow = selector.get_model()
+    flow = selector.get_flow()
 
     assert isinstance(flow, RealNVP)
     assert flow.hidden_dim == 8
@@ -418,7 +418,7 @@ class TrackingSelector:
         self.flow = flow
         self.calls = 0
 
-    def get_model(self):
+    def get_flow(self):
         self.calls += 1
         return self.flow
 

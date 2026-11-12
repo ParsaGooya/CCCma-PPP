@@ -9,18 +9,22 @@ from S2D4P.core.core_abc import moduleABC
 @dataclasses.dataclass
 class LRSchedulerConfig:
     """
-    Document this class.
+    Configuration for a cosine-annealing learning-rate schedule.
+
+    The schedule can optionally begin with a linear warmup and hold the minimum
+    learning rate after the configured training duration.
 
     Parameters
     ----------
     min_lr : float
-        Description not yet provided.
+        Minimum learning rate reached by cosine annealing.
     warmup_epochs : int
-        Description not yet provided.
-    total_epochs : int
-        Description not yet provided.
+        Number of epochs used for linear learning-rate warmup.
+    total_epochs : int | None
+        Total number of epochs represented by the schedule.
     hold_min_lr : bool
-        Description not yet provided.
+        Whether to keep the learning rate fixed at ``min_lr`` after the scheduled
+        number of optimization steps.
     """
 
     min_lr: float = 0.0
@@ -30,12 +34,12 @@ class LRSchedulerConfig:
 
     def __post_init__(self):
         """
-        Document this function.
+        Validate basic learning-rate scheduler settings.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If ``min_lr`` or ``warmup_epochs`` is negative.
         """
         assert self.min_lr >= 0
         assert self.warmup_epochs >= 0
@@ -47,26 +51,31 @@ class LRSchedulerConfig:
         gradient_accumulation_steps: int = 1,
     ):
         """
-        Document this function.
+        Build a step-based cosine-annealing learning-rate scheduler.
+
+        Epoch counts are converted to optimizer-step counts using the number of
+        batches and gradient accumulation interval.
 
         Parameters
         ----------
         optimizer : torch.optim.Optimizer
-            Description not yet provided.
+            Optimizer whose learning rate is scheduled.
         num_batches : int
-            Description not yet provided.
+            Number of training batches in each epoch.
         gradient_accumulation_steps : int
-            Description not yet provided.
+            Number of batches accumulated before each optimizer step.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        CosineAnnealingLRScheduler
+            Configured learning-rate scheduler.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the total epoch count, batch count, or gradient accumulation interval
+            is nonpositive, or if the warmup duration is not shorter than the total
+            schedule duration.
         """
         if self.total_epochs is None or self.total_epochs <= 0:
             raise ValueError("total_epochs must be positive.")
@@ -93,18 +102,19 @@ class LRSchedulerConfig:
 @dataclasses.dataclass
 class OptimizerConfig:
     """
-    Document this class.
+    Configuration for optimization and learning-rate scheduling.
 
     Parameters
     ----------
     lr : float
-        Description not yet provided.
+        Initial optimizer learning rate.
     weight_decay : float
-        Description not yet provided.
+        Weight-decay coefficient applied by the optimizer.
     optimizer_type : str
-        Description not yet provided.
+        Registered optimizer type to construct. Supported values are ``"adam"``
+        and ``"adamw"``.
     lr_scheduler_config : LRSchedulerConfig | None
-        Description not yet provided.
+        Optional learning-rate scheduler configuration.
     """
 
     lr: float = 0.0001
@@ -119,13 +129,14 @@ class OptimizerConfig:
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize and validate the optimizer configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``weight_decay`` is negative.
         """
+
         if self.weight_decay < 0:
             raise ValueError("weight_decay has to be positive")
         self.optimizer = None
@@ -138,28 +149,31 @@ class OptimizerConfig:
         gradient_accumulation_steps: int = 1,
     ):
         """
-        Document this function.
+        Build the configured optimizer and optional learning-rate scheduler.
 
         Parameters
         ----------
         module : moduleABC
-            Description not yet provided.
-        num_batches : int
-            Description not yet provided.
-        max_epochs : int
-            Description not yet provided.
+            Model module whose trainable parameters are optimized.
+        num_batches : int | None
+            Number of training batches in each epoch. Required when a learning-rate
+            scheduler is configured.
+        max_epochs : int | None
+            Maximum number of training epochs. Used as the scheduler duration when
+            ``total_epochs`` is not explicitly configured.
         gradient_accumulation_steps : int
-            Description not yet provided.
+            Number of batches accumulated before each optimizer update.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        OptimizerWrapper
+            Configured optimizer wrapper.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If scheduler construction requires ``max_epochs`` or ``num_batches`` and
+            the required value is not provided.
         """
         if self.lr_scheduler_config is not None:
             if self.lr_scheduler_config.total_epochs is None:
@@ -181,20 +195,22 @@ class OptimizerConfig:
 
 class OptimizerWrapper:
     """
-    Document this class.
+    Wrap an optimizer and optional learning-rate scheduler.
+
+    Only trainable module parameters are supplied to the optimizer.
 
     Parameters
     ----------
     config : OptimizerConfig
-        Description not yet provided.
+        Configuration defining the optimizer and optional scheduler.
     module : moduleABC
-        Description not yet provided.
-    num_batches : int
-        Description not yet provided.
-    max_epochs : int
-        Description not yet provided.
+        Model module whose trainable parameters are optimized.
+    num_batches : int | None
+        Number of training batches in each epoch.
+    max_epochs : int | None
+        Maximum number of training epochs.
     gradient_accumulation_steps : int
-        Description not yet provided.
+        Number of batches accumulated before each optimizer update.
     """
 
     def __init__(
@@ -206,25 +222,26 @@ class OptimizerWrapper:
         gradient_accumulation_steps: int = 1,
     ):
         """
-        Document this function.
+        Initialize the optimizer and optional learning-rate scheduler.
 
         Parameters
         ----------
         config : OptimizerConfig
-            Description not yet provided.
+            Configuration defining the optimizer and scheduler.
         module : moduleABC
-            Description not yet provided.
-        num_batches : int
-            Description not yet provided.
-        max_epochs : int
-            Description not yet provided.
+            Model module whose trainable parameters are optimized.
+        num_batches : int | None
+            Number of training batches in each epoch.
+        max_epochs : int | None
+            Maximum number of training epochs.
         gradient_accumulation_steps : int
-            Description not yet provided.
+            Number of batches accumulated before each optimizer update.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If a learning-rate scheduler is configured without the batch count or
+            without either a maximum epoch count or configured scheduler duration.
         """
         self.lr_scheduler = None
         params = [p for p in module.parameters() if p.requires_grad]
@@ -254,23 +271,23 @@ class OptimizerWrapper:
     @property
     def learning_rate(self):
         """
-        Document this function.
+        Return the current learning rate.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        float
+            Learning rate of the first optimizer parameter group.
         """
         return self.optimizer.param_groups[0]["lr"]
 
     def step(self):
         """
-        Document this function.
+        Perform one optimizer update.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the optimizer has not been built.
         """
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before step().")
@@ -279,26 +296,29 @@ class OptimizerWrapper:
 
     def scheduler_step(self):
         """
-        Document this function.
+        Advance the learning-rate scheduler by one optimizer step.
+
+        If no scheduler is configured, this method has no effect.
         """
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
     def zero_grad(self, set_to_none=True, **kwargs):
         """
-        Document this function.
+        Reset gradients stored by the optimizer.
 
         Parameters
         ----------
-        set_to_none : Any
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        set_to_none : bool
+            Whether gradients are reset to ``None`` instead of zero.
+        kwargs : Any
+            Additional keyword arguments passed to the optimizer's ``zero_grad``
+            method.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the optimizer has not been built.
         """
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before zero_grad().")
@@ -306,17 +326,17 @@ class OptimizerWrapper:
 
     def state_dict(self):
         """
-        Document this function.
+        Return optimizer and scheduler state.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            State dictionaries for the optimizer and optional learning-rate scheduler.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the optimizer has not been built.
         """
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before state_dict().")
@@ -332,17 +352,20 @@ class OptimizerWrapper:
 
     def load_state_dict(self, state_dict):
         """
-        Document this function.
+        Restore optimizer and scheduler state.
+
+        Scheduler state is restored when both the current wrapper and saved state
+        contain a learning-rate scheduler.
 
         Parameters
         ----------
-        state_dict : Any
-            Description not yet provided.
+        state_dict : dict
+            Saved optimizer and scheduler state.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the optimizer has not been built.
         """
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before load_state_dict().")
@@ -355,26 +378,34 @@ class OptimizerWrapper:
 
 class CosineAnnealingLRScheduler:
     """
-    Document this class.
+    Step-based cosine-annealing learning-rate scheduler.
+
+    An optional linear warmup increases the learning rate from a small fraction
+    of its configured initial value before cosine annealing begins. After the
+    configured duration, the minimum learning rate can optionally be held fixed.
 
     Parameters
     ----------
     config : LRSchedulerConfig
-        Description not yet provided.
+        Configuration defining warmup, annealing duration, and minimum learning
+        rate.
     optimizer : torch.optim.Optimizer
-        Description not yet provided.
+        Optimizer whose learning rate is controlled.
     """
 
     def __init__(self, config: LRSchedulerConfig, optimizer: torch.optim.Optimizer):
         """
-        Document this function.
+        Initialize the cosine-annealing learning-rate scheduler.
+
+        When warmup is configured, a linear warmup scheduler and cosine scheduler are
+        combined sequentially. Otherwise, cosine annealing begins immediately.
 
         Parameters
         ----------
         config : LRSchedulerConfig
-            Description not yet provided.
+            Built scheduler configuration containing total and warmup step counts.
         optimizer : torch.optim.Optimizer
-            Description not yet provided.
+            Optimizer whose learning rate is controlled.
         """
         self.config = config
         self.optimizer = optimizer
@@ -406,12 +437,16 @@ class CosineAnnealingLRScheduler:
 
     def step(self):
         """
-        Document this function.
+        Advance the learning-rate schedule by one optimizer step.
+
+        Before ``total_steps`` is reached, the underlying schedule advances normally.
+        Afterward, the learning rate is either fixed at ``min_lr`` or the underlying
+        scheduler continues according to ``hold_min_lr``.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the underlying scheduler has not been built.
         """
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
@@ -430,17 +465,17 @@ class CosineAnnealingLRScheduler:
 
     def state_dict(self):
         """
-        Document this function.
+        Return the learning-rate scheduler state.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            Underlying scheduler state and number of scheduler steps performed.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the underlying scheduler has not been built.
         """
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
@@ -452,17 +487,20 @@ class CosineAnnealingLRScheduler:
 
     def load_state_dict(self, state_dict):
         """
-        Document this function.
+        Restore learning-rate scheduler state.
+
+        Both the current state format containing ``scheduler`` and ``num_steps`` and
+        a direct underlying scheduler state dictionary are supported.
 
         Parameters
         ----------
-        state_dict : Any
-            Description not yet provided.
+        state_dict : dict
+            Saved learning-rate scheduler state.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the underlying scheduler has not been built.
         """
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")

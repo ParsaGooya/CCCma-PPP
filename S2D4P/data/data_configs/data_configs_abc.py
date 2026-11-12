@@ -18,7 +18,6 @@ from S2D4P.configs import (
 )
 
 from S2D4P.data.utils import (
-    TEMPORAL_ORDER,
     _load_xarray_data,
     _create_train_mask,
     _validate_time_sequence,
@@ -26,7 +25,6 @@ from S2D4P.data.utils import (
     get_time_representation,
     TimeTypes,
     TimeFrequency,
-    TEMPORAL_ORDER,
 )
 from S2D4P.generic.runtime import RuntimeContext
 
@@ -80,7 +78,6 @@ class infoclass:
 
 
 class DataConfigABC(abc.ABC):
-
     """
     Abstract base class for DataConfig objects, providing a standardized interface for handling
     xarray datasets in the CCCma_PPP framework.
@@ -150,7 +147,6 @@ class DataConfigABC(abc.ABC):
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self):
-
         """
         Initialize the data configuration and resolve its metadata.
 
@@ -236,7 +232,6 @@ class DataConfigABC(abc.ABC):
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
-
         """
         Fit the preprocessing pipeline using a selected subset of the input data.
 
@@ -306,7 +301,6 @@ class DataConfigABC(abc.ABC):
 
     @final
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
-
         """
         Restore a previously fitted preprocessing pipeline from disk.
 
@@ -396,7 +390,7 @@ class DataConfigABC(abc.ABC):
             add_time_auxiliary_coords=add_time_auxiliary_coords,
             load=load,
         )
-        
+
         if self.init_time_dim in self.data:
             time = self.data.coords[self.init_time_dim]
             _validate_time_sequence(time)
@@ -483,7 +477,7 @@ class DataConfigABC(abc.ABC):
     @final
     def close_data(self):
         """Close the xarray dataset and release OS file handles."""
-        if self.data is not None:
+        if getattr(self, "data", None) is not None:
             self.data.close()
             self.data = None
 
@@ -505,7 +499,6 @@ class DataConfigABC(abc.ABC):
 
 
 def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
-
     """
     Discover and optionally validate input data files for a DataConfig.
 
@@ -631,17 +624,17 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                     )
 
                 invalid = (
-                    dataconfig.concat_dim is not None 
+                    dataconfig.concat_dim is not None
                     and dataconfig.concat_dim not in ds.coords
                 )
                 if invalid:
-                        raise ValueError(
-                            f"Requested concat dimension {dataconfig.concat_dim} "
-                            f"is not a valid data coordinate for {p}"
-                        )
+                    raise ValueError(
+                        f"Requested concat dimension {dataconfig.concat_dim} "
+                        f"is not a valid data coordinate for {p}"
+                    )
 
                 _check_init_time = (
-                    dataconfig.init_time_dim in ds_dims 
+                    dataconfig.init_time_dim in ds_dims
                     or dataconfig.init_time_dim in ds.coords
                 )
                 if _check_init_time:
@@ -664,7 +657,6 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 
 
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
-
     """
     Extract information about xarray data as an infoclass instance.
 
@@ -731,7 +723,6 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
         ds = ds.sel({dataconfig.realization_dim: dataconfig.realization_list})
 
     if init_time_dim in ds.dims:
-
         start_time, final_time = (
             ds[init_time_dim].min().values,
             ds[init_time_dim].max().values,

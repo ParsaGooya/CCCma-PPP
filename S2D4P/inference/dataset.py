@@ -28,18 +28,23 @@ from S2D4P.preprocessing.preprocessing_ABC import PreprocessModuleABC
 @dataclasses.dataclass
 class InferenceDatasetConfig(DatasetConfigABC):
     """
-    Document this class.
+    Configuration for an inference dataset.
+
+    Defines the forecast and conditioning data used to construct model inputs,
+    the conditioning strategy, and the forecast lead times included during
+    inference.
 
     Parameters
     ----------
     forecast : ForecastDataConfig | None
-        Description not yet provided.
+        Forecast data configuration used as an inference input.
     condition : ConditionDataConfig | None
-        Description not yet provided.
-    condition_method : str
-        Description not yet provided.
+        Optional conditioning data configuration.
+    condition_method : str | None
+        Method used to associate conditioning data with forecast inputs.
     lead_times : lead_time_config | None
-        Description not yet provided.
+        Lead times included in inference samples. If ``None``, all available
+        input lead times are used.
     """
 
     forecast: ForecastDataConfig | None = None
@@ -49,20 +54,27 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize and validate the inference dataset configuration.
+
+        Performs common dataset configuration setup, including input-source,
+        conditioning, compatibility, and lead-time validation.
         """
         super().__init__()
 
     @property
     def effective_input(self):
         """
-        Document this function.
+        Return the primary data source used for inference input.
+
+        Forecast data are preferred when configured. Otherwise, conditioning data are
+        used as the primary input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        ForecastDataConfig | ConditionDataConfig
+            Effective inference input configuration.
         """
+
         if self.forecast is not None:
             return self.forecast
         else:
@@ -71,24 +83,28 @@ class InferenceDatasetConfig(DatasetConfigABC):
     @property
     def ds_operator(self):
         """
-        Document this function.
+        Return an operator for this dataset configuration.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        DatasetOperator
+            Dataset operator providing preprocessing and metadata operations.
         """
         return DatasetOperator(self)
 
     @property
     def available_times(self):
         """
-        Document this function.
+        Return initialization times available for inference.
+
+        When both forecast and conditioning data are configured, only initialization
+        times present in both data sources are returned.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Initialization times shared by all configured time-dependent input
+            sources.
         """
         time_coords = list()
         if self.condition is not None:
@@ -108,25 +124,26 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Document this function.
+        Load fitted preprocessing pipelines for inference data sources.
 
         Parameters
         ----------
         load_dir : Path | str | None
-            Description not yet provided.
+            Directory containing saved preprocessing pipelines. If ``None``, the
+            default preprocessing directory is used.
         """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
-        Document this function.
+        Add a fitted preprocessing module to the active data pipelines.
 
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
+            Fitted preprocessing module to add.
+        index : int
+            Position at which the preprocessing module is inserted.
         """
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
@@ -142,23 +159,23 @@ class InferenceDatasetConfig(DatasetConfigABC):
         load: bool = False,
     ):
         """
-        Document this function.
+        Build an inference dataset from this configuration.
 
         Parameters
         ----------
         times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-            Description not yet provided.
+            Initialization times included in the inference dataset.
         time_features : AddedTimeFeatures
-            Description not yet provided.
+            Temporal feature generator applied to inference samples.
         return_metadata : bool
-            Description not yet provided.
+            Whether each sample is returned with its sampling-coordinate metadata.
         load : bool
-            Description not yet provided.
+            Whether underlying xarray data are loaded into memory when opened.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        InferenceDataset
+            Constructed inference dataset.
         """
         return InferenceDataset(
             config=self,
@@ -172,22 +189,26 @@ class InferenceDatasetConfig(DatasetConfigABC):
 @dataclasses.dataclass
 class InferenceDataset(DatasetABC):
     """
-    Document this class.
+    Dataset for constructing model inputs during inference.
+
+    Samples are assembled from forecast and conditioning data according to the
+    configured conditioning strategy. Optional temporal features and sampling
+    metadata are included with each sample.
 
     Parameters
     ----------
     config : InferenceDatasetConfig
-        Description not yet provided.
+        Configuration defining inference data sources and sampling behavior.
     requested_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-        Description not yet provided.
+        Initialization times requested for inference.
     time_features : AddedTimeFeatures
-        Description not yet provided.
+        Temporal feature generator applied to samples.
     return_metadata : bool
-        Description not yet provided.
+        Whether each sample is returned with its sampling-coordinate metadata.
     load : bool
-        Description not yet provided.
+        Whether underlying xarray data are loaded into memory when opened.
     mask : xr.DataArray | None
-        Description not yet provided.
+        Sampling mask constructed internally by the dataset.
     """
 
     config: InferenceDatasetConfig
@@ -207,19 +228,23 @@ class InferenceDataset(DatasetABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize the inference dataset.
+
+        Initializes common dataset sampling state, opens required data sources,
+        constructs source indexes, and prepares temporal features.
         """
         super().__init__()
 
     @property
     def _load_forecast(self):
         """
-        Document this function.
+        Indicate whether forecast data must be loaded separately.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when forecast data are configured and are not being reused as
+            the conditioning source.
         """
         return all(
             [
@@ -231,26 +256,31 @@ class InferenceDataset(DatasetABC):
     @property
     def _write_condition_to_input(self):
         """
-        Document this function.
+        Indicate whether conditioning data are used directly as model input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when forecast data are reused as conditioning data or when no
+            forecast dataset is configured.
         """
         return any(
-            [self.config._using_forecast_data_as_condition, self.config.forecast is None]
+            [
+                self.config._using_forecast_data_as_condition,
+                self.config.forecast is None,
+            ]
         )
 
     @property
     def _concat_condition_to_input(self):
         """
-        Document this function.
+        Indicate whether conditioning data are concatenated with forecast input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when forecast data remain the primary input and a separate
+            conditioning dataset is configured.
         """
         return (
             self._write_condition_to_input is False
@@ -259,17 +289,23 @@ class InferenceDataset(DatasetABC):
 
     def __getitem__(self, ind):
         """
-        Document this function.
+        Return an inference sample.
+
+        Forecast and conditioning data are indexed for the requested sample and
+        combined according to the configured conditioning strategy. Temporal features
+        are then generated and the resulting data are converted to tensors.
 
         Parameters
         ----------
-        ind : Any
-            Description not yet provided.
+        ind : int
+            Index of the inference sample to retrieve.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict | tuple[dict, dict]
+            Dictionary containing the input and optional additional-feature tensors.
+            When metadata are enabled, the sample dictionary is returned together
+            with its sampling coordinates.
         """
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
@@ -303,22 +339,27 @@ def _from_train(
     train_dataset_config: TrainDatasetConfig,
 ) -> "InferenceDatasetConfig":
     """
-    Document this function.
+    Derive an inference dataset configuration from a training configuration.
+
+    Forecast, conditioning, conditioning-method, and lead-time settings required
+    at inference are copied from the training configuration. Reference target data
+    are excluded because they are not required for prediction.
 
     Parameters
     ----------
     train_dataset_config : TrainDatasetConfig
-        Description not yet provided.
+        Training dataset configuration from which inference settings are derived.
 
     Returns
     -------
-    'InferenceDatasetConfig'
-        Description not yet provided.
+    InferenceDatasetConfig
+        Inference configuration compatible with the training dataset setup.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If an inference input configuration cannot be derived from the available
+        training forecast and conditioning data.
     """
     import copy
 
@@ -329,7 +370,9 @@ def _from_train(
 
     train_has_reference = train_dataset_config.reference is not None
     train_has_condition = train_dataset_config.effective_condition is not None
-    train_condition_from_forecast = train_dataset_config._using_forecast_data_as_condition
+    train_condition_from_forecast = (
+        train_dataset_config._using_forecast_data_as_condition
+    )
 
     if train_has_reference and not train_has_condition:
         kwargs["forecast"] = copy.deepcopy(train_dataset_config.forecast)

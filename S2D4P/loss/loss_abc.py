@@ -10,14 +10,16 @@ Reduction = Literal["mean", "sum"]
 
 class lossABC(nn.Module, abc.ABC):
     """
-    Document this class.
+    Abstract base class for loss functions.
+
+    Defines the common interface for computing, aggregating, and reporting model
+    losses while retaining information about the model's generative behavior.
 
     Attributes
     ----------
     generative_context : GenerativeContext
-        Description not yet provided.
-    generative_context : GenerativeContext
-        Description not yet provided.
+        Context describing whether the associated model uses generative modeling
+        or generator-based stochastic output sampling.
     """
 
     generative_context: GenerativeContext
@@ -32,39 +34,49 @@ class lossABC(nn.Module, abc.ABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Compute the loss between model output and target data.
 
         Parameters
         ----------
         data : torch.Tensor
-            Description not yet provided.
+            Model predictions used to calculate the loss.
         target : torch.Tensor
-            Description not yet provided.
-        print_loss : Any
-            Description not yet provided.
+            Target values against which predictions are compared.
+        print_loss : bool
+            Whether to print the calculated loss.
+
+        Returns
+        -------
+        torch.Tensor
+            Calculated loss.
         """
         pass
 
     @abc.abstractmethod
     def _print_loss(self, loss):
         """
-        Document this function.
+        Print the calculated loss.
 
         Parameters
         ----------
-        loss : Any
-            Description not yet provided.
+        loss : torch.Tensor
+            Loss value to print.
         """
         pass
 
     @abc.abstractmethod
     def _aggregate(self, loss) -> torch.Tensor:
         """
-        Document this function.
+        Aggregate unreduced loss values.
 
         Parameters
         ----------
-        loss : Any
-            Description not yet provided.
+        loss : torch.Tensor
+            Unreduced loss values.
+
+        Returns
+        -------
+        torch.Tensor
+            Loss reduced according to the implementation-specific aggregation method.
         """
         pass

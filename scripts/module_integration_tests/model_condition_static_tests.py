@@ -24,6 +24,25 @@ from S2D4P.generic.distributed import Distributed
 import dacite
 from S2D4P.train.train_configs import TrainConfig
 
+# Import architecture modules
+from S2D4P.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from S2D4P.architectures.mlp import (
+    deterministic as _mlp_deterministic,  # noqa: F401
+)
+from S2D4P.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from S2D4P.architectures.unet import (
+    deterministic as _unet_deterministic,  # noqa: F401
+)
+from S2D4P.generic import registry_imports  # noqa: F401
+
+# Import loss modules
+from S2D4P.loss import kld as _loss_kld  # noqa: F401
+from S2D4P.loss import loss as _loss_pipeline  # noqa: F401
+from S2D4P.loss import utils_loss as _loss_utils  # noqa: F401
+
+# Import the training entry point
+
+
 warnings.filterwarnings("ignore")
 
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
@@ -242,7 +261,7 @@ def run_test_case(
 
 def main() -> None:
     """Run static condition cases from existing config files"""
-    root = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+    root = Path("/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/scripts")
 
     # Single shared output directory for both modes
     output_dir = root / "../../output" / "data_modules_model_condition_static"

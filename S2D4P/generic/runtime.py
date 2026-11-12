@@ -5,26 +5,36 @@ from pathlib import Path
 @dataclasses.dataclass
 class RuntimeContext:
     """
-    Document this class.
+    Store global runtime paths and variable metadata.
+
+    Provides shared experiment directories and input and target metadata used
+    across training, inference, logging, checkpointing, monitoring, and output
+    workflows.
 
     Parameters
     ----------
     GLOBAL_EXP_DIR : Path | str | None
-        Description not yet provided.
+        Root directory for the current experiment.
     GLOBAL_CHECKPOINT_DIR : Path | str | None
-        Description not yet provided.
+        Directory used to store model checkpoints. If ``None``, defaults to the
+        ``checkpoints`` directory under ``GLOBAL_EXP_DIR``.
     GLOBAL_FIGURES_DIR : Path | str | None
-        Description not yet provided.
+        Directory used to store generated figures. If ``None``, defaults to the
+        ``figures`` directory under ``GLOBAL_EXP_DIR``.
     GLOBAL_LOG_DIR : Path | str | None
-        Description not yet provided.
+        Directory used to store log files. If ``None``, defaults to the ``logs``
+        directory under ``GLOBAL_EXP_DIR``.
     GLOBAL_MONITORING_DIR : Path | str | None
-        Description not yet provided.
+        Directory used to store resource-monitoring outputs. If ``None``,
+        defaults to the ``resource_monitoring`` directory under
+        ``GLOBAL_EXP_DIR``.
     GLOBAL_OUTPUT_DIR : Path | str | None
-        Description not yet provided.
+        Directory used to store inference outputs. If ``None``, defaults to the
+        ``inference`` directory under ``GLOBAL_EXP_DIR``.
     INPUT_VAR_METADATA : dict | None
-        Description not yet provided.
+        Metadata describing model input variables and preprocessing.
     TARGET_VAR_METADATA : dict | None
-        Description not yet provided.
+        Metadata describing model target variables and preprocessing.
     """
 
     GLOBAL_EXP_DIR: Path | str | None = dataclasses.field(default_factory=Path.cwd)
@@ -38,6 +48,12 @@ class RuntimeContext:
     TARGET_VAR_METADATA: dict | None = None
 
     def __post_init__(self):
+        """
+        Resolve default runtime directories from the experiment directory.
+
+        Any runtime directory that is not explicitly configured is assigned its
+        corresponding default location under ``GLOBAL_EXP_DIR``.
+        """
 
         if self.GLOBAL_CHECKPOINT_DIR is None:
             self.GLOBAL_CHECKPOINT_DIR = self.GLOBAL_EXP_DIR / "checkpoints"

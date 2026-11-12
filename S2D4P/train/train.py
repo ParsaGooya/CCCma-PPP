@@ -16,12 +16,13 @@ from S2D4P.train.train_configs import (
 
 def get_parser() -> argparse.ArgumentParser:
     """
-    Document this function.
+    Build the command-line argument parser for training.
 
     Returns
     -------
     argparse.ArgumentParser
-        Description not yet provided.
+        Parser configured to accept the path to a training YAML configuration
+        file.
     """
     parser = argparse.ArgumentParser(description="Train model from config file")
 
@@ -36,12 +37,18 @@ def get_parser() -> argparse.ArgumentParser:
 
 def main(yaml_config: str) -> None:
     """
-    Document this function.
+    Run the training workflow from a YAML configuration file.
+
+    Initializes distributed execution, loads and validates the training
+    configuration, sets a rank-specific random seed, and prepares the experiment
+    directories. Resource monitoring is enabled while the trainer is built,
+    configured for distributed execution, and run. Distributed resources are
+    cleaned up when training completes or an exception is raised.
 
     Parameters
     ----------
     yaml_config : str
-        Description not yet provided.
+        Path to the YAML file containing the training configuration.
     """
     distributed = Distributed.get_instance()
 

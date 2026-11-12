@@ -33,23 +33,28 @@ def clear_pytest_cache():
 
 def run_full_test_suite():
     """
-    Execute the full pytest test suite.
-    Pytest will automatically record which tests fail in its cache.
+    Execute the full unit-test suite under the tests directory.
 
-    Returns the exit code from pytest (0 = all passed, non-zero = some failed).
+    Pytest records failed test node IDs in its lastfailed cache.
+
+    Returns
+    -------
+    int
+        The pytest exit code. Zero means all tests passed.
     """
-    print("\nRunning the complete pytest suite from scratch...\n")
+    print("\nRunning the complete unit-test suite from scratch...\n")
 
     result = subprocess.run(
         [
             sys.executable,
             "-m",
             "pytest",
-            "-q",  # Quiet mode (less output)
-            "--tb=no",  # No tracebacks (we just want pass/fail status)
+            "tests",
+            "-q",
+            "--tb=no",
         ],
         cwd=ROOT,
-        check=False,  # Don't raise if pytest exits with non-zero (some tests failed)
+        check=False,
     )
 
     print(f"\nPytest finished with exit code {result.returncode}.")

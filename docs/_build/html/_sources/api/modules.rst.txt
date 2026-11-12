@@ -1,7 +1,7 @@
-cccma_ppp
-=========
+S2D4P
+=====
 
 .. toctree::
    :maxdepth: 4
 
-   cccma_ppp
+   S2D4P

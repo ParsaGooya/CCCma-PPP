@@ -26,11 +26,29 @@ from S2D4P.generic.runtime import RuntimeContext
 from S2D4P.train.train_configs import TrainConfig, prepare_config
 from integrationtestslib import LoggingUtils
 
+# Import architecture modules
+from S2D4P.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from S2D4P.architectures.mlp import (
+    deterministic as _mlp_deterministic,  # noqa: F401
+)
+from S2D4P.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from S2D4P.architectures.unet import (
+    deterministic as _unet_deterministic,  # noqa: F401
+)
+from S2D4P.configs import required_sample_dimensions
+from S2D4P.generic import registry_imports  # noqa: F401
+from S2D4P.generic.distributed import Distributed
+
+# Import loss modules
+from S2D4P.loss import kld as _loss_kld  # noqa: F401
+from S2D4P.loss import loss as _loss_pipeline  # noqa: F401
+from S2D4P.loss import utils_loss as _loss_utils  # noqa: F401
+
 warnings.filterwarnings("ignore")
 logging.raiseExceptions = False
 
 
-ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/S2D4P/scripts")
 BASE_TRAIN_CONFIG = ROOT / "integration_suite_train_config.yaml"
 OUTPUT_DIR = ROOT / "../../output" / "preprocessing_integration_test_results"
 CASES_DIR = OUTPUT_DIR / "cases"
@@ -65,6 +83,14 @@ OBSERVATION_SPATIAL_DIMS = [LAT_DIM, LON_DIM]
 OBSERVATION_GLOBAL_DIMS = [TIME_DIM, LAT_DIM, LON_DIM]
 
 VALID_FREQUENCIES = {"month", "day", "year"}
+
+# Maps preprocessing source names used by the test cases to the keys used in
+# the base training config (integration_suite_train_config.yaml).
+SOURCE_CONFIG_KEYS = {
+    "model": "forecast",
+    "observation": "reference",
+    "condition": "condition",
+}
 
 EXPECTED_PREPROCESSOR_STATISTICS = {
     "anomalies": (("mean", "mean_", "means", "means_"),),
@@ -775,7 +801,7 @@ def log_result(
 def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
     """Remove nullable fields."""
     loader_cfg = cfg.setdefault("train_loader", {})
-    dataset_cfg = loader_cfg.setdefault("dataset_config", {})
+    dataset_cfg = loader_cfg.setdefault("dataset", {})
     if loader_cfg.get("time_features") is None:
         loader_cfg.pop("time_features", None)
     if dataset_cfg.get("condition_method") is None:
@@ -786,15 +812,9 @@ def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
 def validate_generated_config(cfg: dict[str, Any]) -> dict[str, Any]:
     """Validate configuration structure."""
     train_loader_cfg = cfg.get("train_loader")
-    if not isinstance(train_loader_cfg, dict):
-        raise ValueError("train_loader must be a mapping")
-    dataset_cfg = train_loader_cfg.get("dataset_config")
-    if not isinstance(dataset_cfg, dict):
-        raise ValueError("train_loader.dataset_config must be a mapping")
-    if not isinstance(dataset_cfg.get("model"), dict):
-        raise ValueError("train_loader.dataset_config.model must be a mapping")
-    if not isinstance(dataset_cfg.get("observation"), dict):
-        raise ValueError("train_loader.dataset_config.observation must be a mapping")
+
+    dataset_cfg = train_loader_cfg.get("dataset")
+
     return cfg
 
 
@@ -824,23 +844,17 @@ def base_config() -> dict[str, Any]:
 
 def get_source_config(dataset_cfg: dict[str, Any], source_name: str) -> dict[str, Any]:
     """Get data-source configuration."""
-    source_keys = {
-        "model": "model",
-        "observation": "observation",
-        "condition": "condition",
-    }
-    if source_name not in source_keys:
+    if source_name not in SOURCE_CONFIG_KEYS:
         raise ValueError(f"Unsupported source: {source_name!r}")
-    source_key = source_keys[source_name]
+    source_key = SOURCE_CONFIG_KEYS[source_name]
     source_cfg = dataset_cfg.get(source_key)
-    if not isinstance(source_cfg, dict):
-        raise ValueError(f"dataset_config.{source_key} must be a mapping")
+
     return source_cfg
 
 
 def remove_existing_preprocessing(dataset_cfg: dict[str, Any]) -> None:
     """Remove inherited preprocessing."""
-    for source_name in ("model", "observation", "condition"):
+    for source_name in SOURCE_CONFIG_KEYS.values():
         source_cfg = dataset_cfg.get(source_name)
         if isinstance(source_cfg, dict):
             source_cfg.pop("preprocessing_pipeline", None)
@@ -865,7 +879,7 @@ def apply_preprocessing_case(
     """Apply preprocessing scenario to config."""
     cfg = deepcopy(cfg)
     train_loader_cfg = cfg["train_loader"]
-    dataset_cfg = train_loader_cfg["dataset_config"]
+    dataset_cfg = train_loader_cfg["dataset"]
     remove_existing_preprocessing(dataset_cfg)
     pipelines = params.get("pipelines")
     if not isinstance(pipelines, dict) or not pipelines:
@@ -913,7 +927,7 @@ def apply_preprocessing_case(
 
 def validate_preprocessing_written(cfg: dict[str, Any], params: dict[str, Any]) -> None:
     """Validate preprocessing in config."""
-    dataset_cfg = cfg["train_loader"]["dataset_config"]
+    dataset_cfg = cfg["train_loader"]["dataset"]
     expected_pipelines = params["pipelines"]
     for source_name, expected_steps in expected_pipelines.items():
         source_cfg = get_source_config(dataset_cfg, source_name)
@@ -923,10 +937,10 @@ def validate_preprocessing_written(cfg: dict[str, Any], params: dict[str, Any]) 
         actual_steps = pipeline_cfg.get("preprocessors_list")
         if actual_steps != expected_steps:
             raise AssertionError(f"{source_name} preprocessing differs")
-    for source_name in ("model", "observation", "condition"):
+    for source_name in SOURCE_CONFIG_KEYS:
         if source_name in expected_pipelines:
             continue
-        source_cfg = dataset_cfg.get(source_name)
+        source_cfg = dataset_cfg.get(SOURCE_CONFIG_KEYS[source_name])
         if isinstance(source_cfg, dict) and "preprocessing_pipeline" in source_cfg:
             raise AssertionError(f"{source_name} retained preprocessing incorrectly")
 
@@ -1008,11 +1022,11 @@ def find_joblib_files(case_dir: Path) -> list:
 def classify_joblib_source(path: Path) -> str | None:
     """Classify joblib by filename."""
     name = path.name.lower()
-    if "observation" in name or "obs" in name:
+    if "observation" in name or "obs" in name or "reference" in name:
         return "observation"
     if "condition" in name:
         return "condition"
-    if "model" in name:
+    if "model" in name or "forecast" in name:
         return "model"
     return None
 

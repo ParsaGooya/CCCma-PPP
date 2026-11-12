@@ -455,6 +455,7 @@ def test_build_mlp_hidden_layer_order():
     assert isinstance(model[4], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_all_options_final_layer_order():
     model = build_mlp(
         [4, 8, 2],
@@ -539,7 +540,6 @@ def test_build_mlp_forward_shape(
     )
 
 
-@pytest.mark.pruned
 def test_build_mlp_forward_with_all_options():
     model = build_mlp(
         [4, 8, 6, 2],

@@ -1,0 +1,870 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S2D4P.architectures.unet package &mdash; S2D4P  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="S2D4P.configs package" href="S2D4P.configs.html" />
+    <link rel="prev" title="S2D4P.architectures.mlp package" href="S2D4P.architectures.mlp.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            S2D4P
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">S2D4P</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="S2D4P.html">S2D4P package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="S2D4P.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="S2D4P.architectures.html">S2D4P.architectures package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.configs.html">S2D4P.configs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html">S2D4P.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.html">S2D4P.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.generic.html">S2D4P.generic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.inference.html">S2D4P.inference package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.loss.html">S2D4P.loss package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html">S2D4P.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.train.html">S2D4P.train package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.html#module-S2D4P">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">S2D4P</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">S2D4P</a></li>
+          <li class="breadcrumb-item"><a href="S2D4P.html">S2D4P package</a></li>
+          <li class="breadcrumb-item"><a href="S2D4P.architectures.html">S2D4P.architectures package</a></li>
+      <li class="breadcrumb-item active">S2D4P.architectures.unet package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/S2D4P.architectures.unet.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="s2d4p-architectures-unet-package">
+<h1>S2D4P.architectures.unet package<a class="headerlink" href="#s2d4p-architectures-unet-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-S2D4P.architectures.unet.cvae">
+<span id="s2d4p-architectures-unet-cvae-module"></span><h2>S2D4P.architectures.unet.cvae module<a class="headerlink" href="#module-S2D4P.architectures.unet.cvae" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.Generation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.cvae.</span></span><span class="sig-name descname"><span class="pre">Generation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latent_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_shapes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><span class="pre">cVAEUNetConfig</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.Generation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Decode latent vectors into spatial feature maps.</p>
+<p>Latent vectors are projected to a spatial bottleneck and passed through
+successive upsampling blocks. Generator-enabled configurations can replicate
+the bottleneck to produce multiple stochastic outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latent_size</strong> (<em>int</em>) – Number of latent features entering the decoder.</p></li>
+<li><p><strong>channels</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – Decoder channel sizes from bottleneck to highest spatial resolution.</p></li>
+<li><p><strong>resize_shapes</strong> (<em>list</em><em>[</em><em>tuple</em><em>]</em>) – Spatial shapes targeted across successive decoder levels.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><em>cVAEUNetConfig</em></a>) – Configuration controlling upsampling and generator noise behavior.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.Generation.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latent_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.Generation.forward" title="Link to this definition"></a></dt>
+<dd><p>Decode latent vectors into spatial feature maps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latent_samples</strong> (<em>torch.Tensor</em>) – Latent vectors with the batch represented by the leading dimension.</p></li>
+<li><p><strong>num_output_samples</strong> (<em>int</em>) – Number of stochastic output samples generated for each latent input when
+generator behavior is enabled.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decoded spatial features, with a leading output-sample dimension when
+multiple generator samples are requested.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.Recognition">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.cvae.</span></span><span class="sig-name descname"><span class="pre">Recognition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spatial_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><span class="pre">cVAEUNetConfig</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_log_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.Recognition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Encode spatial inputs into latent distribution parameters.</p>
+<p>Features are mapped to the first channel level, progressively downsampled,
+and finally projected from the bottleneck representation to latent
+parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_channels</strong> (<em>int</em>) – Number of channels entering the encoder.</p></li>
+<li><p><strong>input_spatial_shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Height and width of the encoder input.</p></li>
+<li><p><strong>channels</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – Channel sizes used across encoder resolution levels.</p></li>
+<li><p><strong>latent_size</strong> (<em>int</em>) – Size of the latent representation.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><em>cVAEUNetConfig</em></a>) – Configuration controlling convolutional blocks and latent projection.</p></li>
+<li><p><strong>get_log_var</strong> (<em>bool</em>) – Whether the bottleneck produces latent log-variance in addition to the
+latent mean.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.Recognition.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.TensorMask" title="S2D4P.architectures.layers.conv.TensorMask"><span class="pre">TensorMask</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentVector" title="S2D4P.architectures.layers.conv.LatentVector"><span class="pre">LatentVector</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.Recognition.forward" title="Link to this definition"></a></dt>
+<dd><p>Encode an input into latent parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input</strong> (<a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.TensorMask" title="S2D4P.architectures.layers.conv.TensorMask"><em>TensorMask</em></a>) – Input feature tensor and optional validity mask.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Latent mean and optional log-variance produced at the encoder bottleneck.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentVector" title="S2D4P.architectures.layers.conv.LatentVector">LatentVector</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.UNetSelector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.cvae.</span></span><span class="sig-name descname"><span class="pre">UNetSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'unet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">share_output_block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.UNetSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.deterministicArchSelector" title="S2D4P.core.selectors.deterministicArchSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">deterministicArchSelector</span></code></a></p>
+<p>Selector for a deterministic U-Net architecture used as a cVAE guess branch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> (<em>str</em>) – Registered deterministic architecture type to select.</p></li>
+<li><p><strong>share_output_block</strong> (<em>bool</em>) – Whether the cVAE and deterministic guess branches share the same output
+block.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.UNetSelector.share_output_block">
+<span class="sig-name descname"><span class="pre">share_output_block</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.UNetSelector.share_output_block" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.UNetSelector.type">
+<span class="sig-name descname"><span class="pre">type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unet'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.UNetSelector.type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNet">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEUNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><span class="pre">cVAEUNetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNet" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.cVAEArchABC" title="S2D4P.architectures.architecture_abc.cVAEArchABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEArchABC</span></code></a></p>
+<p>U-Net conditional variational autoencoder architecture.</p>
+<p>Uses separate recognition and conditioning encoders to construct latent
+representations, a decoder to generate spatial features, and an optional
+deterministic U-Net branch that provides a baseline prediction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><em>cVAEUNetConfig</em></a>) – Configuration defining the cVAE U-Net architecture.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Input shape in channel, height, and width order.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Output shape in channel, height, and width order. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the input
+shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional feature channels supplied with each sample.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="S2D4P.architectures.architecture_abc.cVAEForwardRequest"><span class="pre">cVAEForwardRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.models.html#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput"><span class="pre">cVAEOutput</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNet.forward" title="Link to this definition"></a></dt>
+<dd><p>Run the cVAE U-Net training forward pass.</p>
+<p>Posterior and conditioning latent parameters are inferred, posterior samples
+are drawn, decoder features are generated, and an optional deterministic
+guess is added before the output projection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="S2D4P.architectures.architecture_abc.cVAEForwardRequest"><em>cVAEForwardRequest</em></a>) – Forward request containing target and conditioning tensors, masks,
+additional features, latent and output sample counts, and optional
+posterior variance limits.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Predictions together with posterior parameters, latent samples,
+conditional latent parameters, and deterministic-branch information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.models.html#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput">cVAEOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNet.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="S2D4P.architectures.architecture_abc.cVAEPredictRequest"><span class="pre">cVAEPredictRequest</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic_guess_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.models.html#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput"><span class="pre">cVAEOutput</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNet.predict" title="Link to this definition"></a></dt>
+<dd><p>Generate predictions from the cVAE U-Net latent prior.</p>
+<p>Prior latent samples are decoded in optional chunks. An available
+deterministic guess is either added to the stochastic output or returned by
+itself when deterministic-only prediction is requested.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="S2D4P.architectures.architecture_abc.cVAEPredictRequest"><em>cVAEPredictRequest</em></a>) – Prediction request containing conditioning data, masks, additional
+features, latent sampling settings, output sample count, and chunk size.</p></li>
+<li><p><strong>deterministic_guess_only</strong> (<em>bool</em>) – Whether to return only the deterministic guess branch instead of adding it
+to the generated cVAE output.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generated predictions and conditional latent parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.models.html#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput">cVAEOutput</a></p>
+</dd>
+<dt class="field-even">Warns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>UserWarning</strong> – When deterministic-only prediction is enabled, indicating that only the
+deterministic guess branch is being saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEUNetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">channels:</span> <span class="pre">list[int],</span> <span class="pre">latent_size:</span> <span class="pre">int,</span> <span class="pre">condition_embedding_channels:</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">condition_embedding_size:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">latent_normalization:</span> <span class="pre">~typing.Literal['batch',</span> <span class="pre">'group',</span> <span class="pre">'layer',</span> <span class="pre">'none']</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">'layer',</span> <span class="pre">condition_dependant_latent:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">condemb_to_decoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">deterministic_guess_config:</span> <span class="pre">~S2D4P.architectures.unet.cvae.UNetSelector</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">block_config:</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.PartialConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvNeXtBlockConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">upsampling_method:</span> <span class="pre">~typing.Literal['transpose_conv',</span> <span class="pre">'bilinear',</span> <span class="pre">'pixelshuffle']</span> <span class="pre">=</span> <span class="pre">'bilinear',</span> <span class="pre">upsampling_alignment_method:</span> <span class="pre">~typing.Literal['interpolation',</span> <span class="pre">'padd',</span> <span class="pre">'strict']</span> <span class="pre">=</span> <span class="pre">'padd',</span> <span class="pre">transpose_kernel_sizes:</span> <span class="pre">list[int</span> <span class="pre">|</span> <span class="pre">tuple[int,</span> <span class="pre">int]]</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">add_skip_latent:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">mask_pooling:</span> <span class="pre">~typing.Literal['any',</span> <span class="pre">'all',</span> <span class="pre">'fraction']</span> <span class="pre">=</span> <span class="pre">'any',</span> <span class="pre">mask_fraction_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.5,</span> <span class="pre">output_activation:</span> <span class="pre">~typing.Literal['identity',</span> <span class="pre">'sigmoid',</span> <span class="pre">'tanh']</span> <span class="pre">=</span> <span class="pre">'identity',</span> <span class="pre">output_block_hidden_channels:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">init_method:</span> <span class="pre">~typing.Literal['default',</span> <span class="pre">'kaiming',</span> <span class="pre">'xavier',</span> <span class="pre">'trunc_normal']</span> <span class="pre">=</span> <span class="pre">'default',</span> <span class="pre">GENERATOR:</span> <span class="pre">~S2D4P.architectures.architecture_abc.GENERATORConfig</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="S2D4P.architectures.architecture_abc.cVAEArchConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEArchConfigABC</span></code></a></p>
+<p>Configuration for a U-Net conditional variational autoencoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channels</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – Channel sizes used across the U-Net resolution levels.</p></li>
+<li><p><strong>latent_size</strong> (<em>int</em>) – Size of the posterior latent representation.</p></li>
+<li><p><strong>condition_embedding_channels</strong> (<em>list</em><em> | </em><em>None</em>) – Channel sizes used by the conditioning encoder. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">channels</span></code>
+is used.</p></li>
+<li><p><strong>condition_embedding_size</strong> (<em>int</em><em> | </em><em>None</em>) – Size of the conditioning embedding. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">latent_size</span></code> is used.</p></li>
+<li><p><strong>latent_normalization</strong> (<em>NormalizationMethod</em><em> | </em><em>None</em>) – Normalization applied before projecting bottleneck features to latent
+parameters.</p></li>
+<li><p><strong>condition_dependant_latent</strong> (<em>bool</em>) – Whether the latent prior depends on the conditioning input.</p></li>
+<li><p><strong>condemb_to_decoder</strong> (<em>bool</em>) – Whether the conditioning embedding is concatenated with latent samples
+before generation.</p></li>
+<li><p><strong>deterministic_guess_config</strong> (<a class="reference internal" href="#S2D4P.architectures.unet.cvae.UNetSelector" title="S2D4P.architectures.unet.cvae.UNetSelector"><em>UNetSelector</em></a><em> | </em><em>None</em>) – Optional deterministic U-Net configuration used to provide a baseline
+prediction that is added to the cVAE output.</p></li>
+<li><p><strong>block_config</strong> (<a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig" title="S2D4P.architectures.layers.conv.ConvBlockConfig"><em>ConvBlockConfig</em></a><em> | </em><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig" title="S2D4P.architectures.layers.conv.PartialConvBlockConfig"><em>PartialConvBlockConfig</em></a><em> | </em><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig" title="S2D4P.architectures.layers.conv.ConvNeXtBlockConfig"><em>ConvNeXtBlockConfig</em></a>) – Configuration used to construct convolutional blocks.</p></li>
+<li><p><strong>upsampling_method</strong> (<em>UpsamplingMethod</em>) – Method used to increase decoder spatial resolution.</p></li>
+<li><p><strong>upsampling_alignment_method</strong> (<em>AlignmentMethod</em>) – Method used to align decoder features with requested spatial shapes.</p></li>
+<li><p><strong>transpose_kernel_sizes</strong> (<em>list</em><em>[</em><em>int</em><em> | </em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>] </em><em>| </em><em>int</em>) – Kernel sizes used by successive upsampling blocks. A single integer is
+repeated across all upsampling levels.</p></li>
+<li><p><strong>add_skip_latent</strong> (<em>bool</em>) – Whether latent information is configured to include skip-related
+behavior.</p></li>
+<li><p><strong>mask_pooling</strong> (<em>MaskPoolingMethod</em>) – Method used for validity-mask pooling.</p></li>
+<li><p><strong>mask_fraction_threshold</strong> (<em>float</em>) – Valid-fraction threshold used by fraction-based mask pooling.</p></li>
+<li><p><strong>output_activation</strong> (<em>OutputActivation</em>) – Activation applied by the output block.</p></li>
+<li><p><strong>output_block_hidden_channels</strong> (<em>int</em><em> | </em><em>None</em>) – Number of intermediate channels in the output block.</p></li>
+<li><p><strong>init_method</strong> (<em>InitMethod</em>) – Parameter initialization method used when no checkpoint is loaded.</p></li>
+<li><p><strong>GENERATOR</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig"><em>GENERATORConfig</em></a><em> | </em><em>None</em>) – Optional generator configuration controlling stochastic output sampling
+and noise injection.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.EXPECTS_MASK">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.EXPECTS_MASK" title="Link to this definition"></a></dt>
+<dd><p>Indicate whether the architecture expects spatial validity masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when partial convolution is used directly or through the
+configured ConvNeXt block, otherwise <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.GENERATOR">
+<span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig"><span class="pre">GENERATORConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.GENERATOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.NUM_INPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.NUM_OUTPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.NUM_OUTPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.add_skip_latent">
+<span class="sig-name descname"><span class="pre">add_skip_latent</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.add_skip_latent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.block_config">
+<span class="sig-name descname"><span class="pre">block_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig" title="S2D4P.architectures.layers.conv.ConvBlockConfig"><span class="pre">ConvBlockConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig" title="S2D4P.architectures.layers.conv.PartialConvBlockConfig"><span class="pre">PartialConvBlockConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig" title="S2D4P.architectures.layers.conv.ConvNeXtBlockConfig"><span class="pre">ConvNeXtBlockConfig</span></a></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.block_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Build a U-Net conditional variational autoencoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input shape in channel, height, and width order.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Output shape in channel, height, and width order. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the input
+shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional feature channels supplied with each sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed U-Net conditional variational autoencoder.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNet" title="S2D4P.architectures.unet.cvae.cVAEUNet">cVAEUNet</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.channels">
+<span class="sig-name descname"><span class="pre">channels</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.channels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.condemb_to_decoder">
+<span class="sig-name descname"><span class="pre">condemb_to_decoder</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condemb_to_decoder" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_dependant_latent">
+<span class="sig-name descname"><span class="pre">condition_dependant_latent</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_dependant_latent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_embedding_channels">
+<span class="sig-name descname"><span class="pre">condition_embedding_channels</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_embedding_channels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_embedding_size">
+<span class="sig-name descname"><span class="pre">condition_embedding_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_embedding_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.deterministic_guess_config">
+<span class="sig-name descname"><span class="pre">deterministic_guess_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#S2D4P.architectures.unet.cvae.UNetSelector" title="S2D4P.architectures.unet.cvae.UNetSelector"><span class="pre">UNetSelector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.deterministic_guess_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.init_method">
+<span class="sig-name descname"><span class="pre">init_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.init_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.latent_normalization">
+<span class="sig-name descname"><span class="pre">latent_normalization</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'batch'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'group'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layer'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'none'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'layer'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.latent_normalization" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.latent_size">
+<span class="sig-name descname"><span class="pre">latent_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.latent_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.mask_fraction_threshold">
+<span class="sig-name descname"><span class="pre">mask_fraction_threshold</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.mask_fraction_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.mask_pooling">
+<span class="sig-name descname"><span class="pre">mask_pooling</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'any'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'fraction'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'any'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.mask_pooling" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.output_activation">
+<span class="sig-name descname"><span class="pre">output_activation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'identity'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sigmoid'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tanh'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'identity'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.output_activation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.output_block_hidden_channels">
+<span class="sig-name descname"><span class="pre">output_block_hidden_channels</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.output_block_hidden_channels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.transpose_kernel_sizes">
+<span class="sig-name descname"><span class="pre">transpose_kernel_sizes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.transpose_kernel_sizes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.upsampling_alignment_method">
+<span class="sig-name descname"><span class="pre">upsampling_alignment_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'interpolation'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'padd'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'strict'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'padd'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.upsampling_alignment_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetConfig.upsampling_method">
+<span class="sig-name descname"><span class="pre">upsampling_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'transpose_conv'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bilinear'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pixelshuffle'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'bilinear'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig.upsampling_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetSIC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEUNetSIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><span class="pre">cVAEUNetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetSIC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNet" title="S2D4P.architectures.unet.cvae.cVAEUNet"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEUNet</span></code></a></p>
+<p>Sea-ice-concentration specialization of the cVAE U-Net.</p>
+<p>Uses the standard cVAE U-Net architecture with a sea-ice-specific output block
+that can constrain predictions to the interval [0, 1].</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEUNetSICEConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">channels:</span> <span class="pre">list[int],</span> <span class="pre">latent_size:</span> <span class="pre">int,</span> <span class="pre">condition_embedding_channels:</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">condition_embedding_size:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">latent_normalization:</span> <span class="pre">~typing.Literal['batch',</span> <span class="pre">'group',</span> <span class="pre">'layer',</span> <span class="pre">'none']</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">'layer',</span> <span class="pre">condition_dependant_latent:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">condemb_to_decoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">deterministic_guess_config:</span> <span class="pre">~S2D4P.architectures.unet.cvae.UNetSelector</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">block_config:</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.PartialConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvNeXtBlockConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">upsampling_method:</span> <span class="pre">~typing.Literal['transpose_conv',</span> <span class="pre">'bilinear',</span> <span class="pre">'pixelshuffle']</span> <span class="pre">=</span> <span class="pre">'bilinear',</span> <span class="pre">upsampling_alignment_method:</span> <span class="pre">~typing.Literal['interpolation',</span> <span class="pre">'padd',</span> <span class="pre">'strict']</span> <span class="pre">=</span> <span class="pre">'padd',</span> <span class="pre">transpose_kernel_sizes:</span> <span class="pre">list[int</span> <span class="pre">|</span> <span class="pre">tuple[int,</span> <span class="pre">int]]</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">add_skip_latent:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">mask_pooling:</span> <span class="pre">~typing.Literal['any',</span> <span class="pre">'all',</span> <span class="pre">'fraction']</span> <span class="pre">=</span> <span class="pre">'any',</span> <span class="pre">mask_fraction_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.5,</span> <span class="pre">output_activation:</span> <span class="pre">~typing.Literal['identity',</span> <span class="pre">'sigmoid',</span> <span class="pre">'tanh']</span> <span class="pre">=</span> <span class="pre">'identity',</span> <span class="pre">output_block_hidden_channels:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">init_method:</span> <span class="pre">~typing.Literal['default',</span> <span class="pre">'kaiming',</span> <span class="pre">'xavier',</span> <span class="pre">'trunc_normal']</span> <span class="pre">=</span> <span class="pre">'default',</span> <span class="pre">GENERATOR:</span> <span class="pre">~S2D4P.architectures.architecture_abc.GENERATORConfig</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">clip_output:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetConfig" title="S2D4P.architectures.unet.cvae.cVAEUNetConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEUNetConfig</span></code></a></p>
+<p>Configuration for a sea-ice-concentration cVAE U-Net.</p>
+<p>Extends the standard cVAE U-Net configuration with optional clipping of the
+final output to the valid sea-ice-concentration range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>clip_output</strong> (<em>bool</em>) – Whether final predictions are clipped to the interval [0, 1].</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Build a sea-ice-concentration cVAE U-Net.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input shape in channel, height, and width order.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Output shape in channel, height, and width order. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the input
+shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional feature channels supplied with each sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed sea-ice-concentration cVAE U-Net.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.unet.cvae.cVAEUNetSIC" title="S2D4P.architectures.unet.cvae.cVAEUNetSIC">cVAEUNetSIC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.clip_output">
+<span class="sig-name descname"><span class="pre">clip_output</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.clip_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.architectures.unet.deterministic">
+<span id="s2d4p-architectures-unet-deterministic-module"></span><h2>S2D4P.architectures.unet.deterministic module<a class="headerlink" href="#module-S2D4P.architectures.unet.deterministic" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNet">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.deterministic.</span></span><span class="sig-name descname"><span class="pre">UNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.unet.deterministic.UNetConfig" title="S2D4P.architectures.unet.deterministic.UNetConfig"><span class="pre">UNetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNet" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.deterministicArchABC" title="S2D4P.architectures.architecture_abc.deterministicArchABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">deterministicArchABC</span></code></a></p>
+<p>Deterministic U-Net architecture.</p>
+<p>Features are encoded through successive downsampling blocks, processed at the
+bottleneck, and decoded through corresponding upsampling blocks. Optional
+skip connections, validity-mask propagation, additional features, and
+generator-based stochastic sampling are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.unet.deterministic.UNetConfig" title="S2D4P.architectures.unet.deterministic.UNetConfig"><em>UNetConfig</em></a>) – Configuration defining the U-Net architecture.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Input shape in channel, height, and width order.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Output shape in channel, height, and width order. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the input
+shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional feature channels supplied with each sample.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><span class="pre">DeterministicRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.models.html#S2D4P.core.models.deterministic.deterministicOutput" title="S2D4P.core.models.deterministic.deterministicOutput"><span class="pre">deterministicOutput</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNet.forward" title="Link to this definition"></a></dt>
+<dd><p>Run the deterministic U-Net forward pass.</p>
+<p>Decoder features are generated first and then passed through the output block.
+When multiple generator samples are requested, the resulting batch dimension
+is reshaped into separate output-sample and batch dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><em>DeterministicRequest</em></a>) – Forward request containing model inputs, masks, additional features, and
+output-sampling settings.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model predictions, including an output-sample dimension when multiple
+stochastic outputs are generated.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.models.html#S2D4P.core.models.deterministic.deterministicOutput" title="S2D4P.core.models.deterministic.deterministicOutput">deterministicOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNet.forward_decoder">
+<span class="sig-name descname"><span class="pre">forward_decoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><span class="pre">DeterministicRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNet.forward_decoder" title="Link to this definition"></a></dt>
+<dd><p>Run the U-Net encoder and decoder without the final output block.</p>
+<p>The input is encoded through the downsampling path and bottleneck before being
+decoded with or without skip connections. Generator-enabled models can either
+repeat decoder features for multiple output samples or decode each sample
+separately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><em>DeterministicRequest</em></a>) – Request containing model inputs, masks, additional features, output sample
+count, and output-sample chunking behavior.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decoder feature tensor resized to the configured output spatial shape.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNet.output_block">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">output_block</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UNetOutput" title="S2D4P.architectures.layers.unet.UNetOutput"><span class="pre">UNetOutput</span></a></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNet.output_block" title="Link to this definition"></a></dt>
+<dd><p>Return the final U-Net output block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Output projection used to convert decoder features into model
+predictions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UNetOutput" title="S2D4P.architectures.layers.unet.UNetOutput">UNetOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.deterministic.</span></span><span class="sig-name descname"><span class="pre">UNetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">channels:</span> <span class="pre">list[int],</span> <span class="pre">block_config:</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.PartialConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvNeXtBlockConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">upsampling_method:</span> <span class="pre">~typing.Literal['transpose_conv',</span> <span class="pre">'bilinear',</span> <span class="pre">'pixelshuffle']</span> <span class="pre">=</span> <span class="pre">'bilinear',</span> <span class="pre">skip_alignment_method:</span> <span class="pre">~typing.Literal['interpolation',</span> <span class="pre">'padd',</span> <span class="pre">'strict']</span> <span class="pre">=</span> <span class="pre">'padd',</span> <span class="pre">transpose_kernel_sizes:</span> <span class="pre">list[int</span> <span class="pre">|</span> <span class="pre">tuple[int,</span> <span class="pre">int]]</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">add_skip_connections:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">process_skip_connections:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">mask_pooling:</span> <span class="pre">~typing.Literal['any',</span> <span class="pre">'all',</span> <span class="pre">'fraction']</span> <span class="pre">=</span> <span class="pre">'any',</span> <span class="pre">mask_fraction_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.5,</span> <span class="pre">output_activation:</span> <span class="pre">~typing.Literal['identity',</span> <span class="pre">'sigmoid',</span> <span class="pre">'tanh']</span> <span class="pre">=</span> <span class="pre">'identity',</span> <span class="pre">output_block_hidden_channels:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">init_method:</span> <span class="pre">~typing.Literal['default',</span> <span class="pre">'kaiming',</span> <span class="pre">'xavier',</span> <span class="pre">'trunc_normal']</span> <span class="pre">=</span> <span class="pre">'default',</span> <span class="pre">GENERATOR:</span> <span class="pre">~S2D4P.architectures.architecture_abc.GENERATORConfig</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArchConfigABC</span></code></a></p>
+<p>Configuration for a deterministic U-Net architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channels</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – Channel sizes used across the U-Net resolution levels.</p></li>
+<li><p><strong>block_config</strong> (<a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig" title="S2D4P.architectures.layers.conv.ConvBlockConfig"><em>ConvBlockConfig</em></a><em> | </em><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig" title="S2D4P.architectures.layers.conv.PartialConvBlockConfig"><em>PartialConvBlockConfig</em></a><em> | </em><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig" title="S2D4P.architectures.layers.conv.ConvNeXtBlockConfig"><em>ConvNeXtBlockConfig</em></a>) – Configuration used to construct convolutional blocks.</p></li>
+<li><p><strong>upsampling_method</strong> (<em>UpsamplingMethod</em>) – Method used to increase decoder spatial resolution.</p></li>
+<li><p><strong>skip_alignment_method</strong> (<em>AlignmentMethod</em>) – Method used to align decoder features with skip connections or requested
+spatial shapes.</p></li>
+<li><p><strong>transpose_kernel_sizes</strong> (<em>list</em><em>[</em><em>int</em><em> | </em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>] </em><em>| </em><em>int</em>) – Kernel sizes used by successive upsampling blocks. A single integer is
+repeated across all upsampling levels.</p></li>
+<li><p><strong>add_skip_connections</strong> (<em>bool</em>) – Whether encoder features are passed to corresponding decoder levels
+through skip connections.</p></li>
+<li><p><strong>process_skip_connections</strong> (<em>bool</em>) – Whether skip features are passed through an additional convolutional
+block before being supplied to the decoder.</p></li>
+<li><p><strong>mask_pooling</strong> (<em>MaskPoolingMethod</em>) – Method used to pool validity masks during downsampling.</p></li>
+<li><p><strong>mask_fraction_threshold</strong> (<em>float</em>) – Minimum valid fraction used when fraction-based mask pooling is selected.</p></li>
+<li><p><strong>output_activation</strong> (<em>OutputActivation</em>) – Activation applied by the final output block.</p></li>
+<li><p><strong>output_block_hidden_channels</strong> (<em>int</em><em> | </em><em>None</em>) – Number of intermediate channels in the output block.</p></li>
+<li><p><strong>init_method</strong> (<em>InitMethod</em>) – Parameter initialization method used when no checkpoint is loaded.</p></li>
+<li><p><strong>GENERATOR</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig"><em>GENERATORConfig</em></a><em> | </em><em>None</em>) – Optional generator configuration controlling stochastic output sampling
+and noise injection.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.EXPECTS_MASK">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.EXPECTS_MASK" title="Link to this definition"></a></dt>
+<dd><p>Indicate whether the architecture expects spatial validity masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when partial convolution is used directly or through the
+configured ConvNeXt block, otherwise <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.GENERATOR">
+<span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig"><span class="pre">GENERATORConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.GENERATOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.NUM_INPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.NUM_OUTPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.NUM_OUTPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.add_skip_connections">
+<span class="sig-name descname"><span class="pre">add_skip_connections</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.add_skip_connections" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.block_config">
+<span class="sig-name descname"><span class="pre">block_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig" title="S2D4P.architectures.layers.conv.ConvBlockConfig"><span class="pre">ConvBlockConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig" title="S2D4P.architectures.layers.conv.PartialConvBlockConfig"><span class="pre">PartialConvBlockConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig" title="S2D4P.architectures.layers.conv.ConvNeXtBlockConfig"><span class="pre">ConvNeXtBlockConfig</span></a></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.block_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Build a deterministic U-Net.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input shape in channel, height, and width order.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Output shape in channel, height, and width order. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the input
+shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional feature channels supplied with each sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed deterministic U-Net.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.unet.deterministic.UNet" title="S2D4P.architectures.unet.deterministic.UNet">UNet</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.channels">
+<span class="sig-name descname"><span class="pre">channels</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.channels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.init_method">
+<span class="sig-name descname"><span class="pre">init_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.init_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.mask_fraction_threshold">
+<span class="sig-name descname"><span class="pre">mask_fraction_threshold</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.mask_fraction_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.mask_pooling">
+<span class="sig-name descname"><span class="pre">mask_pooling</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'any'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'fraction'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'any'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.mask_pooling" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.output_activation">
+<span class="sig-name descname"><span class="pre">output_activation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'identity'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sigmoid'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tanh'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'identity'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.output_activation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.output_block_hidden_channels">
+<span class="sig-name descname"><span class="pre">output_block_hidden_channels</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.output_block_hidden_channels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.process_skip_connections">
+<span class="sig-name descname"><span class="pre">process_skip_connections</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.process_skip_connections" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.skip_alignment_method">
+<span class="sig-name descname"><span class="pre">skip_alignment_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'interpolation'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'padd'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'strict'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'padd'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.skip_alignment_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.transpose_kernel_sizes">
+<span class="sig-name descname"><span class="pre">transpose_kernel_sizes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.transpose_kernel_sizes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetConfig.upsampling_method">
+<span class="sig-name descname"><span class="pre">upsampling_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'transpose_conv'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bilinear'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pixelshuffle'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'bilinear'</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetConfig.upsampling_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetSIC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.deterministic.</span></span><span class="sig-name descname"><span class="pre">UNetSIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.unet.deterministic.UNetConfig" title="S2D4P.architectures.unet.deterministic.UNetConfig"><span class="pre">UNetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetSIC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.unet.deterministic.UNet" title="S2D4P.architectures.unet.deterministic.UNet"><code class="xref py py-class docutils literal notranslate"><span class="pre">UNet</span></code></a></p>
+<p>Sea-ice-concentration specialization of the deterministic U-Net.</p>
+<p>Uses the standard U-Net encoder and decoder with a sea-ice-specific output
+block that can constrain predictions to the interval [0, 1].</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetSICConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.unet.deterministic.</span></span><span class="sig-name descname"><span class="pre">UNetSICConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">channels:</span> <span class="pre">list[int],</span> <span class="pre">block_config:</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.PartialConvBlockConfig</span> <span class="pre">|</span> <span class="pre">~S2D4P.architectures.layers.conv.ConvNeXtBlockConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">upsampling_method:</span> <span class="pre">~typing.Literal['transpose_conv',</span> <span class="pre">'bilinear',</span> <span class="pre">'pixelshuffle']</span> <span class="pre">=</span> <span class="pre">'bilinear',</span> <span class="pre">skip_alignment_method:</span> <span class="pre">~typing.Literal['interpolation',</span> <span class="pre">'padd',</span> <span class="pre">'strict']</span> <span class="pre">=</span> <span class="pre">'padd',</span> <span class="pre">transpose_kernel_sizes:</span> <span class="pre">list[int</span> <span class="pre">|</span> <span class="pre">tuple[int,</span> <span class="pre">int]]</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">add_skip_connections:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">process_skip_connections:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">mask_pooling:</span> <span class="pre">~typing.Literal['any',</span> <span class="pre">'all',</span> <span class="pre">'fraction']</span> <span class="pre">=</span> <span class="pre">'any',</span> <span class="pre">mask_fraction_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.5,</span> <span class="pre">output_activation:</span> <span class="pre">~typing.Literal['identity',</span> <span class="pre">'sigmoid',</span> <span class="pre">'tanh']</span> <span class="pre">=</span> <span class="pre">'identity',</span> <span class="pre">output_block_hidden_channels:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">init_method:</span> <span class="pre">~typing.Literal['default',</span> <span class="pre">'kaiming',</span> <span class="pre">'xavier',</span> <span class="pre">'trunc_normal']</span> <span class="pre">=</span> <span class="pre">'default',</span> <span class="pre">GENERATOR:</span> <span class="pre">~S2D4P.architectures.architecture_abc.GENERATORConfig</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">clip_output:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetSICConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.unet.deterministic.UNetConfig" title="S2D4P.architectures.unet.deterministic.UNetConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UNetConfig</span></code></a></p>
+<p>Configuration for a sea-ice-concentration deterministic U-Net.</p>
+<p>Extends the standard U-Net configuration with optional clipping of predicted
+sea-ice concentration to its valid range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>clip_output</strong> (<em>bool</em>) – Whether final predictions are clipped to the interval [0, 1].</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetSICConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetSICConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Build a sea-ice-concentration deterministic U-Net.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input shape in channel, height, and width order.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Output shape in channel, height, and width order. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the input
+shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional feature channels supplied with each sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed sea-ice-concentration deterministic U-Net.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.unet.deterministic.UNetSIC" title="S2D4P.architectures.unet.deterministic.UNetSIC">UNetSIC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetSICConfig.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetSICConfig.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.unet.deterministic.UNetSICConfig.clip_output">
+<span class="sig-name descname"><span class="pre">clip_output</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#S2D4P.architectures.unet.deterministic.UNetSICConfig.clip_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.architectures.unet.utils">
+<span id="s2d4p-architectures-unet-utils-module"></span><h2>S2D4P.architectures.unet.utils module<a class="headerlink" href="#module-S2D4P.architectures.unet.utils" title="Link to this heading"></a></h2>
+</section>
+<section id="module-S2D4P.architectures.unet">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-S2D4P.architectures.unet" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="S2D4P.architectures.mlp.html" class="btn btn-neutral float-left" title="S2D4P.architectures.mlp package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="S2D4P.configs.html" class="btn btn-neutral float-right" title="S2D4P.configs package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

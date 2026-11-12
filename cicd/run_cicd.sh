@@ -18,12 +18,12 @@ echo "========================================"
 echo "Running project checks"
 echo "========================================"
 
-if [ ! -d "cccma_ppp" ]; then
-    echo "ERROR: cccma_ppp directory not found."
+if [ ! -d "S2D4P" ]; then
+    echo "ERROR: S2D4P directory not found."
     exit 1
 fi
 
-cd cccma_ppp
+cd S2D4P
 
 echo "Working directory: $(pwd)"
 

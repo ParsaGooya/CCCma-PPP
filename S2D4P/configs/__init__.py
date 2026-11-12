@@ -28,7 +28,9 @@ condition_data_allowed_dimensions = frozenset(
     set(data["condition_data_allowed_dimensions"])
 ).union(set(supported_NN_dimensions_sorted))
 
-forecast_data_required_dimensions = frozenset(set(data["forecast_data_required_dimensions"]))
+forecast_data_required_dimensions = frozenset(
+    set(data["forecast_data_required_dimensions"])
+)
 reference_data_required_dimensions = frozenset(
     set(data["reference_data_required_dimensions"])
 )

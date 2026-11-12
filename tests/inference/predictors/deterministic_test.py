@@ -38,7 +38,7 @@ class DummyModule:
         generator=True,
         num_output_dims=1,
     ):
-        self.model_config = SimpleNamespace(
+        self.architecture_config = SimpleNamespace(
             GENERATOR=generator,
             NUM_OUTPUT_DIMS=num_output_dims,
         )
@@ -464,7 +464,7 @@ def test_infer_on_batch_predicts_and_saves(
     assert model.predict_kwargs == {
         "data": batch,
         "output_sample_size": 3,
-        "chunk_output_samples": (False,),
+        "chunk_output_samples": False,
     }
 
     predictor._batch_to_netcdf.assert_called_once_with(
@@ -613,7 +613,7 @@ def test_batch_to_netcdf_delegates_prediction(
     args = save_mock.call_args.args
     torch.testing.assert_close(args[0], prediction)
     assert args[1] == metadata
-    assert args[2] == model.model_config.NUM_OUTPUT_DIMS
+    assert args[2] == model.architecture_config.NUM_OUTPUT_DIMS
     assert args[3] == "rank0_00000000.nc"
     assert args[4] == predictor.temp_save_dir
     assert args[5] == ["output_samples"]

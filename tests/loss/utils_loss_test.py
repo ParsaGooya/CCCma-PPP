@@ -425,6 +425,7 @@ def test_mse_shape_mismatch():
         )
 
 
+@pytest.mark.pruned
 def test_mse_invalid_reduction():
     with pytest.raises(NotImplementedError):
         WeightedMSE(
@@ -1287,6 +1288,7 @@ def test_frobenius_spatial_multiple_channels():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_frobenius_channel():
     result = Frobenius_norm(
         w2d(),
@@ -1384,7 +1386,6 @@ def test_frobenius_generator_averages_ensemble():
     )
 
 
-@pytest.mark.pruned
 def test_frobenius_generator_rejects_invalid_structure():
     loss = Frobenius_norm(
         w2d(),
@@ -1419,7 +1420,6 @@ def test_frobenius_generative_spatial():
     assert torch.isfinite(result)
 
 
-@pytest.mark.pruned
 def test_frobenius_generative_channel():
     context = make_context(generative_modeling=True)
 
@@ -1439,6 +1439,7 @@ def test_frobenius_generative_channel():
     assert torch.isfinite(result)
 
 
+@pytest.mark.pruned
 def test_frobenius_generator_and_generative():
     context = make_context(
         generator=True,
@@ -1469,7 +1470,6 @@ def test_frobenius_generator_and_generative():
     )
 
 
-@pytest.mark.pruned
 def test_frobenius_print(capsys):
     Frobenius_norm(
         w2d(),

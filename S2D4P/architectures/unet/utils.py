@@ -3,17 +3,25 @@ from S2D4P.architectures.layers.conv import TensorMask
 
 def _unet_config_checks(config):
     """
-    Document this function.
+    Validate common U-Net configuration settings.
+
+    Checks upsampling kernel sizes, encoder channel widths, latent dimensions,
+    mask pooling settings, output-block dimensions, conditioning behavior, and
+    generator sampling settings.
 
     Parameters
     ----------
     config : Any
-        Description not yet provided.
+        U-Net configuration to validate.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If upsampling kernel sizes are invalid or inconsistent with the number of
+        upsampling stages, channel widths or latent dimensions are nonpositive,
+        conditioning settings are incompatible, the mask fraction threshold is
+        outside [0, 1], the output-block hidden size is nonpositive, or generator
+        noise sampling is configured with a nonpositive number of samples.
     """
     channels = config.channels
     transpose_kernel_sizes = config.transpose_kernel_sizes
@@ -115,19 +123,19 @@ def _repeat_tensor_mask(
     repeats: int,
 ) -> TensorMask:
     """
-    Document this function.
+    Repeat a tensor and its validity mask along the batch dimension.
 
     Parameters
     ----------
     tensor_mask : TensorMask
-        Description not yet provided.
+        Tensor and optional validity mask to repeat.
     repeats : int
-        Description not yet provided.
+        Number of consecutive repetitions created for each batch element.
 
     Returns
     -------
     TensorMask
-        Description not yet provided.
+        Repeated tensor and, when present, repeated validity mask.
     """
     return TensorMask(
         tensor=tensor_mask.tensor.repeat_interleave(repeats, dim=0),

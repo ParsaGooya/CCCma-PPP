@@ -6,14 +6,19 @@ import pytest
 import torch
 
 import S2D4P.core.selectors as selectors_mod
+from S2D4P.core.registery import Registery
 from S2D4P.core.selectors import (
+    ArchSelector,
     FlowSelector,
-    ModelSelector,
     ModuleSelector,
     _load_config_from_checkpoint,
-    cVAEModelSelector,
-    deterministicModelSelector,
+    cVAEArchSelector,
+    deterministicArchSelector,
 )
+
+
+class LocalArchSelector(ArchSelector):
+    registery = Registery()
 
 
 def unique_name(prefix="test"):
@@ -43,7 +48,7 @@ class DummyModuleConfig:
         )
 
 
-class DummyModelConfig:
+class DummyArchConfig:
     def __init__(self, value=1, **kwargs):
         self.value = value
         self.kwargs = kwargs
@@ -63,45 +68,58 @@ class DummyFlow:
         self.kwargs = kwargs
 
 
-class LocalModelSelector(ModelSelector):
-    registery = type(cVAEModelSelector.registery)()
-
-    pass
-
-
 def make_checkpoint(
     path: Path,
-    model_type: str = "dummy",
+    architecture_type: str = "dummy",
     config: dict | None = None,
     input_shape=None,
     output_shape=None,
 ):
-    if config is None:
-        config = {"value": 10}
-
+    """Save a checkpoint in the layout that `_load_config_from_checkpoint` reads."""
     torch.save(
         {
             "module_config": {
-                "ModelConfig": {
-                    "type": model_type,
-                    "config": config,
+                "Architecture": {
+                    "type": architecture_type,
+                    "config": {"value": 10} if config is None else config,
                 }
             },
-            "model_input_shape": (
-                input_shape if input_shape is not None else np.array([1])
-            ),
-            "model_output_shape": (
-                output_shape if output_shape is not None else np.array([2])
-            ),
+            "input_shape": np.array([1]) if input_shape is None else input_shape,
+            "output_shape": np.array([2]) if output_shape is None else output_shape,
+            "input_var_metadata": {},
+            "output_var_metadata": {},
         },
         path,
     )
 
 
+def patch_checkpoint_loader(
+    monkeypatch,
+    architecture_type,
+    config,
+    checkpoint_config=None,
+):
+    """
+    Replace `_load_config_from_checkpoint` with a stub.
+
+    Returns the checkpoint config the stub hands back, so tests can check
+    identity.
+    """
+    sentinel = checkpoint_config if checkpoint_config is not None else object()
+
+    def fake_loader(load_dir, freeze_weights=False):
+        return (
+            {"Architecture": {"type": architecture_type, "config": config}},
+            sentinel,
+        )
+
+    monkeypatch.setattr(selectors_mod, "_load_config_from_checkpoint", fake_loader)
+    return sentinel
+
+
 @pytest.mark.pruned
 def test_module_selector_build_without_output_shape():
     name = unique_name("module_no_output")
-
     ModuleSelector.register(name)(DummyModuleConfig)
 
     selector = ModuleSelector(type=name, config={"value": 1})
@@ -121,7 +139,6 @@ def test_module_selector_unregistered_type_raises():
 @pytest.mark.pruned
 def test_module_selector_register_lowercases_name():
     name = unique_name("mixed_module")
-
     ModuleSelector.register(name.upper())(DummyModuleConfig)
 
     assert name.lower() in ModuleSelector.available()
@@ -132,15 +149,11 @@ def test_module_selector_register_lowercases_name():
 
 
 @pytest.mark.pruned
-def test_module_selector_register_available_and_build():
+def test_module_selector_build_passes_all_shapes():
     name = unique_name("module")
-
     ModuleSelector.register(name)(DummyModuleConfig)
 
-    assert name in ModuleSelector.available()
-
     selector = ModuleSelector(type=name.upper(), config={"value": 42})
-
     built = selector.build_module(
         input_shape=np.array([1]),
         output_shape=np.array([2]),
@@ -153,71 +166,56 @@ def test_module_selector_register_available_and_build():
     assert built.added_features_dim == 3
 
 
-def test_model_selector_requires_config_or_load_dir():
+def test_arch_selector_requires_config_or_load_dir():
     with pytest.raises(RuntimeError):
-        LocalModelSelector(type="anything", config=None, load_dir=None)
+        LocalArchSelector(type="anything", config=None, load_dir=None)
+
+
+def test_arch_selector_freeze_without_load_dir_raises():
+    with pytest.raises(ValueError):
+        LocalArchSelector(type="anything", config={}, freeze_weights=True)
+
+
+def test_arch_selector_register_and_get_architecture_config():
+    name = unique_name("arch")
+    LocalArchSelector.register(name)(DummyArchConfig)
+
+    selector = LocalArchSelector(type=name.upper(), config={"value": 7})
+    arch_config = selector.get_architecture_config()
+
+    assert isinstance(arch_config, DummyArchConfig)
+    assert arch_config.value == 7
+    assert arch_config.checkpoint_config is None
+    assert name in LocalArchSelector.available()
 
 
 @pytest.mark.pruned
-def test_model_selector_register_available_get_model_config():
-    name = unique_name("model")
+def test_arch_selector_register_lowercase_lookup():
+    name = unique_name("case_arch")
+    LocalArchSelector.register(name.upper())(DummyArchConfig)
 
-    LocalModelSelector.register(name)(DummyModelConfig)
+    selector = LocalArchSelector(type=name.upper(), config={"value": 3})
+    arch_config = selector.get_architecture_config()
 
-    selector = LocalModelSelector(type=name.upper(), config={"value": 7})
-    model_config = selector.get_model_config()
-
-    assert isinstance(model_config, DummyModelConfig)
-    assert model_config.value == 7
-    assert model_config.checkpoint_config is None
-    assert name in LocalModelSelector.available()
+    assert isinstance(arch_config, DummyArchConfig)
+    assert arch_config.value == 3
 
 
 @pytest.mark.pruned
-def test_model_selector_register_lowercase_lookup():
-    name = unique_name("case_model")
-
-    LocalModelSelector.register(name.upper())(DummyModelConfig)
-
-    selector = LocalModelSelector(type=name.upper(), config={"value": 3})
-    cfg = selector.get_model_config()
-
-    assert isinstance(cfg, DummyModelConfig)
-    assert cfg.value == 3
-
-
-def test_model_selector_unregistered_raises():
-    selector = LocalModelSelector(type=unique_name("missing_model"), config={})
+def test_arch_selector_unregistered_raises():
+    selector = LocalArchSelector(type=unique_name("missing_arch"), config={})
 
     with pytest.raises(Exception):
-        selector.get_model_config()
+        selector.get_architecture_config()
 
 
-def test_model_selector_checkpoint_load_overwrites_config(monkeypatch, tmp_path):
-    name = unique_name("checkpoint_model")
-    LocalModelSelector.register(name)(DummyModelConfig)
-
-    fake_checkpoint_config = object()
-
-    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
-        return (
-            {
-                "ModelConfig": {
-                    "type": name,
-                    "config": {"value": 99},
-                }
-            },
-            fake_checkpoint_config,
-        )
-
-    monkeypatch.setattr(
-        selectors_mod,
-        "_load_config_from_checkpoint",
-        fake_load_config_from_checkpoint,
-    )
+def test_arch_selector_checkpoint_load_overwrites_config(monkeypatch, tmp_path):
+    name = unique_name("checkpoint_arch")
+    LocalArchSelector.register(name)(DummyArchConfig)
+    fake_checkpoint_config = patch_checkpoint_loader(monkeypatch, name, {"value": 99})
 
     with pytest.warns(UserWarning):
-        selector = LocalModelSelector(
+        selector = LocalArchSelector(
             type=name,
             config={"value": 1},
             load_dir=tmp_path / "checkpoint.pt",
@@ -226,63 +224,32 @@ def test_model_selector_checkpoint_load_overwrites_config(monkeypatch, tmp_path)
     assert selector.config == {"value": 99}
     assert selector.checkpoint_config is fake_checkpoint_config
 
-    model_config = selector.get_model_config()
+    arch_config = selector.get_architecture_config()
 
-    assert isinstance(model_config, DummyModelConfig)
-    assert model_config.value == 99
-    assert model_config.checkpoint_config is fake_checkpoint_config
+    assert isinstance(arch_config, DummyArchConfig)
+    assert arch_config.value == 99
+    assert arch_config.checkpoint_config is fake_checkpoint_config
 
 
 @pytest.mark.pruned
-def test_model_selector_load_dir_type_mismatch(monkeypatch, tmp_path):
-    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
-        return (
-            {
-                "ModelConfig": {
-                    "type": "different_type",
-                    "config": {},
-                }
-            },
-            object(),
-        )
-
-    monkeypatch.setattr(
-        selectors_mod,
-        "_load_config_from_checkpoint",
-        fake_load_config_from_checkpoint,
-    )
+def test_arch_selector_load_dir_type_mismatch_raises(monkeypatch, tmp_path):
+    patch_checkpoint_loader(monkeypatch, "different_type", {})
 
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        LocalModelSelector(
+        LocalArchSelector(
             type="expected_type",
             config={},
             load_dir=tmp_path / "checkpoint.pt",
         )
 
 
-def test_model_selector_freeze_weights_warning(monkeypatch, tmp_path):
-    name = unique_name("freeze_model")
-    LocalModelSelector.register(name)(DummyModelConfig)
-
-    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
-        return (
-            {
-                "ModelConfig": {
-                    "type": name,
-                    "config": {"value": 11},
-                }
-            },
-            object(),
-        )
-
-    monkeypatch.setattr(
-        selectors_mod,
-        "_load_config_from_checkpoint",
-        fake_load_config_from_checkpoint,
-    )
+def test_arch_selector_freeze_weights_emits_both_warnings(monkeypatch, tmp_path):
+    name = unique_name("freeze_arch")
+    LocalArchSelector.register(name)(DummyArchConfig)
+    patch_checkpoint_loader(monkeypatch, name, {"value": 11})
 
     with pytest.warns(UserWarning) as record:
-        LocalModelSelector(
+        LocalArchSelector(
             type=name,
             config=None,
             load_dir=tmp_path / "checkpoint.pt",
@@ -296,29 +263,13 @@ def test_model_selector_freeze_weights_warning(monkeypatch, tmp_path):
 
 
 @pytest.mark.pruned
-def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tmp_path):
-    name = unique_name("nofreeze_model")
-    LocalModelSelector.register(name)(DummyModelConfig)
-
-    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
-        return (
-            {
-                "ModelConfig": {
-                    "type": name,
-                    "config": {"value": 12},
-                }
-            },
-            object(),
-        )
-
-    monkeypatch.setattr(
-        selectors_mod,
-        "_load_config_from_checkpoint",
-        fake_load_config_from_checkpoint,
-    )
+def test_arch_selector_load_dir_without_freeze_warns_once(monkeypatch, tmp_path):
+    name = unique_name("nofreeze_arch")
+    LocalArchSelector.register(name)(DummyArchConfig)
+    patch_checkpoint_loader(monkeypatch, name, {"value": 12})
 
     with pytest.warns(UserWarning) as record:
-        LocalModelSelector(
+        LocalArchSelector(
             type=name,
             config=None,
             load_dir=tmp_path / "checkpoint.pt",
@@ -329,41 +280,39 @@ def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tm
     assert "overwritten" in str(record[0].message)
 
 
-def test_cvae_model_selector_has_registry():
-    name = unique_name("cvae_model")
+@pytest.mark.pruned
+def test_cvae_arch_selector_has_registry():
+    name = unique_name("cvae_arch")
+    cVAEArchSelector.register(name)(DummyArchConfig)
 
-    cVAEModelSelector.register(name)(DummyModelConfig)
+    selector = cVAEArchSelector(type=name, config={"value": 5})
+    arch_config = selector.get_architecture_config()
 
-    selector = cVAEModelSelector(type=name, config={"value": 5})
-    cfg = selector.get_model_config()
-
-    assert isinstance(cfg, DummyModelConfig)
-    assert cfg.value == 5
-    assert name in cVAEModelSelector.available()
+    assert isinstance(arch_config, DummyArchConfig)
+    assert arch_config.value == 5
+    assert name in cVAEArchSelector.available()
 
 
 @pytest.mark.pruned
-def test_deterministic_model_selector_has_registry():
-    name = unique_name("det_model")
+def test_deterministic_arch_selector_has_registry():
+    name = unique_name("det_arch")
+    deterministicArchSelector.register(name)(DummyArchConfig)
 
-    deterministicModelSelector.register(name)(DummyModelConfig)
+    selector = deterministicArchSelector(type=name, config={"value": 6})
+    arch_config = selector.get_architecture_config()
 
-    selector = deterministicModelSelector(type=name, config={"value": 6})
-    cfg = selector.get_model_config()
-
-    assert isinstance(cfg, DummyModelConfig)
-    assert cfg.value == 6
-    assert name in deterministicModelSelector.available()
+    assert isinstance(arch_config, DummyArchConfig)
+    assert arch_config.value == 6
+    assert name in deterministicArchSelector.available()
 
 
 @pytest.mark.pruned
-def test_flow_selector_register_available_and_get_model():
+def test_flow_selector_register_available_and_get_flow():
     name = unique_name("flow")
-
     FlowSelector.register(name)(DummyFlow)
 
     selector = FlowSelector(type=name.upper(), args={"scale": 3})
-    flow = selector.get_model()
+    flow = selector.get_flow()
 
     assert isinstance(flow, DummyFlow)
     assert flow.scale == 3
@@ -375,47 +324,33 @@ def test_flow_selector_unregistered_raises():
     selector = FlowSelector(type=unique_name("missing_flow"), args={})
 
     with pytest.raises(Exception):
-        selector.get_model()
-
-
-@pytest.mark.pruned
-def test_flow_selector_post_init_noop():
-    name = unique_name("flow_noop")
-
-    FlowSelector.register(name)(DummyFlow)
-
-    selector = FlowSelector(type=name, args={"scale": 4})
-    flow = selector.get_model()
-
-    assert isinstance(flow, DummyFlow)
-    assert flow.scale == 4
+        selector.get_flow()
 
 
 @pytest.mark.pruned
 def test_flow_selector_case_insensitive_lookup():
     name = unique_name("flow_case")
-
     FlowSelector.register(name.upper())(DummyFlow)
 
     selector = FlowSelector(type=name.upper(), args={"scale": 8})
-    flow = selector.get_model()
+    flow = selector.get_flow()
 
     assert isinstance(flow, DummyFlow)
     assert flow.scale == 8
 
 
-def test_load_config_from_checkpoint_missing_file():
-    with pytest.raises(FileNotFoundError):
+@pytest.mark.pruned
+def test_load_config_from_checkpoint_missing_file_raises():
+    with pytest.raises(FileNotFoundError, match="Checkpoint not found"):
         _load_config_from_checkpoint("missing_checkpoint.pt")
 
 
 @pytest.mark.pruned
-def test_load_config_from_checkpoint_success(tmp_path):
+def test_load_config_from_checkpoint_returns_module_and_config(tmp_path):
     path = tmp_path / "checkpoint.pt"
-
     make_checkpoint(
         path,
-        model_type="abc",
+        architecture_type="abc",
         config={"value": 123},
         input_shape=np.array([1, 2]),
         output_shape=np.array([3, 4]),
@@ -423,68 +358,62 @@ def test_load_config_from_checkpoint_success(tmp_path):
 
     checkpoint_module, checkpoint_config = _load_config_from_checkpoint(path)
 
-    assert checkpoint_module["ModelConfig"]["type"] == "abc"
-    assert checkpoint_module["ModelConfig"]["config"] == {"value": 123}
+    assert checkpoint_module["Architecture"]["type"] == "abc"
+    assert checkpoint_module["Architecture"]["config"] == {"value": 123}
     assert checkpoint_config is not None
     assert checkpoint_config.load_path == path
     assert checkpoint_config.strict is True
 
 
 @pytest.mark.pruned
-def test_load_config_from_checkpoint_strict_false(tmp_path):
+def test_load_config_from_checkpoint_forwards_strict_flag(tmp_path):
     path = tmp_path / "checkpoint.pt"
-
-    make_checkpoint(path, model_type="abc")
+    make_checkpoint(path, architecture_type="abc")
 
     checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
         path,
         strict=False,
     )
 
-    assert checkpoint_module["ModelConfig"]["type"] == "abc"
-    assert checkpoint_config is not None
+    assert checkpoint_module["Architecture"]["type"] == "abc"
     assert checkpoint_config.strict is False
 
 
 @pytest.mark.pruned
-def test_load_config_from_checkpoint_missing_module_config(tmp_path):
+def test_load_config_from_checkpoint_without_module_config_returns_none(tmp_path):
     path = tmp_path / "bad_checkpoint.pt"
-
     torch.save(
         {
-            "model_input_shape": np.array([1]),
-            "model_output_shape": np.array([1]),
+            "input_shape": np.array([1]),
+            "output_shape": np.array([1]),
         },
         path,
     )
 
     checkpoint_module, checkpoint_config = _load_config_from_checkpoint(path)
 
-    assert checkpoint_module in (None, {})
-    assert checkpoint_config is not None
+    assert checkpoint_module is None
     assert checkpoint_config.load_path == path
 
 
 @pytest.mark.pruned
-def test_load_config_from_checkpoint_missing_shapes_allowed(tmp_path):
+def test_load_config_from_checkpoint_allows_missing_shapes(tmp_path):
     path = tmp_path / "checkpoint.pt"
-
     torch.save(
         {
             "module_config": {
-                "ModelConfig": {
+                "Architecture": {
                     "type": "abc",
                     "config": {"value": 1},
                 }
             },
-            "model_input_shape": None,
-            "model_output_shape": None,
+            "input_shape": None,
+            "output_shape": None,
         },
         path,
     )
 
     checkpoint_module, checkpoint_config = _load_config_from_checkpoint(path)
 
-    assert checkpoint_module["ModelConfig"]["type"] == "abc"
-    assert checkpoint_config is not None
+    assert checkpoint_module["Architecture"]["type"] == "abc"
     assert checkpoint_config.load_path == path

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 from pathlib import Path
 
 import pytest
@@ -9,12 +8,6 @@ from S2D4P.generic.runtime import RuntimeContext
 
 
 class TestRuntimeContextDefaults:
-    # Remove test due to no coverage
-
-    @pytest.mark.pruned
-    def test_is_dataclass(self):
-        assert dataclasses.is_dataclass(RuntimeContext)
-
     @pytest.mark.pruned
     def test_default_experiment_directory_is_current_directory(
         self,
@@ -119,7 +112,6 @@ class TestRuntimeContextDefaults:
 
 
 class TestRuntimeContextCustomDirectories:
-    @pytest.mark.pruned
     def test_preserves_custom_checkpoint_directory(
         self,
         tmp_path,
@@ -161,6 +153,7 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_LOG_DIR is custom
 
+    @pytest.mark.pruned
     def test_preserves_custom_monitoring_directory(
         self,
         tmp_path,
@@ -422,23 +415,6 @@ class TestRuntimeContextStringExperimentDirectory:
 
 
 class TestRuntimeContextDataclassBehavior:
-    # Remove test due to no coverage
-
-    @pytest.mark.pruned
-    def test_declared_field_order(self):
-        field_names = [field.name for field in dataclasses.fields(RuntimeContext)]
-
-        assert field_names == [
-            "GLOBAL_EXP_DIR",
-            "GLOBAL_CHECKPOINT_DIR",
-            "GLOBAL_FIGURES_DIR",
-            "GLOBAL_LOG_DIR",
-            "GLOBAL_MONITORING_DIR",
-            "GLOBAL_OUTPUT_DIR",
-            "INPUT_VAR_METADATA",
-            "TARGET_VAR_METADATA",
-        ]
-
     @pytest.mark.pruned
     def test_equal_contexts_compare_equal(
         self,

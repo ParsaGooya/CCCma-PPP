@@ -86,13 +86,14 @@ def make_config_without_post_init(
     prefetch_factor=2,
     drop_last=False,
     load=False,
-    reduce_spatial_mask=False,
+    share_spatial_mask=False,
 ):
     if dataset_config is None:
         dataset_config = make_dataset_config()
 
     config = object.__new__(TrainDataloaderConfig)
 
+    config.dataset = dataset_config
     config.dataset_config = dataset_config
     config.batch_size = batch_size
     config.time_features = time_features
@@ -102,7 +103,7 @@ def make_config_without_post_init(
     config.prefetch_factor = prefetch_factor
     config.drop_last = drop_last
     config.load = load
-    config.reduce_spatial_mask = reduce_spatial_mask
+    config.share_spatial_mask = share_spatial_mask
 
     config._setup = False
     config.distributed = None
@@ -236,7 +237,7 @@ class TestBatchData:
             input=input_data,
             target=target_data,
             return_spatial_mask=True,
-            reduce_spatial_mask=True,
+            share_spatial_mask=True,
         )
 
         torch.testing.assert_close(
@@ -290,7 +291,7 @@ class TestBatchData:
             input=input_data,
             target=target_data,
             return_spatial_mask=True,
-            reduce_spatial_mask=False,
+            share_spatial_mask=False,
         )
 
         torch.testing.assert_close(
@@ -351,7 +352,7 @@ class TestBatchData:
                 ]
             ),
             return_spatial_mask=True,
-            reduce_spatial_mask=True,
+            share_spatial_mask=True,
         )
 
         second = BatchData(
@@ -364,7 +365,7 @@ class TestBatchData:
                 2,
             ),
             return_spatial_mask=True,
-            reduce_spatial_mask=True,
+            share_spatial_mask=True,
         )
 
         assert first.input_mask.data_ptr() == second.input_mask.data_ptr()
@@ -405,7 +406,7 @@ class TestBatchData:
                 4,
             ),
             return_spatial_mask=True,
-            reduce_spatial_mask=False,
+            share_spatial_mask=False,
         )
 
         result = batch.to_device(device)
@@ -588,11 +589,11 @@ class TestCollateBatch:
                 self.make_sample(4),
             ],
             return_spatial_mask=True,
-            reduce_spatial_mask=False,
+            share_spatial_mask=False,
         )
 
         assert result.return_spatial_mask is True
-        assert result.reduce_spatial_mask is False
+        assert result.share_spatial_mask is False
         assert result.input_mask.shape == (
             2,
             2,
@@ -667,6 +668,7 @@ class TestTrainDataloaderConfigPostInit:
             config.dataset_config.available_times,
         )
 
+    @pytest.mark.pruned
     def test_requested_train_slice_is_converted_to_strings(self):
         config = make_config_without_post_init(
             train_years_slice=[
@@ -773,7 +775,6 @@ class TestSetupDistributed:
             barrier=Mock(),
         )
 
-    @pytest.mark.pruned
     def test_root_fits_preprocessors(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -790,6 +791,7 @@ class TestSetupDistributed:
         distributed.barrier.assert_called_once_with()
         assert config._setup is True
 
+    @pytest.mark.pruned
     def test_non_root_does_not_fit_preprocessors(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -803,6 +805,7 @@ class TestSetupDistributed:
         config.dataset_config.fit_preprocessors.assert_not_called()
         distributed.barrier.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_distributed_mode_loads_preprocessors(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -818,7 +821,6 @@ class TestSetupDistributed:
         )
         assert config.pin_memory is True
 
-    @pytest.mark.pruned
     def test_explicit_load_path_skips_fit_and_loads(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -837,7 +839,6 @@ class TestSetupDistributed:
             load_dir=load_path
         )
 
-    @pytest.mark.pruned
     def test_records_distributed_metadata(self):
         config = make_initialized_config()
         distributed = self.make_distributed(

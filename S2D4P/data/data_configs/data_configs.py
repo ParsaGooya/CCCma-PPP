@@ -41,7 +41,6 @@ class ForecastDataConfig(DataConfigABC):
         validation, loading, and preprocessing functionality.
     """
 
-
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -55,7 +54,6 @@ class ForecastDataConfig(DataConfigABC):
     drop_vars_list: list[str] = None
 
     def __post_init__(self) -> None:
-
         """
         Initialize the forecast configuration and construct its forecast time range.
 
@@ -157,7 +155,7 @@ class RefDataConfig(DataConfigABC):
                 "Reference data must have same temporal frequency as the "
                 f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
-        
+
         self.time_range = build_time_range(
             init_time=self.coords[init_time_dim],
             lead_time_resolution=self.init_time_frequency,
@@ -215,7 +213,6 @@ class ConditionDataConfig(DataConfigABC):
         validation, loading, and preprocessing functionality.
     """
 
-
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -230,7 +227,12 @@ class ConditionDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize the conditioning data configuration.
+
+        Performs base-class initialization and constructs the temporal range when
+        initialization-time and lead-time information are available. For static
+        conditioning data without temporal coverage, ``time_range`` is set to
+        ``None``.
         """
         super().__init__()
 
@@ -280,36 +282,37 @@ def build_time_range(
     lead_time_resolution: lead_time_unit = "month",
 ) -> xr.CFTimeIndex | np.ndarray:
     """
-    Build a continuous temporal extent from init times and lead times.
+    Build a continuous temporal range from initialization and lead times.
 
-    Returns the inclusive continuous range [min(init_time),
-    max(init_time) + max_lead_time]. This is NOT a list of valid times
-    in the data, only the temporal extent covered.
-
-    Use for temporal validation (e.g., checking if all samples
-    fall within expected range), not for exact time matching.
-
+    The returned range spans from the earliest initialization time through the
+    latest initialization time extended by the configured number of lead-time
+    steps. The range represents temporal coverage rather than the exact valid
+    times present in the source data.
 
     Parameters
     ----------
     init_time : xr.DataArray
-        Description not yet provided.
+        One-dimensional initialization-time coordinate containing NumPy datetime
+        or CFTime values.
     n_lead_times : int
-        Description not yet provided.
+        Number of temporal steps included in the range, including the latest
+        initialization time as the first step.
     lead_time_resolution : lead_time_unit
-        Description not yet provided.
+        Temporal resolution used to construct the range. Supported values are
+        ``"month"`` and ``"day"``.
 
     Returns
     -------
     xr.CFTimeIndex | np.ndarray
-        Description not yet provided.
+        Continuous sequence of times spanning the complete temporal extent.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If ``init_time`` does not contain NumPy datetime or CFTime values.
     ValueError
-        Description not yet provided.
+        If ``init_time`` is empty or not one-dimensional, ``n_lead_times`` is
+        less than one, or ``lead_time_resolution`` is unsupported.
     """
 
     if init_time.size == 0:

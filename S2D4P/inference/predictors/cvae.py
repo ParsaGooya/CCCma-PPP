@@ -20,20 +20,22 @@ from S2D4P.data.dataloader import BatchDataABC
 @dataclasses.dataclass
 class cVAEPredictorConfig:
     """
-    Document this class.
+    Configuration for conditional variational autoencoder inference.
 
     Parameters
     ----------
     num_latent_samples : int
-        Description not yet provided.
+        Number of latent samples generated for each input sample.
     nstds : float
-        Description not yet provided.
-    chunk_size: int
-        Description not yet provided.
+        Standard-deviation multiplier used when sampling latent variables.
+    chunk_size : int | None
+        Number of latent samples processed per generation chunk. If ``None``, all
+        latent samples are processed together.
     infer_latent_samples_from_training : bool
-        Description not yet provided.
+        Whether latent samples are drawn from a Gaussian distribution estimated
+        from posterior samples collected on the training data.
     save_latent : bool
-        Description not yet provided.
+        Whether latent variables are saved instead of model predictions.
     """
 
     num_latent_samples: int
@@ -46,17 +48,18 @@ class cVAEPredictorConfig:
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Validate the cVAE predictor configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``num_latent_samples`` is less than one or ``nstds`` is not positive.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If ``save_latent`` is enabled, indicating that predictions will not be
+            saved.
         """
         if self.num_latent_samples < 1:
             raise ValueError("num_latent_samples must be at least 1.")
@@ -79,43 +82,47 @@ class cVAEPredictorConfig:
         num_output_sampling: int = 1,
     ):
         """
-        Document this function.
+        Build a cVAE predictor.
 
         Parameters
         ----------
         module : moduleABC
-            Description not yet provided.
+            Trained cVAE module used for inference.
         distributed : Distributed
-            Description not yet provided.
+            Distributed runtime used for device placement and rank information.
         output_dir : Path | str
-            Description not yet provided.
+            Directory in which inference outputs and training statistics are stored.
         num_output_sampling : int
-            Description not yet provided.
+            Number of output samples generated for each latent sample.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        cVAEPredictor
+            Configured cVAE predictor.
         """
         return cVAEPredictor(self, module, distributed, output_dir, num_output_sampling)
 
 
 class cVAEPredictor(PredictorABC):
     """
-    Document this class.
+    Run inference for a conditional variational autoencoder.
+
+    Supports prior sampling, latent distributions estimated from training
+    posteriors, output residual covariance sampling, latent-variable export, and
+    temporary NetCDF prediction output.
 
     Parameters
     ----------
     config : cVAEPredictorConfig
-        Description not yet provided.
+        Configuration controlling latent sampling and output behavior.
     module : moduleABC
-        Description not yet provided.
+        Trained cVAE module used for inference.
     distributed : Distributed
-        Description not yet provided.
+        Distributed runtime used for device placement and rank information.
     output_dir : Path | str
-        Description not yet provided.
+        Directory in which inference outputs and training statistics are stored.
     num_output_sampling : int
-        Description not yet provided.
+        Number of output samples generated for each latent sample.
     """
 
     def __init__(
@@ -127,25 +134,29 @@ class cVAEPredictor(PredictorABC):
         num_output_sampling: int = 1,
     ):
         """
-        Document this function.
+        Initialize the cVAE predictor.
+
+        Configures latent and output sampling behavior and initializes running
+        covariance accumulators when training-derived latent or residual statistics
+        are required.
 
         Parameters
         ----------
         config : cVAEPredictorConfig
-            Description not yet provided.
+            Configuration controlling cVAE inference.
         module : moduleABC
-            Description not yet provided.
+            Trained cVAE module used for inference.
         distributed : Distributed
-            Description not yet provided.
+            Distributed runtime used for device placement and rank information.
         output_dir : Path | str
-            Description not yet provided.
+            Directory in which inference outputs and training statistics are stored.
         num_output_sampling : int
-            Description not yet provided.
+            Number of output samples generated for each latent sample.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``num_output_sampling`` is not positive.
         """
         self.config = config
         self.module = module
@@ -183,36 +194,39 @@ class cVAEPredictor(PredictorABC):
     @property
     def extract_training_vars(self):
         """
-        Document this function.
+        Indicate whether training-derived statistics must be extracted.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when posterior latent statistics or training residual statistics
+            are required.
         """
         return any([self.extract_posterior_samples, self.extract_training_residuals])
 
     @property
     def extract_posterior_samples(self):
         """
-        Document this function.
+        Indicate whether posterior latent statistics must be extracted.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            Whether inference uses a latent distribution estimated from training
+            posterior samples.
         """
         return self.infer_latent_samples_from_training
 
     @property
     def extract_training_residuals(self):
         """
-        Document this function.
+        Indicate whether training residual statistics must be extracted.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` when multiple output samples require residual covariance
+            sampling.
         """
         return self.num_output_covariance_sampling > 1
 
@@ -223,24 +237,34 @@ class cVAEPredictor(PredictorABC):
         _getting_train_stats: bool = False,
     ) -> cVAEOutput | dict[str, RunningCovariance]:
         """
-        Document this function.
+        Run cVAE inference or statistic extraction on one batch.
+
+        When training statistics are requested, posterior variables are computed and
+        used to update running covariance statistics. Latent-saving mode writes
+        posterior variables instead of predictions. Otherwise, predictions are
+        generated from either the configured prior or a training-derived latent
+        distribution.
 
         Parameters
         ----------
         batch : BatchDataABC
-            Description not yet provided.
+            Batch containing conditioning inputs, optional targets, masks, metadata,
+            and additional features.
         _getting_train_stats : bool
-            Description not yet provided.
+            Whether to update training-derived latent or residual statistics instead
+            of generating inference output.
 
         Returns
         -------
         cVAEOutput | dict[str, RunningCovariance]
-            Description not yet provided.
+            cVAE output during prediction or latent saving, or updated running
+            covariance statistics while extracting training statistics.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If a target is required for posterior-variable extraction but is absent
+            from the batch.
         """
         clear_memory()
         self.raw_module.eval()
@@ -300,24 +324,29 @@ class cVAEPredictor(PredictorABC):
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
         """
-        Document this function.
+        Update training-derived latent and residual statistics.
+
+        Posterior latent samples are accumulated when training-based latent sampling
+        is enabled. Prediction residuals are accumulated when output covariance
+        sampling is required.
 
         Parameters
         ----------
         output : cVAEOutput
-            Description not yet provided.
+            cVAE output containing posterior samples and predictions.
         data : BatchDataABC
-            Description not yet provided.
+            Training batch containing the corresponding target values.
 
         Returns
         -------
         dict[str, RunningCovariance]
-            Description not yet provided.
+            Updated running covariance accumulators.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If posterior sample statistics are required but ``output.samples`` is
+            unavailable.
         """
         if self.extract_posterior_samples:
             if output.samples is None:
@@ -340,17 +369,21 @@ class cVAEPredictor(PredictorABC):
 
     def _get_latent_samples_based_on_train(self, data: BatchDataABC):
         """
-        Document this function.
+        Sample latent vectors from training-derived posterior statistics.
+
+        The latent sampler is constructed lazily from previously saved training
+        statistics and reused for subsequent batches.
 
         Parameters
         ----------
         data : BatchDataABC
-            Description not yet provided.
+            Inference batch whose size determines the number of latent samples needed.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        torch.Tensor
+            Latent samples with leading latent-sample and batch dimensions, moved to
+            the inference device.
         """
         if self.infer_latent_samples_from_training and self.latent_sampler is None:
             self.latent_sampler = self.build_latent_sampler()
@@ -366,17 +399,22 @@ class cVAEPredictor(PredictorABC):
 
     def build_latent_sampler(self) -> Callable[..., torch.Tensor]:
         """
-        Document this function.
+        Build a sampler from training posterior statistics.
+
+        The saved posterior mean and covariance matrix are loaded and used to create
+        a callable that samples a multivariate latent distribution.
 
         Returns
         -------
         Callable[..., torch.Tensor]
-            Description not yet provided.
+            Callable accepting a sample shape and standard-deviation multiplier and
+            returning latent samples.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If training statistics have not been saved or the stored statistics do
+            not contain posterior sample mean and covariance values.
         """
         stats_path = self.output_dir / "training_variable_stats.pt"
 
@@ -402,19 +440,19 @@ class cVAEPredictor(PredictorABC):
 
         def _sampler(sample_size: int | tuple[int, ...], std: float):
             """
-            Document this function.
+            Draw latent samples from the training-derived distribution.
 
             Parameters
             ----------
             sample_size : int | tuple[int, ...]
-                Description not yet provided.
+                Number or shape of latent samples to generate.
             std : float
-                Description not yet provided.
+                Standard-deviation multiplier applied during sampling.
 
             Returns
             -------
-            Any
-                Description not yet provided.
+            torch.Tensor
+                Samples drawn using the stored posterior mean and covariance matrix.
             """
             return self._sample(
                 stats["samples_mean"],
@@ -431,19 +469,24 @@ class cVAEPredictor(PredictorABC):
         metadata: list[dict],
     ):
         """
-        Document this function.
+        Save batch predictions or latent variables to a temporary NetCDF file.
+
+        In latent-saving mode, available posterior and conditional latent variables
+        are padded to a common latent size and stored as channels. Otherwise, model
+        predictions are stored with output-sample and latent-sample dimensions for
+        later aggregation.
 
         Parameters
         ----------
         output : cVAEOutput
-            Description not yet provided.
+            cVAE output containing predictions or latent variables to save.
         metadata : list[dict]
-            Description not yet provided.
+            Per-sample coordinate metadata used to construct the NetCDF output.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If latent-saving mode is enabled but no latent variables are available.
         """
         attrs = None
         if self.save_latent:

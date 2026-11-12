@@ -160,7 +160,6 @@ def test_cosine_scheduler_state_dict_without_scheduler_attr():
         scheduler.state_dict()
 
 
-@pytest.mark.pruned
 def test_cosine_scheduler_load_state_dict_without_scheduler_attr():
     module = make_module()
     opt = make_optimizer(module)
@@ -1012,6 +1011,7 @@ def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     scheduler_load_mock.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_optimizer_without_scheduler_ignores_scheduler_state(
     monkeypatch,
 ):

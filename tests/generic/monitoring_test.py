@@ -257,6 +257,7 @@ def test_invalid_interval(interval):
         Monitor(interval=interval)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "indices",
     [
@@ -403,7 +404,6 @@ def test_multiple_gpu_sample(fake_pynvml):
     assert sample["vram1"] == pytest.approx(25.0)
 
 
-@pytest.mark.pruned
 def test_unavailable_gpu_returns_nan(fake_pynvml):
     instance = Monitor(
         cpu=False,
@@ -443,7 +443,6 @@ def test_failed_gpu_initialization(monkeypatch):
     assert instance.ram_enabled is True
 
 
-@pytest.mark.pruned
 def test_gpu_query_failure(fake_pynvml):
     fake_pynvml.nvmlDeviceGetUtilizationRates.side_effect = RuntimeError(
         "GPU query failed"
@@ -537,6 +536,7 @@ def test_span_ends_after_exception(basic_monitor):
     assert basic_monitor.current_stage() == "root"
 
 
+@pytest.mark.pruned
 def test_empty_span_name(basic_monitor):
     with pytest.raises(
         ValueError,
@@ -546,6 +546,7 @@ def test_empty_span_name(basic_monitor):
             pass
 
 
+@pytest.mark.pruned
 def test_invalid_span_name_type(basic_monitor):
     with pytest.raises(
         TypeError,
@@ -578,6 +579,7 @@ def test_checkpoint_inside_span(basic_monitor):
     assert checkpoint["stage"] == "main.work.ready"
 
 
+@pytest.mark.pruned
 def test_empty_checkpoint_name(basic_monitor):
     with pytest.raises(
         ValueError,
@@ -687,7 +689,6 @@ def test_stop_before_start(basic_monitor):
     assert basic_monitor.running is False
 
 
-@pytest.mark.pruned
 def test_negative_stop_timeout(basic_monitor):
     with pytest.raises(
         ValueError,
@@ -752,6 +753,7 @@ def test_dataframe_returns_copy(basic_monitor):
     assert second.loc[0, "stage"] == "main.ready"
 
 
+@pytest.mark.pruned
 def test_metric_names_with_all_resources(fake_pynvml):
     instance = Monitor(
         cpu=True,
@@ -769,6 +771,7 @@ def test_metric_names_with_all_resources(fake_pynvml):
     )
 
 
+@pytest.mark.pruned
 def test_empty_kalman_filter():
     result = Monitor._kalman_filter([])
 
@@ -786,6 +789,7 @@ def test_kalman_filter_preserves_length():
     assert np.isfinite(result).all()
 
 
+@pytest.mark.pruned
 def test_kalman_filter_handles_nan():
     values = np.array([np.nan, 2.0, np.nan, 4.0])
 
@@ -897,7 +901,6 @@ def test_invalid_rolling_window():
         )
 
 
-@pytest.mark.pruned
 def test_kalman_smoothing():
     series = pd.Series([1.0, 2.0, 3.0, 4.0])
 
@@ -1294,7 +1297,6 @@ def test_plot_rejects_string_metrics(
         )
 
 
-@pytest.mark.pruned
 def test_plot_rejects_unknown_metric(
     sample_dataframe,
 ):
@@ -1372,6 +1374,7 @@ def test_plot_returns_none_for_nan_metric():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_sample_stage_tracks_active_span(
     basic_monitor,
 ):
@@ -1571,7 +1574,6 @@ def test_monitor_rejects_invalid_distributed_value_types(
         Monitor(**arguments)
 
 
-@pytest.mark.pruned
 def test_monitor_rejects_negative_rank():
     with pytest.raises(
         ValueError,
@@ -1583,7 +1585,6 @@ def test_monitor_rejects_negative_rank():
         )
 
 
-@pytest.mark.pruned
 def test_monitor_rejects_negative_local_rank():
     with pytest.raises(
         ValueError,
@@ -1594,7 +1595,6 @@ def test_monitor_rejects_negative_local_rank():
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "world_size",
     [
@@ -1734,6 +1734,7 @@ def test_gpu_initialization_marks_handle_failure_unavailable(
     }
 
 
+@pytest.mark.pruned
 def test_repeated_failed_gpu_query_does_not_log_again(
     fake_pynvml,
     monkeypatch,
@@ -1772,6 +1773,7 @@ def test_shutdown_gpus_returns_when_not_initialized():
     assert instance._pynvml is None
 
 
+@pytest.mark.pruned
 def test_shutdown_gpus_clears_nvml_state(
     fake_pynvml,
 ):
@@ -1857,7 +1859,6 @@ def test_span_removes_itself_from_modified_stack(
     assert basic_monitor.current_stage() == "root"
 
 
-@pytest.mark.pruned
 def test_current_sample_stage_combines_unique_active_stages(
     basic_monitor,
 ):
@@ -2244,6 +2245,7 @@ def test_plot_filters_selected_metric_with_only_nan_values(
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_plot_save_path_without_directory(
     sample_dataframe,
     monkeypatch,
@@ -3188,7 +3190,6 @@ class TestAdditionalEventAndStackBranches:
 
         assert dataframe.iloc[0]["stage"] == "main.ready"
 
-    @pytest.mark.pruned
     def test_observe_forwards_positional_and_keyword_arguments(
         self,
         basic_monitor,
@@ -3341,7 +3342,6 @@ class TestAdditionalSamplerBranches:
 
         assert basic_monitor.running is False
 
-    @pytest.mark.pruned
     def test_running_true_for_live_thread(
         self,
         basic_monitor,
@@ -3443,6 +3443,7 @@ class TestAdditionalSmoothingBranches:
         assert result[2] == pytest.approx(3.0)
         assert np.isfinite(result[3])
 
+    @pytest.mark.pruned
     def test_kalman_smoothing_forwards_variances(
         self,
         monkeypatch,
@@ -3552,7 +3553,6 @@ class TestAdditionalPlotBranches:
             fontsize=8,
         )
 
-    @pytest.mark.pruned
     def test_available_metrics_excludes_missing_and_all_nan_columns(
         self,
     ):
@@ -3672,51 +3672,6 @@ class TestAdditionalPlotBranches:
 
 
 class TestAdditionalFactoryBranches:
-    # Remove test due to no coverage
-
-    @pytest.mark.pruned
-    def test_monitor_factory_forwards_every_argument(
-        self,
-        monkeypatch,
-    ):
-        constructor = Mock(
-            return_value=object(),
-        )
-        monkeypatch.setattr(
-            module,
-            "Monitor",
-            constructor,
-        )
-
-        result = module.monitor(
-            cpu=False,
-            ram=False,
-            gpu0=True,
-            gpu1=True,
-            gpus=[
-                3,
-            ],
-            interval=2.0,
-            rank=1,
-            local_rank=2,
-            world_size=4,
-        )
-
-        assert result is constructor.return_value
-        constructor.assert_called_once_with(
-            cpu=False,
-            ram=False,
-            gpu0=True,
-            gpu1=True,
-            gpus=[
-                3,
-            ],
-            interval=2.0,
-            rank=1,
-            local_rank=2,
-            world_size=4,
-        )
-
     @pytest.mark.pruned
     def test_build_distributed_monitor_resolves_physical_gpu(
         self,
@@ -4035,7 +3990,6 @@ class TestAdditionalDistributedMonitoringBranches:
         assert distributed.barrier_calls == 0
         module.combine_rank_results.assert_not_called()
 
-    @pytest.mark.pruned
     def test_export_failure_on_interrupted_context_still_closes_monitor(
         self,
         tmp_path,

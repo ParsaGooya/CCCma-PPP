@@ -474,6 +474,7 @@ class TestGetPreprocessor:
         )
         assert result.value == 1
 
+    @pytest.mark.pruned
     def test_builds_registered_preprocessor_with_arguments(
         self,
         isolated_registry,
@@ -740,6 +741,7 @@ class TestClassRegister:
         )
         assert result is decorator
 
+    @pytest.mark.pruned
     def test_duplicate_registration_error_is_propagated(
         self,
         isolated_registry,

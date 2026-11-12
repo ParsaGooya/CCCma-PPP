@@ -1,211 +1,176 @@
-import torch
+import sys
+import traceback
+from pathlib import Path
+
 import numpy as np
 import xarray as xr
-from typing import Dict, Optional, Union
-from S2D4P.architectures.architecture_abc import DeterministicRequest
-from S2D4P.core.models.deterministic import deterministicOutput
-from S2D4P.preprocessing.utils_preprocessing import Standardizer
+
+from S2D4P.preprocessing.selector import PreprocessingStepSelector
+from S2D4P.preprocessing.utils_preprocessing import TrendRemover
+
+DATA_PATH = Path(
+    "/space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime"
+)
+MAX_SAMPLES = 100
 
 
-class InverseTransformationMapper:
-    def __init__(self, standardizers: Dict[int, Standardizer]):
-        # Store actual Standardizer objects instead of stats
-        self.standardizers = standardizers
-        if len(standardizers) != 12:
-            raise ValueError("Must have 12 standardizers (one per month)")
-
-    def apply_inverse_transformation(
-        self,
-        output: torch.Tensor,
-        init_month: Union[int, torch.Tensor],
-        device: Optional[torch.device] = None,
-    ) -> torch.Tensor:
-        # Inverse transformation using Standardizer.inverse_transform()
-        if output.dim() == 3:
-            output = output.unsqueeze(0)
-            squeeze_output = True
-        elif output.dim() == 4:
-            squeeze_output = False
-        else:
-            raise ValueError(f"Expected 3D or 4D tensor, got {output.dim()}D")
-
-        batch_size = output.shape[0]
-
-        if isinstance(init_month, torch.Tensor):
-            if init_month.shape[0] != batch_size:
-                raise ValueError("init_month batch size mismatch")
-            init_months = init_month.cpu().numpy().astype(int)
-        else:
-            init_months = np.full(batch_size, init_month, dtype=int)
-
-        denormalized = torch.zeros_like(output)
-        for i, month in enumerate(init_months):
-            if not 0 <= month <= 11:
-                raise ValueError(f"init_month must be 0-11, got {month}")
-
-            # Convert tensor to numpy, wrap in xarray, denormalize using Standardizer
-            output_np = output[i].cpu().numpy()
-            output_xr = xr.DataArray(output_np, dims=["var", "height", "width"])
-
-            # Use Standardizer.inverse_transform()
-            denormalized_xr = self.standardizers[int(month)].inverse_transform(
-                output_xr
-            )
-            denormalized[i] = torch.from_numpy(np.array(denormalized_xr.data)).float()
-
-        if squeeze_output:
-            denormalized = denormalized.squeeze(0)
-
-        return denormalized
-
-    def process_deterministic_output(
-        self,
-        det_output: deterministicOutput,
-        init_month: Union[int, torch.Tensor],
-    ) -> deterministicOutput:
-        denormalized = self.apply_inverse_transformation(det_output.output, init_month)
-        return deterministicOutput(output=denormalized)
-
-    def process_deterministic_request(
-        self,
-        model,
-        request: DeterministicRequest,
-        init_month: Union[int, torch.Tensor],
-    ) -> deterministicOutput:
-        model_output = model.forward(request)
-        return self.process_deterministic_output(model_output, init_month)
+def section(title: str) -> None:
+    print(f"\n{'-' * 70}\n{title}\n{'-' * 70}")
 
 
-def create_standardizers_per_month():
-    # Create 12 Standardizer instances, one per month
-    standardizers = {}
-
-    for month in range(12):
-        standardizer = Standardizer(dims=[], frequency=None)
-
-        # Create xarray dataset with multiple variables (realistic scenario)
-        monthly_data = np.random.randn(100, 3, 64, 64) + month * 0.3
-        monthly_data_xr = xr.DataArray(
-            monthly_data,
-            dims=["time", "var", "height", "width"],
-            coords={"time": np.arange(100)},
-        )
-
-        # Fit: computes mean/std
-        standardizer.fit(monthly_data_xr)
-        standardizers[month] = standardizer
-
-    return standardizers
+def as_dataarray(obj) -> xr.DataArray:
+    return obj["data"] if isinstance(obj, xr.Dataset) else obj
 
 
-def main():
-    print("Creating 12 Standardizer instances (one per month)...")
-    standardizers = create_standardizers_per_month()
-    mapper = InverseTransformationMapper(standardizers)
+def max_abs_diff(a: xr.DataArray, b: xr.DataArray) -> float:
+    """Largest absolute difference between a and b, with b aligned to a's dims."""
+    av = np.asarray(a.values, dtype=np.float64)
+    bv = np.asarray(b.transpose(*a.dims).values, dtype=np.float64)
+    return float(np.max(np.abs(av - bv)))
 
-    print("\n[Forward Normalization - using Standardizer.transform()]")
-    original_sample = np.random.randn(3, 64, 64).astype(np.float32)
-    original_sample_xr = xr.DataArray(original_sample, dims=["var", "height", "width"])
 
-    month = 5
-    standardizer = standardizers[month]
+def load_data(data_path: Path, max_samples: int) -> xr.Dataset:
+    section("Loading data")
+    files = sorted(data_path.glob("*.nc"))[:max_samples]
+    print(f"Files read: {len(files)} from {data_path}")
 
-    # Use Standardizer.transform()
-    normalized_sample_xr = standardizer.transform(original_sample_xr)
-    normalized_sample_np = np.array(normalized_sample_xr.data)
-    normalized_sample = torch.from_numpy(normalized_sample_np).float()
-    print(f"  Original shape: {original_sample.shape}")
-    print(f"  Normalized shape: {normalized_sample.shape}")
+    pieces = []
+    for path in files:
+        with xr.open_dataset(path) as ds:
+            init = ds["year"].values[0].astype("datetime64[ns]")
+            da = ds["tas"].load()
+            pieces.append(da.expand_dims(time=[init]))
+
+    combined = xr.concat(pieces, dim="time")
+    print(f"Array dims: {dict(combined.sizes)}")
+    print(f"Init times: {combined['time'].values[0]} to {combined['time'].values[-1]}")
+    return xr.Dataset({"data": combined})
+
+
+def run_one(name: str, data: xr.DataArray) -> None:
+    section(
+        f"{name.upper()} (preprocessor fitted on all {data.sizes['time']} init times)"
+    )
+    prep = PreprocessingStepSelector(name=name, args=None).get_preprocessor()
+    prep.fit(data)
+
+    print("Lead-time 0, one init time: transform then inverse_transform")
+    sample = data.isel(time=[0], lead_time=[0])
+    fwd = as_dataarray(prep.transform(sample))
+    inv = as_dataarray(prep.inverse_transform(fwd))
     print(
-        f"  Original mean: {original_sample.mean():.4f}, std: {original_sample.std():.4f}"
+        f"  Round-trip error, max|x - inverse(transform(x))|: "
+        f"{max_abs_diff(sample, inv):.3e}"
     )
     print(
-        f"  Normalized mean: {normalized_sample.mean():.4f}, std: {normalized_sample.std():.4f}"
+        f"  Forward change, max|transform(x) - x|:           "
+        f"{max_abs_diff(sample, fwd):.3e}"
     )
 
-    print("\n[Inverse Transformation - using InverseTransformationMapper]")
-    denormalized_sample = mapper.apply_inverse_transformation(
-        normalized_sample, init_month=month
-    )
-    print(f"  Denormalized shape: {denormalized_sample.shape}")
+    print("Fit data, all init times and lead times: transform only")
+    full_out = as_dataarray(prep.transform(data))
+    print(f"  Output mean over fit data: {float(full_out.mean()):+.6e}")
+    print(f"  Output std over fit data:  {float(full_out.std()):.6e}")
+
+    print("Late half of init times (not in the first half): transform only")
+    n = data.sizes["time"]
+    late_out = as_dataarray(prep.transform(data.isel(time=slice(n // 2, n))))
+    print(f"  Output mean over late half: {float(late_out.mean()):+.6e}")
+    print(f"  Output std over late half:  {float(late_out.std()):.6e}")
+
+
+def run_trend_old(prep_ds: xr.Dataset) -> None:
+    section("TREND_REMOVER (fitted on all init times)")
+    trend = TrendRemover()
+    trend.fit(prep_ds)
+    data = prep_ds["data"]
+
+    print("First init time, all lead times: transform then inverse_transform")
+    sample = data.isel(time=[0])
+    fwd = as_dataarray(trend.transform(sample))
+    inv = as_dataarray(trend.inverse_transform(fwd))
     print(
-        f"  Denormalized mean: {denormalized_sample.mean():.4f}, std: {denormalized_sample.std():.4f}"
+        f"  Round-trip error, max|x - inverse(transform(x))|: "
+        f"{max_abs_diff(sample, inv):.3e}"
     )
 
-    error_mapper = np.abs(original_sample - denormalized_sample.numpy()).max()
-    print(f"  Reconstruction error (mapper): {error_mapper:.2e}")
-
-    print("\n[Roundtrip Verification - Standardizer.transform() → inverse_transform()]")
-    test_month = 7
-    original_data = np.random.randn(3, 64, 64).astype(np.float32)
-    original_data_xr = xr.DataArray(original_data, dims=["var", "height", "width"])
-
-    standardizer = standardizers[test_month]
-
-    # Forward: Standardizer.transform()
-    normalized_xr = standardizer.transform(original_data_xr)
-    print(f"  Original mean: {float(original_data_xr.mean()):.4f}")
-    print(f"  Normalized mean: {float(normalized_xr.mean()):.4f}")
-
-    # Inverse: Standardizer.inverse_transform()
-    recovered_xr = standardizer.inverse_transform(normalized_xr)
-    recovered_np = np.array(recovered_xr.data)
-
-    error_standardizer = np.abs(original_data - recovered_np).max()
-    print(f"  Recovered mean: {recovered_np.mean():.4f}")
-    print(f"  Reconstruction error (Standardizer): {error_standardizer:.2e}")
-
-    print("\n[Batch Processing - Mixed Initialization Months]")
-    batch_size = 12
-    init_months = torch.tensor(list(range(12)))  # One sample per month
-    batch_normalized = torch.randn(batch_size, 3, 64, 64)
-
-    batch_denormalized = mapper.apply_inverse_transformation(
-        batch_normalized, init_month=init_months
-    )
-    print(f"  Batch size: {batch_size}")
-    print(f"  Normalized batch shape: {batch_normalized.shape}")
-    print(f"  Denormalized batch shape: {batch_denormalized.shape}")
-    print("  Each sample denormalized with its respective month's Standardizer")
-
-    print("\n[DeterministicRequest Integration]")
-
-    class MockDeterministicModel(torch.nn.Module):
-        def forward(self, request: DeterministicRequest) -> deterministicOutput:
-            # Model outputs normalized predictions
-            output = request.input * 0.95 + 0.05
-            return deterministicOutput(output=output)
-
-    model = MockDeterministicModel()
-    model.eval()
-
-    input_tensor = torch.randn(8, 3, 64, 64)
-    request = DeterministicRequest(input=input_tensor)
-
-    with torch.no_grad():
-        model_output = model.forward(request)
-
-    print(f"  Model input shape: {input_tensor.shape}")
-    print(f"  Model output shape: {model_output.output.shape}")
-
-    # Denormalize using mapper with mixed months
-    test_months = torch.tensor([0, 0, 1, 1, 2, 2, 3, 3])
-    denormalized_output = mapper.process_deterministic_output(
-        model_output, init_month=test_months
-    )
-    print(f"  Denormalized output shape: {denormalized_output.output.shape}")
-    print(f"  Months used: {list(test_months.numpy())}")
-
-    # Direct request processing
-    denormalized_direct = mapper.process_deterministic_request(
-        model, request, init_month=5
-    )
+    lt = data.sizes["lead_time"]
+    print(f"First init time, lead time {lt - 1} only: transform then inverse_transform")
+    last = data.isel(time=[0], lead_time=[lt - 1])
+    fwd_last = as_dataarray(trend.transform(last))
+    inv_last = as_dataarray(trend.inverse_transform(fwd_last))
     print(
-        f"  Direct request processing output shape: {denormalized_direct.output.shape}"
+        f"  Round-trip error, max|x - inverse(transform(x))|: "
+        f"{max_abs_diff(last, inv_last):.3e}"
     )
 
-    print("\nAll tests passed!")
+
+def run_trend(prep_ds: xr.Dataset) -> None:
+    section("TREND_REMOVER (fitted on all init times)")
+    trend = TrendRemover()
+    trend.fit(prep_ds)
+    data = prep_ds["data"]
+
+    # 1. Round trip over all lead times, first init time
+    sample = data.isel(time=[0])
+    fwd = as_dataarray(trend.transform(sample))
+    inv = as_dataarray(trend.inverse_transform(fwd))
+    err_all = np.abs(
+        np.asarray(sample.values, dtype=np.float64)
+        - np.asarray(inv.transpose(*sample.dims).values, dtype=np.float64)
+    )
+    print(f"  Round-trip error, all lead times: {err_all.max():.3e}")
+
+    # 2. Round trip at the last lead time, element-wise error map
+    lt = data.sizes["lead_time"]
+    last = data.isel(time=[0], lead_time=[lt - 1])
+    fwd_last = as_dataarray(trend.transform(last))
+    inv_last = as_dataarray(trend.inverse_transform(fwd_last))
+    err_last = np.abs(
+        np.asarray(last.values, dtype=np.float64)
+        - np.asarray(inv_last.transpose(*last.dims).values, dtype=np.float64)
+    )
+    print(f"  Round-trip error at lead {lt - 1}: {err_last.max():.3e}")
+
+    # 3. Predicted error from the offset alone: slope * (t_target - t_init)
+    target = trend._get_inverse_target_time(last)
+    t_init = trend._time_to_numeric(last["time"], origin=trend.time_origin).values
+    t_target = trend._time_to_numeric(target, origin=trend.time_origin).values
+    offset = xr.DataArray(
+        np.asarray(t_target - t_init, dtype=np.float64),
+        dims=("time", "lead_time"),
+        coords={"time": last["time"], "lead_time": last["lead_time"]},
+    )
+    trend_diff = (trend.slope["data"] * offset).broadcast_like(last)
+    diff_vals = np.abs(
+        np.asarray(trend_diff.transpose(*last.dims).values, dtype=np.float64)
+    )
+    print(f"  Predicted error, max|slope * (t_target - t_init)|: {diff_vals.max():.3e}")
+
+    # 4. Compare at the element where the round-trip error peaks
+    idx = np.unravel_index(np.argmax(err_last), err_last.shape)
+    print(
+        f"  At peak element {idx}: round-trip {err_last[idx]:.3e}, "
+        f"predicted {diff_vals[idx]:.3e}"
+    )
+
+
+def main() -> int:
+    prep_ds = load_data(DATA_PATH, MAX_SAMPLES)
+
+    for name in ["standardizer", "anomalies", "normalizer"]:
+        try:
+            run_one(name, prep_ds["data"])
+        except Exception:
+            traceback.print_exc()
+
+    try:
+        run_trend(prep_ds)
+    except Exception:
+        traceback.print_exc()
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

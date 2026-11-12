@@ -1,4 +1,4 @@
-CCCma PPP
+S2D4P
 =========
 
 .. toctree::
@@ -8,7 +8,7 @@ CCCma PPP
    start_here/readme
    start_here/installation
    start_here/usage
-   start_here/contributing
+   start_here/further_development
 
 .. toctree::
    :maxdepth: 3

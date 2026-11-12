@@ -23,6 +23,7 @@ class DummyDistributed:
         self.rank = rank
         self.world_size = world_size
         self.device = torch.device(device)
+        self.architecture_config = SimpleNamespace(EXPECTS_MASK=False)
         self._root = root
         self.barrier_called = False
         self.barrier_calls = 0
@@ -121,7 +122,7 @@ class DummyTrainLoaderConfig:
 class DummyModule:
     input_shape = (2, 3)
     added_features_dim = 0
-    model_config = SimpleNamespace(EXPECTS_MASK=False)
+    architecture_config = SimpleNamespace(EXPECTS_MASK=False)
 
     def __init__(self):
         self.loaded_state = None
@@ -218,7 +219,7 @@ def config_file(tmp_path):
             {
                 "train_loader": {
                     "dataset_config": {
-                        "model": {
+                        "forecast": {
                             "names": ["tas"],
                         }
                     }
@@ -331,7 +332,7 @@ def test_output_preprocessor_dir_observation_branch(tmp_path):
     config.train_config = {
         "train_loader": {
             "dataset_config": {
-                "observation": {
+                "reference": {
                     "names": ["tas"],
                 }
             }
@@ -339,9 +340,7 @@ def test_output_preprocessor_dir_observation_branch(tmp_path):
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path
-        / "preprocessing_pipeline"
-        / "observation_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "reference_preprocessing_pipeline.joblib"
     )
 
 
@@ -350,7 +349,7 @@ def test_output_preprocessor_dir_model_branch(tmp_path):
     config.train_config = {
         "train_loader": {
             "dataset_config": {
-                "model": {
+                "forecast": {
                     "names": ["tas"],
                 }
             }
@@ -358,7 +357,7 @@ def test_output_preprocessor_dir_model_branch(tmp_path):
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path / "preprocessing_pipeline" / "model_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "forecast_preprocessing_pipeline.joblib"
     )
 
 
@@ -414,7 +413,7 @@ def test_set_random_seed_none_does_not_call_set_seed(
     called = []
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.set_seed",
+        "S2D4P.inference.inference_configs.set_seed",
         lambda seed: called.append(seed),
     )
 
@@ -446,7 +445,7 @@ def test_set_random_seed_uses_rank_offset(
     called = []
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.set_seed",
+        "S2D4P.inference.inference_configs.set_seed",
         lambda value: called.append(value),
     )
 
@@ -488,7 +487,7 @@ def patch_module_selector(monkeypatch):
     selector = DummySelector()
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        "S2D4P.inference.inference_configs.dacite.from_dict",
         lambda **kwargs: selector,
     )
 
@@ -655,7 +654,7 @@ def test_load_module_dacite_receives_module_config(
         return selector
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        "S2D4P.inference.inference_configs.dacite.from_dict",
         fake_from_dict,
     )
 
@@ -681,7 +680,7 @@ def test_load_module_calls_gc_collect(
     calls = []
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.gc.collect",
+        "S2D4P.inference.inference_configs.gc.collect",
         lambda: calls.append(True),
     )
 
@@ -705,7 +704,7 @@ def make_writer_config_fixture(tmp_path):
         output_preprocessor_dir=(
             tmp_path
             / "preprocessing_pipeline"
-            / "observation_preprocessing_pipeline.joblib"
+            / "reference_preprocessing_pipeline.joblib"
         ),
         output_dir=tmp_path / "inference",
         load_module=lambda loader=None: module,
@@ -736,7 +735,7 @@ def test_build_writer_passes_all_writer_arguments(
     postprocessor = object()
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         lambda self, path: postprocessor,
     )
 
@@ -776,7 +775,7 @@ def test_build_writer_loads_expected_preprocessor(
         return object()
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         fake_load,
     )
 
@@ -807,7 +806,7 @@ def test_build_writer_propagates_loader_setup_error(
     inference_config.setup_distributed = fail_setup
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         lambda self, path: object(),
     )
 
@@ -842,7 +841,7 @@ def test_build_writer_propagates_module_load_error(
     config.load_module = fail_load
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         lambda self, path: object(),
     )
 
@@ -875,7 +874,7 @@ def test_build_writer_propagates_postprocessor_error(
         raise FileNotFoundError("missing preprocessor")
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        "S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory",
         fail_load,
     )
 
@@ -984,16 +983,14 @@ def test_output_preprocessor_dir_prefers_observation(
     config.train_config = {
         "train_loader": {
             "dataset_config": {
-                "model": {"names": ["model"]},
-                "observation": {"names": ["observation"]},
+                "forecast": {"names": ["model"]},
+                "reference": {"names": ["observation"]},
             }
         }
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path
-        / "preprocessing_pipeline"
-        / "observation_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "reference_preprocessing_pipeline.joblib"
     )
 
 
@@ -1003,11 +1000,11 @@ def test_output_preprocessor_dir_uses_model_without_observation(
 ):
     config = make_bare_config(tmp_path)
     config.train_config = {
-        "train_loader": {"dataset_config": {"model": {"names": ["model"]}}}
+        "train_loader": {"dataset_config": {"forecast": {"names": ["model"]}}}
     }
 
     assert config.output_preprocessor_dir == (
-        tmp_path / "preprocessing_pipeline" / "model_preprocessing_pipeline.joblib"
+        tmp_path / "preprocessing_pipeline" / "forecast_preprocessing_pipeline.joblib"
     )
 
 
@@ -1124,7 +1121,7 @@ def test_load_module_propagates_selector_build_error(
             raise RuntimeError("build failed")
 
     monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        "S2D4P.inference.inference_configs.dacite.from_dict",
         lambda **kwargs: FailingSelector(),
     )
 
@@ -1188,10 +1185,7 @@ def test_build_writer_setup_arguments(
     ) = make_writer_config_fixture(tmp_path)
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 
@@ -1226,10 +1220,7 @@ def test_build_writer_module_receives_device(
     ) = make_writer_config_fixture(tmp_path)
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 
@@ -1261,10 +1252,7 @@ def test_build_writer_propagates_loader_build_error(
     inference_config.build_inference_loader = fail_build_loader
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 
@@ -1294,10 +1282,7 @@ def test_build_writer_propagates_writer_build_error(
     ) = make_writer_config_fixture(tmp_path)
 
     monkeypatch.setattr(
-        (
-            "cccma_ppp.inference.inference_configs."
-            "PreprocessingPipeline.load_from_memory"
-        ),
+        ("S2D4P.inference.inference_configs.PreprocessingPipeline.load_from_memory"),
         lambda self, path: object(),
     )
 

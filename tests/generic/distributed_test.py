@@ -28,6 +28,7 @@ def test_distributed_false(monkeypatch):
     assert d.is_root()
 
 
+@pytest.mark.pruned
 def test_distributed_true(monkeypatch):
     monkeypatch.setenv("RANK", "1")
     monkeypatch.setenv("LOCAL_RANK", "0")
@@ -74,7 +75,6 @@ def test_cleanup(monkeypatch):
     assert called.get("destroy", False)
 
 
-@pytest.mark.pruned
 def test_cleanup_not_initialized(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: False)

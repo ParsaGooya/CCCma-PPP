@@ -63,7 +63,7 @@ wheels = [
 ]
 
 [[package]]
-name = "cccma-ppp"
+name = "S2D4P"
 source = { editable = "." }
 dependencies = [
     { name = "dacite" },

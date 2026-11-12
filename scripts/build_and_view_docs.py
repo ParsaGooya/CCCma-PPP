@@ -13,7 +13,7 @@ SOURCE_DIR = DOCS_DIR / "source"  # Where the .rst documentation files live
 API_DIR = SOURCE_DIR / "api"  # Where auto-generated API docs go
 
 # The actual package we're documenting
-PACKAGE_DIR = PROJECT_ROOT / "cccma_ppp"
+PACKAGE_DIR = PROJECT_ROOT / "S2D4P"
 
 # Output directories for the build
 BUILD_DIR = DOCS_DIR / "_build"

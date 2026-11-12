@@ -241,7 +241,6 @@ def test_setup_distributed_logger_none(tmp_path):
     assert writer._setup
 
 
-@pytest.mark.pruned
 def test_setup_distributed_device_mismatch(tmp_path):
     predictor = DummyPredictor()
 
@@ -329,7 +328,7 @@ def test_predict_runs(
     }
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.clear_memory",
+        "S2D4P.core.writer.clear_memory",
         lambda: called.__setitem__("clear", True),
     )
 
@@ -529,7 +528,7 @@ def test_aggregate_predictions_to_netcdf_root(
     called = {}
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         lambda **kwargs: called.setdefault(
             "called",
             True,
@@ -559,7 +558,7 @@ def test_aggregate_predictions_to_netcdf_non_root(
     called = {}
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         lambda **kwargs: called.setdefault(
             "called",
             True,
@@ -588,7 +587,7 @@ def test_aggregate_predictions_to_netcdf_no_postprocess(
     captured = {}
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         lambda **kwargs: captured.setdefault(
             "pp",
             kwargs["post_processor"],
@@ -618,7 +617,7 @@ def test_aggregate_predictions_to_netcdf_latent(
     captured = {}
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         lambda **kwargs: captured.setdefault(
             "name",
             "latent",
@@ -983,7 +982,7 @@ def test_aggregate_predictions_to_netcdf_distributed_barriers(
     calls = {"aggregate": 0}
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         lambda **kwargs: calls.__setitem__(
             "aggregate",
             calls["aggregate"] + 1,
@@ -1022,7 +1021,7 @@ def test_aggregate_predictions_to_netcdf_latent_name(
     captured = {}
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         lambda **kwargs: captured.setdefault(
             "name",
             "latent",
@@ -1191,7 +1190,6 @@ def test_setup_distributed_creates_temp_directory_on_root(
     assert writer.temp_save_dir.is_dir()
 
 
-@pytest.mark.pruned
 def test_setup_distributed_non_root_does_not_create_temp_directory(
     tmp_path,
 ):
@@ -1216,6 +1214,7 @@ def test_setup_distributed_non_root_does_not_create_temp_directory(
     assert not writer.temp_save_dir.exists()
 
 
+@pytest.mark.pruned
 def test_setup_distributed_records_distributed_properties(
     tmp_path,
 ):
@@ -1266,11 +1265,11 @@ def test_predict_logs_elapsed_time(
     times = iter([100.0, 102.5])
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.time.time",
+        "S2D4P.core.writer.time.time",
         lambda: next(times),
     )
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.clear_memory",
+        "S2D4P.core.writer.clear_memory",
         lambda: None,
     )
 
@@ -1885,7 +1884,7 @@ def test_aggregate_predictions_to_netcdf_nonroot_distributed_barriers(
     aggregate_mock = []
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         lambda **kwargs: aggregate_mock.append(kwargs),
     )
 
@@ -2233,6 +2232,7 @@ class TestAggregatePredictionFiles:
         assert second.exists()
         assert temp_dir.exists()
 
+    @pytest.mark.pruned
     def test_empty_initialization_times_raise_runtime_error(
         self,
         tmp_path,
@@ -2618,7 +2618,6 @@ class TestWriterSetupCompletion:
             for _, message in logger.messages
         )
 
-    @pytest.mark.pruned
     def test_training_stats_failure_prevents_setup_completion(
         self,
         tmp_path,
@@ -2717,7 +2716,7 @@ class LegacyAdditionalWriterConfig:
             return_value=built,
         )
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.Writer",
+            "S2D4P.core.writer.Writer",
             constructor,
         )
 
@@ -2761,7 +2760,7 @@ class LegacyAdditionalWriterPredictionLoop:
 
         clear = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
+            "S2D4P.core.writer.clear_memory",
             clear,
         )
 
@@ -2813,7 +2812,7 @@ class LegacyAdditionalWriterPredictionLoop:
         writer.aggregate_predictions_to_netcdf = Mock()
 
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
+            "S2D4P.core.writer.clear_memory",
             Mock(),
         )
 
@@ -2846,11 +2845,11 @@ class LegacyAdditionalWriterPredictionLoop:
             side_effect=lambda iterable, **kwargs: iterable,
         )
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.tqdm",
+            "S2D4P.core.writer.tqdm",
             tqdm_mock,
         )
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
+            "S2D4P.core.writer.clear_memory",
             Mock(),
         )
 
@@ -2872,11 +2871,11 @@ class LegacyAdditionalWriterPredictionLoop:
             side_effect=lambda iterable, **kwargs: iterable,
         )
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.tqdm",
+            "S2D4P.core.writer.tqdm",
             tqdm_mock,
         )
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
+            "S2D4P.core.writer.clear_memory",
             Mock(),
         )
 
@@ -2899,11 +2898,11 @@ class LegacyAdditionalWriterPredictionLoop:
         writer.log_root = lambda level, message: messages.append(message)
 
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
+            "S2D4P.core.writer.clear_memory",
             Mock(),
         )
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.time.time",
+            "S2D4P.core.writer.time.time",
             Mock(return_value=10.0),
         )
 
@@ -3070,7 +3069,7 @@ class LegacyAdditionalTrainStatistics:
 
         clear = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
+            "S2D4P.core.writer.clear_memory",
             clear,
         )
 
@@ -3121,7 +3120,7 @@ class LegacyAdditionalTrainStatistics:
         writer.aggregate_train_stats = Mock()
 
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
+            "S2D4P.core.writer.clear_memory",
             Mock(),
         )
 
@@ -3237,7 +3236,7 @@ class LegacyAdditionalAggregationDispatch:
 
         aggregate = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
+            "S2D4P.core.writer.aggregate_predictions",
             aggregate,
         )
 
@@ -3265,7 +3264,7 @@ class LegacyAdditionalAggregationDispatch:
 
         aggregate = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
+            "S2D4P.core.writer.aggregate_predictions",
             aggregate,
         )
 
@@ -3291,7 +3290,7 @@ class LegacyAdditionalAggregationDispatch:
 
         aggregate = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
+            "S2D4P.core.writer.aggregate_predictions",
             aggregate,
         )
 
@@ -3316,7 +3315,7 @@ class LegacyAdditionalAggregationDispatch:
 
         aggregate = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
+            "S2D4P.core.writer.aggregate_predictions",
             aggregate,
         )
 
@@ -3341,7 +3340,7 @@ class LegacyAdditionalAggregationDispatch:
 
         aggregate = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
+            "S2D4P.core.writer.aggregate_predictions",
             aggregate,
         )
 
@@ -3369,7 +3368,7 @@ class LegacyAdditionalAggregationDispatch:
 
         aggregate = Mock()
         monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
+            "S2D4P.core.writer.aggregate_predictions",
             aggregate,
         )
 
@@ -3733,6 +3732,7 @@ def test_writer_config_rejects_aggregate_and_predict_only_together(
         )
 
 
+@pytest.mark.pruned
 def test_writer_config_aggregate_only_does_not_require_predictor(
     tmp_path,
 ):
@@ -3765,7 +3765,7 @@ def test_writer_config_builds_default_predictor_when_missing(
         return_value=default_predictor,
     )
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.DeterministicPredictorConfig",
+        "S2D4P.core.writer.DeterministicPredictorConfig",
         constructor,
     )
 
@@ -3812,6 +3812,7 @@ def test_setup_aggregate_only_requires_existing_temp_files(
     assert writer._setup is False
 
 
+@pytest.mark.pruned
 def test_setup_aggregate_only_accepts_existing_netcdf_file(
     tmp_path,
 ):
@@ -3888,11 +3889,11 @@ def test_predict_aggregate_only_logs_aggregation_start(
         ]
     )
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.time.time",
+        "S2D4P.core.writer.time.time",
         lambda: next(times),
     )
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.clear_memory",
+        "S2D4P.core.writer.clear_memory",
         Mock(),
     )
 
@@ -3916,7 +3917,7 @@ def test_predict_only_skips_aggregation(
     writer.aggregate_predictions_to_netcdf = Mock()
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.clear_memory",
+        "S2D4P.core.writer.clear_memory",
         Mock(),
     )
 
@@ -3948,7 +3949,7 @@ def test_aggregate_only_skips_inference_and_aggregates(
     writer.aggregate_predictions_to_netcdf = Mock()
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.clear_memory",
+        "S2D4P.core.writer.clear_memory",
         Mock(),
     )
 
@@ -3976,7 +3977,7 @@ def test_aggregate_only_does_not_require_predictor_attribute(
     writer.aggregate_predictions_to_netcdf = Mock()
 
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.clear_memory",
+        "S2D4P.core.writer.clear_memory",
         Mock(),
     )
 
@@ -3993,7 +3994,7 @@ def test_aggregate_dispatch_sets_output_ensemble_true(
 ):
     aggregate = Mock()
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         aggregate,
     )
 
@@ -4023,7 +4024,7 @@ def test_aggregate_dispatch_sets_output_ensemble_false(
 ):
     aggregate = Mock()
     monkeypatch.setattr(
-        "cccma_ppp.core.writer.aggregate_predictions",
+        "S2D4P.core.writer.aggregate_predictions",
         aggregate,
     )
 
@@ -4335,7 +4336,6 @@ def test_build_train_loader_converts_global_experiment_dir_to_path(
     assert config.setup_called is True
 
 
-@pytest.mark.pruned
 def test_setup_aggregate_only_distributed_barrier(
     tmp_path,
 ):

@@ -1397,7 +1397,7 @@ class LegacyToDataset:
         ]
 
         monkeypatch.setattr(
-            "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
+            "S2D4P.preprocessing.utils_preprocessing.Flattennanremove",
             FakeFlattennanremove,
         )
 
@@ -1822,6 +1822,7 @@ class TestAdditionalTransform:
                 )
             )
 
+    @pytest.mark.pruned
     def test_empty_pipeline_returns_original_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1867,7 +1868,6 @@ class TestAdditionalTransform:
             data + 1.0,
         )
 
-    @pytest.mark.pruned
     def test_none_step_arguments_becomes_empty_mapping(self):
         pipeline, first, second = make_fitted_pipeline()
         data = xr.DataArray(

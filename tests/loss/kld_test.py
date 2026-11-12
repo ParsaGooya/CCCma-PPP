@@ -133,7 +133,6 @@ class DummyFlow:
         )
 
 
-@pytest.mark.pruned
 def test_kld_with_flow():
     kld = KLD()
 
@@ -147,6 +146,7 @@ def test_kld_with_flow():
     assert loss.item() >= 0
 
 
+@pytest.mark.pruned
 def test_kld_with_flow_and_condition():
     kld = KLD()
 
