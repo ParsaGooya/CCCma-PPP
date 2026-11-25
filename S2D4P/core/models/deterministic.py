@@ -200,8 +200,8 @@ class deterministic(moduleABC):
             added_features_dim=added_features_dim,
         )
 
-        if self.config.load_dir is not None:
-            self._load_state_dict(self.config.load_dir)
+
+        self._load_state_dict(self.config.load_dir)
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
         """

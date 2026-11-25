@@ -225,6 +225,9 @@ class moduleABC(nn.Module, abc.ABC):
         FileNotFoundError
             If the checkpoint file does not exist.
         """
+        if load_path is None:
+            return
+        
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 

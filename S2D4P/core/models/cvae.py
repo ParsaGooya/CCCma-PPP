@@ -317,8 +317,7 @@ class cVAE(moduleABC):
                 latent_size=self.latent_size, condition_size=self.flow_condition_size
             )
 
-        if self.config.load_dir is not None:
-            self._load_state_dict(self.config.load_dir)
+        self._load_state_dict(self.config.load_dir)
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
         """
