@@ -96,7 +96,6 @@ class moduleABC(nn.Module, abc.ABC):
 
         self.config = config
         self.architecture_config = config.architecture_config
-
         self.criterion = None
 
         if output_shape is None:
