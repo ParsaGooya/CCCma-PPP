@@ -7,7 +7,7 @@ import gc
 from pathlib import Path
 from typing import ClassVar
 import dataclasses
-
+from S2D4P.generic.runtime import RuntimeContext
 
 class moduleConfigABC(abc.ABC):
     """
@@ -85,6 +85,53 @@ class moduleABC(nn.Module, abc.ABC):
         Initialize the model module.
         """
         super().__init__()
+
+    @final
+    def model_setup(self, 
+                config: moduleConfigABC,
+                input_shape: np.ndarray,
+                output_shape: np.ndarray | None = None,
+                added_features_dim: int = None,
+        ):
+
+        self.config = config
+        self.architecture_config = config.architecture_config
+
+        self.criterion = None
+
+        if output_shape is None:
+            output_shape = input_shape.copy()
+
+        if self.config.load_dir is not None:
+            if (
+                RuntimeContext.INPUT_VAR_METADATA
+                != self.config.checkpoint_config.checkpoint_input_var_metadata
+            ):
+                raise RuntimeError(
+                    "the loaded module was not trained for the consistent input variables or preprocessing steps"
+                )
+            if (
+                RuntimeContext.TARGET_VAR_METADATA
+                != self.config.checkpoint_config.checkpoint_output_var_metadata
+            ):
+                raise RuntimeError(
+                    "the loaded module was not trained for the consistent output variables or preprocessing steps"
+                )
+
+            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
+                raise RuntimeError(
+                    f"the requested input shape ({input_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_input_shape}"
+                )
+            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
+                raise RuntimeError(
+                    f"the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}"
+                )
+            
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.added_features_dim = added_features_dim
+
+        return self
 
     @abc.abstractmethod
     def init_loss_function(self, reconstruction_loss: nn.Module, **kwargs):

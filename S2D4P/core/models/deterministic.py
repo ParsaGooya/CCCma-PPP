@@ -15,8 +15,6 @@ from S2D4P.core.selectors import (
     _load_config_from_checkpoint,
 )
 from S2D4P.train.dataloader import BatchData
-from S2D4P.generic.runtime import RuntimeContext
-
 
 @dataclasses.dataclass
 class deterministicOutput(OutputABC):
@@ -193,42 +191,8 @@ class deterministic(moduleABC):
             incompatible with the loaded checkpoint.
         """
         super().__init__()
-        self.config = config
-        self.architecture_config = config.architecture_config
-
-        self.criterion = None
-
-        if output_shape is None:
-            output_shape = input_shape.copy()
-
-        if self.config.load_dir is not None:
-            if (
-                RuntimeContext.INPUT_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_input_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent input variables or preprocessing steps"
-                )
-            if (
-                RuntimeContext.TARGET_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_output_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent output variables or preprocessing steps"
-                )
-
-            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
-                raise RuntimeError(
-                    f"the requested input shape ({input_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_input_shape}"
-                )
-            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
-                raise RuntimeError(
-                    f"the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}"
-                )
-
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-        self.added_features_dim = added_features_dim
+        
+        self.model_setup(config, input_shape, output_shape, added_features_dim)
 
         self.arch = self.architecture_config.build(
             input_shape=input_shape,

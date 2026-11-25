@@ -17,7 +17,7 @@ from S2D4P.core.selectors import (
 from S2D4P.architectures.normalized_flows import NormalizedFlowConfig
 from S2D4P.architectures.architecture_abc import cVAEPredictRequest, cVAEForwardRequest
 from S2D4P.train.dataloader import BatchData
-from S2D4P.generic.runtime import RuntimeContext
+
 
 
 @dataclasses.dataclass
@@ -269,8 +269,7 @@ class cVAE(moduleABC):
             incompatible with the loaded checkpoint.
         """
         super().__init__()
-        self.config = config
-        self.architecture_config = self.config.architecture_config
+
         self.latent_size = self.config.latent_size
         self.posterior_variance_limits = self.config.posterior_variance_limits
         self.prior_flow_config = self.config.prior_flow_config
@@ -289,37 +288,6 @@ class cVAE(moduleABC):
         else:
             self.flow_condition_size = None
 
-        self.criterion = None
-        self.prior_flow = None
-
-        if output_shape is None:
-            output_shape = input_shape.copy()
-
-        if self.config.load_dir is not None:
-            if (
-                RuntimeContext.INPUT_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_input_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent input variables or preprocessing steps"
-                )
-            if (
-                RuntimeContext.TARGET_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_output_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent output variables or preprocessing steps"
-                )
-
-            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
-                raise RuntimeError(
-                    f"the requested input shape ({input_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_input_shape}"
-                )
-            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
-                raise RuntimeError(
-                    f"the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}"
-                )
-
         if self.posterior_variance_limits is not None:
             min = (
                 torch.log(torch.tensor(self.posterior_variance_limits[0]))
@@ -335,9 +303,7 @@ class cVAE(moduleABC):
 
             self.posterior_variance_limits = [min, max]
 
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-        self.added_features_dim = added_features_dim
+        self.model_setup(config, input_shape, output_shape, added_features_dim)
 
         self.arch = self.architecture_config.build(
             input_shape=input_shape,
@@ -345,6 +311,7 @@ class cVAE(moduleABC):
             added_features_dim=added_features_dim,
         )
 
+        self.prior_flow = None
         if self.prior_flow_config is not None:
             self.prior_flow = self.prior_flow_config.build(
                 latent_size=self.latent_size, condition_size=self.flow_condition_size
