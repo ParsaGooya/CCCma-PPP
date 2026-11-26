@@ -200,7 +200,6 @@ class deterministic(moduleABC):
             added_features_dim=added_features_dim,
         )
 
-
         self._load_state_dict(self.config.load_dir)
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):

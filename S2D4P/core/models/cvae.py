@@ -269,6 +269,7 @@ class cVAE(moduleABC):
             incompatible with the loaded checkpoint.
         """
         super().__init__()
+        self.model_setup(config, input_shape, output_shape, added_features_dim)
 
         self.latent_size = self.config.latent_size
         self.posterior_variance_limits = self.config.posterior_variance_limits
@@ -303,7 +304,6 @@ class cVAE(moduleABC):
 
             self.posterior_variance_limits = [min, max]
 
-        self.model_setup(config, input_shape, output_shape, added_features_dim)
 
         self.arch = self.architecture_config.build(
             input_shape=input_shape,
