@@ -1,9 +1,9 @@
 README
 ======
-CCCma Post-Processing Package (PPP)
+Sub-seasonal to Decadal Predictions Post-Processing Package (S2D4P)
 -----------------------------------
 
-A machine learning pipeline for post-processing seasonal-to-decadal predictions produced by the Canadian Earth System Models (CanESM) at the Canadian Centre for Climate Modelling and Analysis (CCCma).
+A machine learning pipeline for post-processing sub-seasonal-to-decadal predictions produced by the Canadian Earth System Models (CanESM) at the Canadian Centre for Climate Modelling and Analysis (CCCma).
 
 The training framework supports a suite of deterministic and probabilistic models across multiple neural network architectures. Current applications include bias adjustment, ensemble boosting, and statistical downscaling.
 

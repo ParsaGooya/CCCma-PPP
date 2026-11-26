@@ -1,3 +1,4 @@
+
 Further Development
 ============
 
@@ -32,12 +33,21 @@ Adding a component
 
 Most extensions use a registry. Classes are registered with a decorator and then selected by name from a YAML config. Follow the pattern for the component you are adding.
 
-**Model architecture**
+**Models**
 
-1. Write a config dataclass that subclasses ``cVAEmodelConfigABC`` or ``modelConfigABC``. Set ``NUM_INPUT_DIMS``, ``NUM_OUTPUT_DIMS``, and an ``EXPECTS_MASK`` property. Validate arguments in ``__post_init__``.
-2. Implement a ``build`` method that returns the module.
-3. Write the module as a subclass of ``deterministicmodelsABC`` or ``cVAEmodelsABC``. Call ``_initialize_weights`` or ``_load_state_dict`` at the end of ``__init__`` depending on whether a checkpoint is provided.
-4. Register it with ``@deterministicModelSelector.register("name")`` or ``@cVAEModelSelector.register("name")``.
+1. Write a config dataclass that subclasses ``moduleConfigABC``. Validate arguments in ``__post_init__``.
+2. Implement a ``build`` and ``_load_from_checkpoint`` method that returns the model module and loads architecture and other model specific components.
+3. Write the model module as a subclass of ``moduleABC``. Call ``model_setup`` and ``self.architecture_config.build`` in the ``__init__`` together with any model specific setups. Call ``_load_state_dict`` at the end of ``__init__``.
+4. Register the config class with ``@ModuleSelector.register("name")``.
+5. Create a predictor module and config in ``inference/predictors`` inhertting from ``PredictorABC``.
+5. Import the module in ``generic/registry_imports.py`` so the registration runs before configs are parsed.
+
+**Architecture**
+
+1. Write a config dataclass that subclasses ``cVAEArchConfigABC``, ``ArchlConfigABC`` or any future model-architecture ConfigABCs. Set expected ``NUM_INPUT_DIMS``, ``NUM_OUTPUT_DIMS``, and an ``EXPECTS_MASK`` property. Validate arguments in ``__post_init__``.
+2. Implement a ``build`` method that returns the architecture module.
+3. Write the architecture module as a subclass of ``deterministicArchABC``, ``cVAEArchABC`` or any future model-architecture ABC. Call ``_initialize_weights`` or ``_load_state_dict`` at the end of ``__init__`` depending on whether a checkpoint is provided.
+4. Register the config class with ``@deterministicModelSelector.register("name")``, ``@cVAEModelSelector.register("name")`` or any future model-selector class.
 5. Import the module in ``generic/registry_imports.py`` so the registration runs before configs are parsed.
 
 **Loss term**
@@ -102,3 +112,7 @@ Reporting issues
 ----------------
 
 Include the config file (with paths redacted if needed), the full traceback, the output of ``python -c "import torch; print(torch.__version__)"``, and whether the run was single-process or distributed.
+
+
+
+*This document is generated with the help of Artifical Intelligence.*

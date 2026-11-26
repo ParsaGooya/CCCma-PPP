@@ -263,7 +263,7 @@ class DatasetConfigABC(abc.ABC):
                     if self.condition.coords.get(dim) is None:
                         raise ValueError(
                             "Condition data should be available"
-                            f" on the same {dim} dimestions as forecast data."
+                            f" on the same {dim} dimensions as forecast data."
                         )
 
                     if not set(self.forecast.coords[dim].values).issubset(
