@@ -18,7 +18,7 @@ Each top-level package has one job. See the module overview files in ``docs/`` f
 - ``architectures``: neural network models and layers.
 - ``configs``: project-wide settings loaded from ``configs.yaml``. Change dimension names here, not in code.
 - ``core``: model wrappers, selectors, trainer, optimizer, and writer.
-- ``data``: data loading, dataset construction, and weights.
+- ``data_modules``: data loading, dataset construction, and weights.
 - ``generic``: distributed setup, logging, metrics, runtime state, and monitoring.
 - ``inference``: prediction entry point, predictors, and output writing.
 - ``loss``: loss terms, the loss pipeline, and the KL term.
