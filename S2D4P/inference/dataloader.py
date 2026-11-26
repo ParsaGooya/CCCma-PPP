@@ -126,8 +126,6 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     share_spatial_mask : bool
         Whether spatial validity masks are reduced across the batch dimension and
         shared between batches.
-    time_features : AddedTimeFeatures | None
-        Temporal feature configuration inherited from the training data loader.
     """
 
     dataset: InferenceDatasetConfig | None = None
@@ -139,7 +137,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     load: bool = False
     share_spatial_mask: bool = False
 
-    time_features: AddedTimeFeatures | None = dataclasses.field(
+    time_features: AddedTimeFeatures | list | None = dataclasses.field(
         init=False,
         default=None,
     )
