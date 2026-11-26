@@ -36,9 +36,6 @@ class BatchData(BatchDataABC):
     share_spatial_mask : bool
         Whether to reduce the validity mask across the batch dimension and reuse
         it as a shared mask.
-    input_mask : torch.Tensor | None
-        Validity mask derived from the input tensor when spatial masking is
-        requested.
     """
 
     input: torch.Tensor
@@ -46,6 +43,7 @@ class BatchData(BatchDataABC):
     metadata: list[dict] | None = None
     return_spatial_mask: bool = False
     share_spatial_mask: bool = False
+    
     input_mask: torch.Tensor | None = dataclasses.field(
         init=False,
         default=None,

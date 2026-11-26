@@ -207,8 +207,6 @@ class InferenceDataset(DatasetABC):
         Whether each sample is returned with its sampling-coordinate metadata.
     load : bool
         Whether underlying xarray data are loaded into memory when opened.
-    mask : xr.DataArray | None
-        Sampling mask constructed internally by the dataset.
     """
 
     config: InferenceDatasetConfig

@@ -166,7 +166,7 @@ def make_base_data():
         {
             "tas": (
                 (
-                    PreprocessingPipeline.init_time_time,
+                    PreprocessingPipeline.init_time_dim,
                     "lat",
                     "lon",
                 ),
@@ -181,7 +181,7 @@ def make_base_data():
             ),
             "pr": (
                 (
-                    PreprocessingPipeline.init_time_time,
+                    PreprocessingPipeline.init_time_dim,
                     "lat",
                     "lon",
                 ),
@@ -197,7 +197,7 @@ def make_base_data():
             ),
         },
         coords={
-            PreprocessingPipeline.init_time_time: times,
+            PreprocessingPipeline.init_time_dim: times,
             "lat": [
                 45.0,
                 46.0,
@@ -291,11 +291,11 @@ class LegacyInitialization:
         pipeline = PreprocessingPipeline()
 
         assert isinstance(
-            pipeline.init_time_time,
+            pipeline.init_time_dim,
             str,
         )
         assert isinstance(
-            pipeline.lead_time_time,
+            pipeline.lead_time_dim,
             str,
         )
         assert isinstance(
@@ -356,7 +356,7 @@ class LegacyFit:
 
         np.testing.assert_array_equal(
             pipeline.fitted_based_time,
-            data[pipeline.init_time_time].values,
+            data[pipeline.init_time_dim].values,
         )
 
     def test_calls_preprocessors_in_order(
@@ -1602,7 +1602,7 @@ class TestAdditionalFit:
 
         np.testing.assert_array_equal(
             pipeline.fitted_based_time,
-            data[pipeline.init_time_time].values,
+            data[pipeline.init_time_dim].values,
         )
 
     def test_fit_applies_each_step_before_fitting_next(self):

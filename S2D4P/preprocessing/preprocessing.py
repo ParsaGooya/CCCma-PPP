@@ -32,9 +32,15 @@ class PreprocessingPipeline:
     load_dir : str | Path | None
         Path to a previously saved preprocessing pipeline. If provided, fitted
         pipeline state is restored during initialization.
-    init_time_time : str
+
+    Notes
+    ---------
+    Below arguments are configured to be read from configs and not specified
+    by user. This can be changed if adopting the code for other pipelines.
+
+    init_time_dim : str
         Name of the initialization-time dimension used by the pipeline.
-    lead_time_time : str
+    lead_time_dim : str
         Name of the lead-time dimension used by the pipeline.
     supported_NN_dimensions : tuple[str, ...]
         Ordered dimensions supported as neural-network output dimensions.
@@ -45,8 +51,8 @@ class PreprocessingPipeline:
     )
     load_dir: str | Path = None
 
-    init_time_time: str = dataclasses.field(init=False, default=init_time_dim)
-    lead_time_time: str = dataclasses.field(init=False, default=lead_time_dim)
+    init_time_dim: str = dataclasses.field(init=False, default=init_time_dim)
+    lead_time_dim: str = dataclasses.field(init=False, default=lead_time_dim)
     supported_NN_dimensions: tuple[str] = dataclasses.field(
         init=False, default=supported_NN_dimensions_sorted
     )
@@ -135,8 +141,8 @@ class PreprocessingPipeline:
             data_processed = base_data
             self.mask = mask
             self.fitted_based_time = (
-                base_data[self.init_time_time].values
-                if self.init_time_time in base_data.dims
+                base_data[self.init_time_dim].values
+                if self.init_time_dim in base_data.dims
                 else None
             )
 

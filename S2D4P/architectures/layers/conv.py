@@ -182,10 +182,6 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
         Whether convolutional layers include a learnable bias.
     group_norm_groups : int
         Number of groups used when group normalization is selected.
-    multi_channel : bool
-        Whether masks are maintained independently for each channel.
-    return_mask : bool
-        Whether partial convolutions return the updated validity mask.
     """
 
     name: Literal["partial_conv"]
@@ -245,11 +241,6 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
         Maximum stochastic-depth probability applied across the block.
     use_partial_conv : bool
         Whether depthwise and projection convolutions use partial convolutions.
-    multi_channel : bool
-        Whether partial-convolution masks are maintained independently for each
-        channel.
-    return_mask : bool
-        Whether partial convolutions return updated validity masks.
     """
 
     name: Literal["convnext"]
