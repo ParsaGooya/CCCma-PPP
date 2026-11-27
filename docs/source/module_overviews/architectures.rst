@@ -57,8 +57,8 @@ Architectures register with ``cVAEArchSelector`` or ``deterministicArchSelector`
 Development
 ---------------
 
-Future use might require a new architecture. Each new architecture requires a class and config class and will be compatible with ``S2D4P``` as long as they inherit from ``ArchABC`` and ``ArchConfigABC`` respectively.
-If an architecture falls under the existing architecture families (mlp and unet), it is expected that the building blocks be added to the corresponding family in ``layers/``, while the architecture object class and its config class 
+Future use might require a new architecture. Each new architecture requires a class and config class and will be compatible with the models as long as they inherit from ``ArchABC`` and ``ArchConfigABC``, respectively.
+If an architecture falls under the existing architecture families (e.g., mlp and unet), it is expected that the building blocks be added to the corresponding family in ``layers/``, while the architecture object class and its config class 
 are defined in their corresponding family's directory (``mlp/`` or ``unet/``, etc.) for their corresponding model (``deterministic.py`` or ``cvae.py``, etc.). Finelly, the config class must be registered with that model family's
 selector class (``deterministicArchSelector`` or ``cVAEArchSelector``, etc.).  Should the design fall under a new family of architectures, it is expected its building blocks, architecture and config class to be defined under representative family names 
 (e.g. ``layers/transformers.py``, ``transformer/cvae.py``), and the config class registered with the corresponidng model selector (e.g. ``cVAEArchSelector``).
