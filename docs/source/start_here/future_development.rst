@@ -31,7 +31,7 @@ Keep dependencies one-directional where possible. ``generic`` and ``configs`` sh
 Adding a component
 ------------------
 
-Most extensions use a registry. Classes are registered with a decorator and then selected by name from a YAML config. Follow the pattern for the component you are adding. Users are adviced to review ``MODULE OVERVIEWS`` section before development.
+Most extensions use a registry. Classes are registered with a decorator and then selected by name from a YAML config. Follow the pattern for the component you are adding. Users are advised to review ``MODULE OVERVIEWS`` section before development.
 
 **Models**
 

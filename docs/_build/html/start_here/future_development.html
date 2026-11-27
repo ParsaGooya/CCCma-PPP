@@ -18,7 +18,9 @@
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Architectures" href="../module_overviews/architectures.html" />
+    <link rel="prev" title="Design Logic and Software Architecture Overview" href="design_overview.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,11 +43,22 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="design_overview.html">Design Logic and Software Architecture Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Further Development</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development-setup">Development setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#project-layout">Project layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-a-component">Adding a component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding-conventions">Coding conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-and-pruning-steps">Build and pruning steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pull-requests">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reporting-issues">Reporting issues</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -114,7 +127,7 @@
 </section>
 <section id="adding-a-component">
 <h2>Adding a component<a class="headerlink" href="#adding-a-component" title="Link to this heading"></a></h2>
-<p>Most extensions use a registry. Classes are registered with a decorator and then selected by name from a YAML config. Follow the pattern for the component you are adding.</p>
+<p>Most extensions use a registry. Classes are registered with a decorator and then selected by name from a YAML config. Follow the pattern for the component you are adding. Users are adviced to review <code class="docutils literal notranslate"><span class="pre">MODULE</span> <span class="pre">OVERVIEWS</span></code> section before development.</p>
 <p><strong>Models</strong></p>
 <ol class="arabic simple">
 <li><p>Write a config dataclass that subclasses <code class="docutils literal notranslate"><span class="pre">moduleConfigABC</span></code>. Validate arguments in <code class="docutils literal notranslate"><span class="pre">__post_init__</span></code>.</p></li>
@@ -191,14 +204,17 @@
 <section id="reporting-issues">
 <h2>Reporting issues<a class="headerlink" href="#reporting-issues" title="Link to this heading"></a></h2>
 <p>Include the config file (with paths redacted if needed), the full traceback, the output of <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-c</span> <span class="pre">&quot;import</span> <span class="pre">torch;</span> <span class="pre">print(torch.__version__)&quot;</span></code>, and whether the run was single-process or distributed.</p>
-<p><em>This document is generated with the help of Artifical Intelligence.</em></p>
+<p><strong>* *This document and module docstrings are generated with the help of Artifical Intelligence.* *</strong></p>
 </section>
 </section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="design_overview.html" class="btn btn-neutral float-left" title="Design Logic and Software Architecture Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../module_overviews/architectures.html" class="btn btn-neutral float-right" title="Architectures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
