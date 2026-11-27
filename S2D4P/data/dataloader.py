@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from functools import partial
 import abc
-from typing import final, ClassVar
+from typing import final, ClassVar, Sequence
 from collections.abc import Callable, Iterator
 from itertools import islice
 
@@ -147,6 +147,15 @@ class DataloaderConfigABC(abc.ABC):
             Initialization times available from the configured dataset.
         """
         pass
+
+    @final
+    def _to_year_slice(years: Sequence):
+        if years is None:
+            return None
+        if len(years) != 2:
+            raise ValueError(f"inference_years_slice must have 2 items, got {len(years)}.")
+        start, stop = (None if y is None else int(y) for y in years)
+        return slice(start, stop)
 
     @final
     def select_requested_times(

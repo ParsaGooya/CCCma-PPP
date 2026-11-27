@@ -157,7 +157,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             _ = self._inference_times
 
         self.inference_years_slice = (
-            slice(*[str(item) for item in self.inference_years_slice])
+            self._to_year_slice(self.inference_years_slice)
             if self.inference_years_slice is not None
             else None
         )
@@ -235,7 +235,10 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         Any
             Initialization times available from the inference dataset configuration.
         """
-        self._check_config()
+        if self.dataset_config is None:
+            raise RuntimeError("dataset config must be provided or read from train configs " 
+            "via read_configs_from_train method.")
+    
         return self.dataset_config.available_times
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
@@ -281,6 +284,9 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         for path in preprocessor_to_check:
             exists.append(path.exists())
+
+        if not preprocessor_to_check:
+            return False
 
         return all(exists)
 

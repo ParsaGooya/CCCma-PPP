@@ -182,9 +182,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         if self.train_years_slice is None:
             self.train_times = self.available_times
         else:
-            self.train_years_slice = slice(
-                *[str(item) for item in self.train_years_slice]
-            )
+            self.train_years_slice = self._to_year_slice(self.train_years_slice) 
 
             self.train_times = self.select_requested_times(
                 requested_slice=self.train_years_slice,

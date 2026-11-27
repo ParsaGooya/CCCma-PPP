@@ -6,6 +6,7 @@ import xarray as xr
 import torch
 import cftime
 import datetime
+import copy
 
 from S2D4P.data.dataset.dataset_abc import (
     DatasetConfigABC,
@@ -49,7 +50,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     forecast: ForecastDataConfig | None = None
     condition: ConditionDataConfig | None = None
-    condition_method: str = None
+    condition_method: str | None = None
     lead_times: lead_time_config | None = None
 
     def __post_init__(self):
@@ -359,7 +360,6 @@ def _from_train(
         If an inference input configuration cannot be derived from the available
         training forecast and conditioning data.
     """
-    import copy
 
     kwargs = {
         "condition_method": train_dataset_config.condition_method,
