@@ -291,7 +291,7 @@ The structure of the training YAML file follows the hierarchy of ``TrainConfig``
    save_checkpoint: true
 
    train_loader:
-     dataset_config:
+     dataset:
        model:
          # ModelDataConfig arguments
        observation:
@@ -305,7 +305,11 @@ The structure of the training YAML file follows the hierarchy of ``TrainConfig``
 
    module:
      type: deterministic
-     # Module-specific configuration
+      config:
+      # Model-specific configuration
+        Architecture:
+          type: UNet
+          # Architecture-specific configuration
 
    losspipeline:
      # LosspipelineConfig arguments
@@ -487,7 +491,7 @@ The inference configuration follows the same recursive dataclass construction an
    |       |-- Lead-time selection
    |       `-- Conditioning method
    |-- Predictor configuration
-   |   `-- Module-specific inference settings
+   |   `-- Model-specific inference settings
    `-- Additional inference settings
 
 Consult each nested configuration class to identify its supported arguments, types, and default values.
