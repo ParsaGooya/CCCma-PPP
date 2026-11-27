@@ -14,8 +14,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -47,7 +47,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
@@ -59,6 +58,7 @@
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Loss</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
@@ -95,21 +95,21 @@
              
   <section id="loss">
 <h1>Loss<a class="headerlink" href="#loss" title="Link to this heading"></a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.loss</span></code> package defines the training objectives. Losses are chained into a pipeline with per-term weights, and a KL divergence term is used for the cVAE.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">S2D4P.loss</span></code> package defines the training objectives. Losses are chained into a pipeline with per-term weights using <code class="docutils literal notranslate"><span class="pre">Losspipeline</span></code> orchestrator. KL divergence term is used for the cVAE separately.</p>
 <section id="modules">
 <h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">loss.py</span></code></dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">LossStepConfig</span></code>: one loss term, given by registered name and arguments.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">LosspipelineConfig</span></code>: a list of loss steps, their weights (which must sum to 1), reduction (<code class="docutils literal notranslate"><span class="pre">mean</span></code> or <code class="docutils literal notranslate"><span class="pre">sum</span></code>), and an optional saved output mask (<code class="docutils literal notranslate"><span class="pre">.pt</span></code> or <code class="docutils literal notranslate"><span class="pre">.nc</span></code>). <code class="docutils literal notranslate"><span class="pre">build</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Losspipeline</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Losspipeline</span></code>: an <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> that runs each term, applies the output mask, and returns the weighted total and per-term values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LossStepConfig</span></code>: Configs for one loss term, given by registered name and arguments are passed with this object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LosspipelineConfig</span></code>: a list of loss steps, their weights (which must sum to 1), reduction (<code class="docutils literal notranslate"><span class="pre">mean</span></code> or <code class="docutils literal notranslate"><span class="pre">sum</span></code>), and an optional saved output mask (<code class="docutils literal notranslate"><span class="pre">.pt</span></code> or <code class="docutils literal notranslate"><span class="pre">.nc</span></code>). <code class="docutils literal notranslate"><span class="pre">build</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Losspipeline</span></code>. Registers individual loss terms.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Losspipeline</span></code>: an <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> that orchestrates running each term, applying output mask, and returning the weighted total and per-term values.</p></li>
 </ul>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">loss_abc.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">lossABC</span></code>, the abstract base for loss terms, and the <code class="docutils literal notranslate"><span class="pre">Reduction</span></code> type.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">registery.py</span></code></dt><dd><p>A registry of loss classes, populated by <code class="docutils literal notranslate"><span class="pre">&#64;Losspipeline.register(&quot;name&quot;)</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">utils_loss.py</span></code></dt><dd><p>Registered loss terms:</p>
+<dt><code class="docutils literal notranslate"><span class="pre">utils_loss.py</span></code></dt><dd><p>Registered individual loss terms:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">WeightedMSE</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;mse&quot;</span></code>): weighted mean squared error, with optional thresholds and low-resolution pooling.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">WeightedCRPS</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;crps&quot;</span></code>): continuous ranked probability score for ensemble generators, computed from sorted samples.</p></li>
@@ -122,6 +122,10 @@
 </ul>
 </dd>
 </dl>
+</section>
+<section id="development">
+<h2>development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>New loss functions can be added to <code class="docutils literal notranslate"><span class="pre">utils_loss.py</span></code> and registered with <code class="docutils literal notranslate"><span class="pre">Losspipeline</span></code> and will be compatible with the <code class="docutils literal notranslate"><span class="pre">loss.py</span></code> orchestrator as long as they inherit from <code class="docutils literal notranslate"><span class="pre">loss_abc.py</span></code>.</p>
 </section>
 </section>
 

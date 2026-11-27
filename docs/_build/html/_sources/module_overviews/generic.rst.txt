@@ -1,7 +1,7 @@
 Generic
 =======
 
-The ``cccma_ppp.generic`` package holds cross-cutting utilities used by training and inference: distributed setup, logging, metrics, runtime state, resource monitoring, and import registration.
+The ``S2D4P.generic`` package holds cross-cutting utilities used by training and inference: distributed setup, logging, metrics, runtime state, resource monitoring, and import registration.
 
 Modules
 -------
@@ -23,3 +23,10 @@ Modules
 
 ``registery_imports.py``
     Imports modules for their registration side effects, so ``@register`` decorators run before configs are parsed.
+
+development
+------------------------
+
+1- New models, architecture, loss functions and preprocessing objects registered with selector classes throughout the pipeline must be imported in ``registery_imports.py`` for database building.
+
+2- MLFlow wrapper will later be added here.

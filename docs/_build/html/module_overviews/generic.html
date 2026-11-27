@@ -14,8 +14,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -47,7 +47,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
@@ -57,6 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="data_modules.html">Data Modules</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Generic</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
@@ -95,7 +95,7 @@
              
   <section id="generic">
 <h1>Generic<a class="headerlink" href="#generic" title="Link to this heading"></a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.generic</span></code> package holds cross-cutting utilities used by training and inference: distributed setup, logging, metrics, runtime state, resource monitoring, and import registration.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">S2D4P.generic</span></code> package holds cross-cutting utilities used by training and inference: distributed setup, logging, metrics, runtime state, resource monitoring, and import registration.</p>
 <section id="modules">
 <h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
 <dl class="simple">
@@ -112,6 +112,11 @@
 <dt><code class="docutils literal notranslate"><span class="pre">registery_imports.py</span></code></dt><dd><p>Imports modules for their registration side effects, so <code class="docutils literal notranslate"><span class="pre">&#64;register</span></code> decorators run before configs are parsed.</p>
 </dd>
 </dl>
+</section>
+<section id="development">
+<h2>development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>1- New models, architecture, loss functions and preprocessing objects registered with selector classes throughout the pipeline must be imported in <code class="docutils literal notranslate"><span class="pre">registery_imports.py</span></code> for database building.</p>
+<p>2- MLFlow wrapper will later be added here.</p>
 </section>
 </section>
 

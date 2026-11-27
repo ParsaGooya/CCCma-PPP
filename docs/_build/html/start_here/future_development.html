@@ -14,13 +14,11 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Architectures" href="../module_overviews/architectures.html" />
-    <link rel="prev" title="Usage" href="usage.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,21 +41,10 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Further Development</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#development-setup">Development setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#project-layout">Project layout</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#adding-a-component">Adding a component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coding-conventions">Coding conventions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#build-and-pruning-steps">Build and pruning steps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pull-requests">Pull requests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#reporting-issues">Reporting issues</a></li>
-</ul>
-</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -92,7 +79,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Further Development</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/start_here/further_development.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/start_here/future_development.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -127,12 +114,21 @@
 <section id="adding-a-component">
 <h2>Adding a component<a class="headerlink" href="#adding-a-component" title="Link to this heading"></a></h2>
 <p>Most extensions use a registry. Classes are registered with a decorator and then selected by name from a YAML config. Follow the pattern for the component you are adding.</p>
-<p><strong>Model architecture</strong></p>
+<p><strong>Models</strong></p>
 <ol class="arabic simple">
-<li><p>Write a config dataclass that subclasses <code class="docutils literal notranslate"><span class="pre">cVAEmodelConfigABC</span></code> or <code class="docutils literal notranslate"><span class="pre">modelConfigABC</span></code>. Set <code class="docutils literal notranslate"><span class="pre">NUM_INPUT_DIMS</span></code>, <code class="docutils literal notranslate"><span class="pre">NUM_OUTPUT_DIMS</span></code>, and an <code class="docutils literal notranslate"><span class="pre">EXPECTS_MASK</span></code> property. Validate arguments in <code class="docutils literal notranslate"><span class="pre">__post_init__</span></code>.</p></li>
-<li><p>Implement a <code class="docutils literal notranslate"><span class="pre">build</span></code> method that returns the module.</p></li>
-<li><p>Write the module as a subclass of <code class="docutils literal notranslate"><span class="pre">deterministicmodelsABC</span></code> or <code class="docutils literal notranslate"><span class="pre">cVAEmodelsABC</span></code>. Call <code class="docutils literal notranslate"><span class="pre">_initialize_weights</span></code> or <code class="docutils literal notranslate"><span class="pre">_load_state_dict</span></code> at the end of <code class="docutils literal notranslate"><span class="pre">__init__</span></code> depending on whether a checkpoint is provided.</p></li>
-<li><p>Register it with <code class="docutils literal notranslate"><span class="pre">&#64;deterministicModelSelector.register(&quot;name&quot;)</span></code> or <code class="docutils literal notranslate"><span class="pre">&#64;cVAEModelSelector.register(&quot;name&quot;)</span></code>.</p></li>
+<li><p>Write a config dataclass that subclasses <code class="docutils literal notranslate"><span class="pre">moduleConfigABC</span></code>. Validate arguments in <code class="docutils literal notranslate"><span class="pre">__post_init__</span></code>.</p></li>
+<li><p>Implement a <code class="docutils literal notranslate"><span class="pre">build</span></code> and <code class="docutils literal notranslate"><span class="pre">_load_from_checkpoint</span></code> method that returns the model module and loads architecture and other model specific components.</p></li>
+<li><p>Write the model module as a subclass of <code class="docutils literal notranslate"><span class="pre">moduleABC</span></code>. Call <code class="docutils literal notranslate"><span class="pre">model_setup</span></code> and <code class="docutils literal notranslate"><span class="pre">self.architecture_config.build</span></code> in the <code class="docutils literal notranslate"><span class="pre">__init__</span></code> together with any model specific setups. Call <code class="docutils literal notranslate"><span class="pre">_load_state_dict</span></code> at the end of <code class="docutils literal notranslate"><span class="pre">__init__</span></code>.</p></li>
+<li><p>Register the config class with <code class="docutils literal notranslate"><span class="pre">&#64;ModuleSelector.register(&quot;name&quot;)</span></code>.</p></li>
+</ol>
+<p>5. Create a predictor module and config in <code class="docutils literal notranslate"><span class="pre">inference/predictors</span></code> inhertting from <code class="docutils literal notranslate"><span class="pre">PredictorABC</span></code>.
+5. Import the module in <code class="docutils literal notranslate"><span class="pre">generic/registry_imports.py</span></code> so the registration runs before configs are parsed.</p>
+<p><strong>Architecture</strong></p>
+<ol class="arabic simple">
+<li><p>Write a config dataclass that subclasses <code class="docutils literal notranslate"><span class="pre">cVAEArchConfigABC</span></code>, <code class="docutils literal notranslate"><span class="pre">ArchlConfigABC</span></code> or any future model-architecture ConfigABCs. Set expected <code class="docutils literal notranslate"><span class="pre">NUM_INPUT_DIMS</span></code>, <code class="docutils literal notranslate"><span class="pre">NUM_OUTPUT_DIMS</span></code>, and an <code class="docutils literal notranslate"><span class="pre">EXPECTS_MASK</span></code> property. Validate arguments in <code class="docutils literal notranslate"><span class="pre">__post_init__</span></code>.</p></li>
+<li><p>Implement a <code class="docutils literal notranslate"><span class="pre">build</span></code> method that returns the architecture module.</p></li>
+<li><p>Write the architecture module as a subclass of <code class="docutils literal notranslate"><span class="pre">deterministicArchABC</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEArchABC</span></code> or any future model-architecture ABC. Call <code class="docutils literal notranslate"><span class="pre">_initialize_weights</span></code> or <code class="docutils literal notranslate"><span class="pre">_load_state_dict</span></code> at the end of <code class="docutils literal notranslate"><span class="pre">__init__</span></code> depending on whether a checkpoint is provided.</p></li>
+<li><p>Register the config class with <code class="docutils literal notranslate"><span class="pre">&#64;deterministicModelSelector.register(&quot;name&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;cVAEModelSelector.register(&quot;name&quot;)</span></code> or any future model-selector class.</p></li>
 <li><p>Import the module in <code class="docutils literal notranslate"><span class="pre">generic/registry_imports.py</span></code> so the registration runs before configs are parsed.</p></li>
 </ol>
 <p><strong>Loss term</strong></p>
@@ -194,16 +190,14 @@
 <section id="reporting-issues">
 <h2>Reporting issues<a class="headerlink" href="#reporting-issues" title="Link to this heading"></a></h2>
 <p>Include the config file (with paths redacted if needed), the full traceback, the output of <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-c</span> <span class="pre">&quot;import</span> <span class="pre">torch;</span> <span class="pre">print(torch.__version__)&quot;</span></code>, and whether the run was single-process or distributed.</p>
+<p><em>This document is generated with the help of Artifical Intelligence.</em></p>
 </section>
 </section>
 
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../module_overviews/architectures.html" class="btn btn-neutral float-right" title="Architectures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

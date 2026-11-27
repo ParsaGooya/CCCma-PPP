@@ -17,53 +17,53 @@ S2D4P.core.core\_abc module
 
 .. automodule:: S2D4P.core.core_abc
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.core.optimization module
 ------------------------------
 
 .. automodule:: S2D4P.core.optimization
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.core.registery module
 ---------------------------
 
 .. automodule:: S2D4P.core.registery
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.core.selectors module
 ---------------------------
 
 .. automodule:: S2D4P.core.selectors
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.core.trainer module
 -------------------------
 
 .. automodule:: S2D4P.core.trainer
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.core.writer module
 ------------------------
 
 .. automodule:: S2D4P.core.writer
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: S2D4P.core
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

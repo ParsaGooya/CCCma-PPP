@@ -1,7 +1,9 @@
 Train
 =====
 
-The ``cccma_ppp.train`` package wires the other packages together for training. It is run from the command line with ``python -m cccma_ppp.train config.yaml``.
+The ``cccma_ppp.train`` package wires the other packages together for training. It is run from the command line with ``python -m cccma_ppp.train config.yaml``. At runtime ``dataloader.py`` supports loading
+train ready batches of data based on indexing logic from ``dataset.py``. Training requires optimizor from ``core/optimization.py`` and creates the ``Trainer`` from ``core/trainer.py`` that orchestrates training using 
+the above objects.
 
 Modules
 -------

@@ -19,21 +19,21 @@ S2D4P.architectures.architecture\_abc module
 
 .. automodule:: S2D4P.architectures.architecture_abc
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.architectures.normalized\_flows module
 --------------------------------------------
 
 .. automodule:: S2D4P.architectures.normalized_flows
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: S2D4P.architectures
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

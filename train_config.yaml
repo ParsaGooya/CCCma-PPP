@@ -1,92 +1,85 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_for_Reinel
-max_epochs: 100
+experiment_dir: /fs/site7/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/train_forecast_reference
+max_epochs: 1
 train_loader:
   dataset:
     forecast:
-      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime/forecast_like
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
       names:
       - tas
       preprocessing_pipeline:
         preprocessors_list:
-        - name: standardizer
+        - name: anomalies
+          args:
+            dims:
+            - time
+      ensemble_mean: true
+      concat_dim: time
+      rename_dict:
+        year: time
+      drop_vars_list:
+      - height
+    reference:
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
+      names:
+      - tas
+      preprocessing_pipeline:
+        preprocessors_list:
+        - name: anomalies
           args:
             dims:
             - time
             frequency: month
-        - name: flattener 
-      ensemble_mean: false
-      # concat_dim: time
-      # rename_dict:
-      #   year: time
-      # drop_vars_list: [height]
-    # reference:
-    #   paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
-    #   names:
-    #   - tas
-    #   preprocessing_pipeline:
-    #     preprocessors_list:
-    #     - name: anomalies
-    #       args:
-    #         dims:
-    #         - time
-    #         frequency: month
-    #     - name: flattener
-    #   concat_dim: time
-    condition_method: same_member 
+      concat_dim: time
     lead_times:
       start: 1
-      end: 1
-    # condition:
-    #   paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/dummy_mask
-    #   names:
-    #     - tas
-    #   preprocessing_pipeline:
-    #     preprocessors_list:
-    #     - name: flattener
-  batch_size: 100
-  # time_features:
-  # - time
-  # - lead_time
-  # - month_sin
-  # - month_cos
+      end: 12
+  batch_size: 10
+  time_features:
+  - time
+  - lead_time
+  - month_sin
+  - month_cos
   train_years_slice:
-  - 2000
-  - 2024
-  num_validation_years: 5
-  # num_data_workers: 0
-  # reduce_spatial_mask: False 
-  load: True
+  - 1980
+  - 1981
+  num_validation_years: 0
+  prefetch_factor: 4
+  num_data_workers: 0
+  share_spatial_mask: true
+  load: true
 module:
-  type: cvae
+  type: deterministic
   config:
-    Architecture:   
-      type: MLP
+    Architecture:
+      type: UNet
       config:
-        encoder_hidden_dims: [3000,3000, 3000, 3000, 3000]
-        latent_size: 500
-        decoder_hidden_dims: [3000,3000, 3000, 3000, 3000]
-        condition_embedding_dims: [3000,3000, 3000, 3000, 3000]
-        condition_embedding_size: 2
-        condition_dependant_latent: false
-        condemb_to_decoder: true
-        batch_normalization: false
-        dropout_rate: 0
-        # init_method: xavier
+        channels:
+        - 16
+        - 32
+        - 64
+        - 128
+        - 256
+        block_config:
+          name: convnext
+          num_blocks: 2
+        output_block_hidden_channels: 32
 losspipeline:
   loss_pipeline:
   - name: mse
   reduction: mean
 trainer:
   beta_finder:
-    beta: 0.1
+    beta: 10
     num_epoch_to_warmup: 10
+  earlystoppingbuffer: 10
   mixed_precision: true
 optimization:
   lr: 0.0001
   optimizer_type: adam
   lr_scheduler_config:
-    min_lr: 1.0e-06
-    warmup_epochs: 5
+    min_lr: 1.0e-05
+    warmup_epochs: 1
+    total_epochs: 10
     hold_min_lr: true
 weights:
   spatial_method: uniform

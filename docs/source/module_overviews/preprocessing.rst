@@ -29,6 +29,6 @@ Modules
     - ``align_stat_data_lead_time_inverse_transform``: aligns stored statistics with predicted valid times when inverting.
 
 
-development
+Development
 ------------------------
 New preprocessor funtions can be added to ``utils_preprocessing.py`` and will be compatible with the ``preprocessing.py`` orchestrator as long as they inherit from ``preprocessing_ABC.py``.

@@ -14,8 +14,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -47,7 +47,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
@@ -60,6 +59,7 @@
 <li class="toctree-l1"><a class="reference internal" href="loss.html">Loss</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
@@ -95,13 +95,13 @@
              
   <section id="preprocessing">
 <h1>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading"></a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.preprocessing</span></code> package transforms data before training and reverses the transforms on predictions. Steps are fitted on training data only, then saved and reloaded for inference.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">S2D4P.preprocessing</span></code> package oarchestrates data transformations before training and reverses the transforms on predictions. Steps are fitted on training data only, then saved and reloaded for inference.</p>
 <section id="modules">
 <h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline</span></code>: an ordered list of steps. <code class="docutils literal notranslate"><span class="pre">fit</span></code> fits each step on the output of the previous one and saves the pipeline with joblib. <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> apply the steps forward or in reverse. <code class="docutils literal notranslate"><span class="pre">to_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_rename</span></code> restore the xarray structure of predictions. <code class="docutils literal notranslate"><span class="pre">load_from_memory</span></code> reloads a fitted pipeline.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline</span></code>: Orchestrator. Uses an ordered list of steps. <code class="docutils literal notranslate"><span class="pre">fit</span></code> fits each step on the output of the previous one and saves the pipeline with joblib. <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> apply the steps forward or in reverse. <code class="docutils literal notranslate"><span class="pre">to_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_rename</span></code> restore the xarray structure of predictions. <code class="docutils literal notranslate"><span class="pre">load_from_memory</span></code> reloads a fitted pipeline.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">selector.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">PreprocessingStepSelector</span></code>: picks a step by registered name and arguments, and builds it.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">selector.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">PreprocessingStepSelector</span></code>: picks individual preprocessors by registered name and arguments, and builds it.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">registery.py</span></code></dt><dd><p>The step registry, used by the selector.</p>
 </dd>
@@ -118,6 +118,10 @@
 </ul>
 </dd>
 </dl>
+</section>
+<section id="development">
+<h2>development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>New preprocessor funtions can be added to <code class="docutils literal notranslate"><span class="pre">utils_preprocessing.py</span></code> and will be compatible with the <code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code> orchestrator as long as they inherit from <code class="docutils literal notranslate"><span class="pre">preprocessing_ABC.py</span></code>.</p>
 </section>
 </section>
 

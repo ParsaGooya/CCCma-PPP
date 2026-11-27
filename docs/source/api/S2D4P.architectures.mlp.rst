@@ -9,21 +9,21 @@ S2D4P.architectures.mlp.cvae module
 
 .. automodule:: S2D4P.architectures.mlp.cvae
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.architectures.mlp.deterministic module
 --------------------------------------------
 
 .. automodule:: S2D4P.architectures.mlp.deterministic
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: S2D4P.architectures.mlp
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

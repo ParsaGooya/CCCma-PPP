@@ -24,7 +24,7 @@ Other modules import these constants instead of hard-coding dimension names, so 
 
 The YAML file that supplies the values above. Edit it to change dimension names or the lead-time resolution for a project.
 
-development
+Development
 ------------------------
 
 Configs that need to be accesible project-wide must be added here. For instance, ``save_critic_prediction`` for a later GAN model.

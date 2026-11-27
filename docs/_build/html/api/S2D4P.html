@@ -14,8 +14,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -47,7 +47,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -307,6 +306,7 @@
 <li class="toctree-l3"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC"><code class="docutils literal notranslate"><span class="pre">moduleABC</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC.forward"><code class="docutils literal notranslate"><span class="pre">moduleABC.forward()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC.init_loss_function"><code class="docutils literal notranslate"><span class="pre">moduleABC.init_loss_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC.model_setup"><code class="docutils literal notranslate"><span class="pre">moduleABC.model_setup()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC.predict"><code class="docutils literal notranslate"><span class="pre">moduleABC.predict()</span></code></a></li>
 </ul>
 </li>
@@ -819,10 +819,10 @@
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.get_flattener"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.get_flattener()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.get_preprocessors"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.get_preprocessors()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.has_flattener"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.has_flattener</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.init_time_time"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.init_time_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.init_time_dim"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.init_time_dim</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.inverse_rename"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.inverse_rename()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.inverse_transform"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.inverse_transform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.lead_time_time"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.lead_time_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.lead_time_dim"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.lead_time_dim</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.load_dir"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.load_dir</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.load_from_memory"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.load_from_memory()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.preprocessors_list"><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline.preprocessors_list</span></code></a></li>
@@ -894,25 +894,19 @@
 <li class="toctree-l3"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer"><code class="docutils literal notranslate"><span class="pre">Normalizer</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer.fit"><code class="docutils literal notranslate"><span class="pre">Normalizer.fit()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer.inverse_transform"><code class="docutils literal notranslate"><span class="pre">Normalizer.inverse_transform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer.max"><code class="docutils literal notranslate"><span class="pre">Normalizer.max</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer.min"><code class="docutils literal notranslate"><span class="pre">Normalizer.min</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer.transform"><code class="docutils literal notranslate"><span class="pre">Normalizer.transform()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer"><code class="docutils literal notranslate"><span class="pre">Standardizer</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer.fit"><code class="docutils literal notranslate"><span class="pre">Standardizer.fit()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer.inverse_transform"><code class="docutils literal notranslate"><span class="pre">Standardizer.inverse_transform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer.mean"><code class="docutils literal notranslate"><span class="pre">Standardizer.mean</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer.std"><code class="docutils literal notranslate"><span class="pre">Standardizer.std</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer.transform"><code class="docutils literal notranslate"><span class="pre">Standardizer.transform()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover"><code class="docutils literal notranslate"><span class="pre">TrendRemover</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.TEMPORAL_ORDER"><code class="docutils literal notranslate"><span class="pre">TrendRemover.TEMPORAL_ORDER</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.fit"><code class="docutils literal notranslate"><span class="pre">TrendRemover.fit()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.intercept"><code class="docutils literal notranslate"><span class="pre">TrendRemover.intercept</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.inverse_transform"><code class="docutils literal notranslate"><span class="pre">TrendRemover.inverse_transform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.slope"><code class="docutils literal notranslate"><span class="pre">TrendRemover.slope</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.transform"><code class="docutils literal notranslate"><span class="pre">TrendRemover.transform()</span></code></a></li>
 </ul>
 </li>

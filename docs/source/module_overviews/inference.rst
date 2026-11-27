@@ -33,7 +33,7 @@ Output
 Predictions are written first as per-batch temporary files in ``_temp``, then combined by year into files named ``<source>_<year>[_nstds<n>][_output_ensemble].nc`` under the output directory. Post-processing inverts the preprocessing steps used in training. The temporary files are removed afterwards.
 
 
-development
+Development
 ------------------------
 
 New models require their own predictors defined under ``predictors/`` (e.g.  ``predictors/gan.py``) and will be compatible with the ``core/writer.py`` orchestrator as long as they inherit from ``predictor_abc.py``.

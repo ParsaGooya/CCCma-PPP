@@ -39,14 +39,14 @@ Modules
 ``writer.py``
     ``WriterConfig`` and ``Writer``. Inference orchestrator. Runs inference over a loader, writes per-batch temporary NetCDF files, then aggregates them year by year into final outputs with ``aggregate_predictions``. It can also compute training statistics for ensemble noise.
 
-development
+Development
 ------------------------
 
 1- New models are expected to be added to ``models/``, and will be compatible with ``trainer.py`` orchestrator as long as their class and config class inherit from ``moduleConfigABC`` and ``moduleABC``. 
 
 2- The new model's config class must be registrered with ``ModuleSelector``.
 
-3- The model is an orchestrator that separates the modeling framework from architecture allowing flexibility. For instance, a futre GAN model might be defined under ``models/gan.py`` that takes care of orchestrating parts and architecture modules  
+3- The model is an orchestrator that separates the modeling framework from architecture allowing flexibility. For instance, a future GAN model might be defined under ``models/gan.py`` that takes care of orchestrating parts and architecture modules  
 specific to GAN model while allowing flexibility for architectural choices for the criric or generator networks. Those could in turn be defined under ``architectures``. An architecture selector specific to that model (e.g. ``GANArchSelector``)
 must be created that inherit from ``ArchSelector`` and registers all architectures comptabible with that model type stored in e.g. ``architectures/unet/gan.py``. Finally, each new model requires its own ``predictor`` object
 stored in ``inference/predictors``.

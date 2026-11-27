@@ -28,7 +28,7 @@ Modules
     - ``KLD``: KL divergence between the approximate posterior and the prior. Uses a standard normal prior, a conditional Gaussian prior, or a normalizing flow prior, estimated by sampling.
     - ``BetaAnnealing``: schedules the KL weight beta over training, with warmup and optional hold cycles.
 
-development
+Development
 ------------------------
 
 New loss functions can be added to ``utils_loss.py`` and registered with ``Losspipeline`` and will be compatible with the ``loss.py`` orchestrator as long as they inherit from ``loss_abc.py``. 

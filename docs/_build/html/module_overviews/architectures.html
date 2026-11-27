@@ -14,13 +14,13 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Configs" href="configs.html" />
-    <link rel="prev" title="Further Development" href="../start_here/further_development.html" /> 
+    <link rel="prev" title="Usage" href="../start_here/usage.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,13 +47,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Architectures</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#subpackages-and-modules">Subpackages and modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#model-selection">Model selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Configs</a></li>
@@ -96,18 +96,20 @@
              
   <section id="architectures">
 <h1>Architectures<a class="headerlink" href="#architectures" title="Link to this heading"></a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.architectures</span></code> package defines the neural network models and their building blocks. Each model has a config dataclass (subclassing <code class="docutils literal notranslate"><span class="pre">modelConfigABC</span></code>) that validates settings and builds the model, plus a <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> implementation.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">S2D4P.architectures</span></code> package defines the neural network architectures and their building blocks. Each architecture has a config dataclass (subclassing <code class="docutils literal notranslate"><span class="pre">ArchConfigABC</span></code>) that validates settings and builds the architecure, plus a <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> implementation.
+The design separates the modeling framework (e.g. cVAE, deterministic, GAN, etc.) and architecture (e.g. MLP, UNet, transformer, etc.) as model vs. architecture.
+Each architecture is desined as a <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> child class and requrires a corresponding config class thst is registered to a selector class.</p>
 <section id="subpackages-and-modules">
 <h2>Subpackages and modules<a class="headerlink" href="#subpackages-and-modules" title="Link to this heading"></a></h2>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">models_abc.py</span></code></dt><dd><p>Abstract base classes and shared request/config types:</p>
+<dt><code class="docutils literal notranslate"><span class="pre">architectures_abc.py</span></code></dt><dd><p>Abstract base classes and shared request/config types:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">modelConfigABC</span></code> and <code class="docutils literal notranslate"><span class="pre">modelABC</span></code>: base classes for all configs and models. Provide checkpoint loading, weight initialization, and device lookup.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">deterministicmodelsABC</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAEmodelsABC</span></code>: base classes for deterministic and conditional VAE models.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DeterministicRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEForwardRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest</span></code>: typed request objects passed to <code class="docutils literal notranslate"><span class="pre">forward</span></code>/<code class="docutils literal notranslate"><span class="pre">predict</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GENERATORConfig</span></code>: settings for the ensemble generator (noise samples, noise level).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CheckpointConfig</span></code>: metadata for loading a saved model (shapes, variable metadata, freeze flag).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">flowABC</span></code>: abstract base for normalizing flows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ArchConfigABC</span></code> and <code class="docutils literal notranslate"><span class="pre">ArchABC</span></code>: base classes for all configs and architrectures. Provide checkpoint loading, weight initialization, and device lookup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministicArchABC</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAEArchsABC</span></code>: base classes for deterministic and conditional VAE model compatable architectures. Adding architectures for new models will require creating their own ABCs, e,g, GANArchABC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DeterministicRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEForwardRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEPredictRequest</span></code>: typed request objects passed to <code class="docutils literal notranslate"><span class="pre">forward</span></code>/<code class="docutils literal notranslate"><span class="pre">predict</span></code>. This makes it easy for developers and users to understand what allowed and required input combinations and arguments specific to each model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENERATORConfig</span></code>: settings for the ensemble generator (noise samples, noise level). It is up to the architecture to support a generator formulation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CheckpointConfig</span></code>: metadata for loading a saved nn module (shapes, variable metadata, freeze flag).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flowABC</span></code>: abstract base for normalizing flows. This is used by cVAE for prior distrbution flexibility.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">weights_init</span></code>: applies kaiming, xavier, or truncated-normal initialization.</p></li>
 </ul>
 </dd>
@@ -118,34 +120,40 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">FCNN</span></code> is the small base network used inside each flow step.</p></li>
 </ul>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">layers/</span></code></dt><dd><p>Reusable building blocks:</p>
+<dt><code class="docutils literal notranslate"><span class="pre">layers/</span></code></dt><dd><p>Reusable building blocks. It is expected that building blocks that might be later used for different architecures to be defined here under the architecture family name, e.g. <code class="docutils literal notranslate"><span class="pre">unet.py</span></code> .</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">generic.py</span></code>: type aliases (activation, normalization, padding, init methods) and helpers <code class="docutils literal notranslate"><span class="pre">_build_activation</span></code>, <code class="docutils literal notranslate"><span class="pre">_build_normalization</span></code>, <code class="docutils literal notranslate"><span class="pre">LayerNorm2d</span></code>, <code class="docutils literal notranslate"><span class="pre">DropPath</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">conv.py</span></code>: block configs (<code class="docutils literal notranslate"><span class="pre">ConvBlockConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig</span></code>) and block modules (<code class="docutils literal notranslate"><span class="pre">ConvBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">PartialConvBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvNeXtBlock</span></code>), plus <code class="docutils literal notranslate"><span class="pre">LatentBlock</span></code>/<code class="docutils literal notranslate"><span class="pre">LatentLayer</span></code> for the bottleneck to latent vector. <code class="docutils literal notranslate"><span class="pre">TensorMask</span></code> and <code class="docutils literal notranslate"><span class="pre">LatentVector</span></code> are the data carriers.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">partialconv2d.py</span></code>: <code class="docutils literal notranslate"><span class="pre">PartialConv2d</span></code>, a convolution that tracks a validity mask, used for data with missing values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">unet.py</span></code>: <code class="docutils literal notranslate"><span class="pre">DownBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">UpBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">UNetOutput</span></code>, <code class="docutils literal notranslate"><span class="pre">UNetOutputSIC</span></code>, and <code class="docutils literal notranslate"><span class="pre">build_conv_block</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mlp.py</span></code>: <code class="docutils literal notranslate"><span class="pre">build_mlp</span></code>, which builds a fully connected stack.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unet.py</span></code>: <code class="docutils literal notranslate"><span class="pre">DownBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">UpBlock</span></code>, <code class="docutils literal notranslate"><span class="pre">UNetOutput</span></code>, <code class="docutils literal notranslate"><span class="pre">UNetOutputSIC</span></code>, and <code class="docutils literal notranslate"><span class="pre">build_conv_block</span></code>. Building blocks of a UNet architecture.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mlp.py</span></code>: <code class="docutils literal notranslate"><span class="pre">build_mlp</span></code>, which builds a fully connected layers.  Building blocks of an MLP architecture.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">utils.py</span></code>: padding, mask broadcasting and merging, noise injection, and resizing helpers.</p></li>
 </ul>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">mlp/</span></code></dt><dd><p>Fully connected models:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code>: <code class="docutils literal notranslate"><span class="pre">AutoencoderConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">Autoencoder</span></code>, registered as <code class="docutils literal notranslate"><span class="pre">&quot;mlp&quot;</span></code> for deterministic prediction. <code class="docutils literal notranslate"><span class="pre">append_mode</span></code> controls where added features enter.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cvae.py</span></code>: <code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAE_MLP</span></code>, a conditional VAE with MLP encoder and decoder.</p></li>
-</ul>
+<dt><code class="docutils literal notranslate"><span class="pre">mlp/</span></code></dt><dd><p>Fully connected architectures family. Each model might require different architectural choices, e.g., cVAE needs separate encoder, decoder and potentially conditon branches. Many different architectures can be imagined but archirectures of the same multi-layer perceptron family can be defined here.
+All architectures defined here will be registered to a Selector designed for that family of architectures (see below).
+- <code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code>: <code class="docutils literal notranslate"><span class="pre">AutoencoderConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">Autoencoder</span></code>, registered as <code class="docutils literal notranslate"><span class="pre">&quot;mlp&quot;</span></code> for deterministic prediction. <code class="docutils literal notranslate"><span class="pre">append_mode</span></code> controls where added features enter.
+- <code class="docutils literal notranslate"><span class="pre">cvae.py</span></code>: <code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAE_MLP</span></code>, a conditional VAE with MLP encoder and decoder.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unet/</span></code></dt><dd><p>U-Net models:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code>: <code class="docutils literal notranslate"><span class="pre">UNetConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">UNet</span></code> and <code class="docutils literal notranslate"><span class="pre">UNetSICConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">UNetSIC</span></code> (the SIC variant clamps output).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cvae.py</span></code>: <code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAEUNet</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAEUNetSICEConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAEUNetSIC</span></code>. A conditional U-Net encodes the target into a latent, and can add a deterministic-guess U-Net branch.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">utils.py</span></code>: config validation and mask repetition for ensemble generation.</p></li>
-</ul>
+<dt><code class="docutils literal notranslate"><span class="pre">unet/</span></code></dt><dd><p>U-Net architectures family.  Each model might require different architectural choices, e.g., cVAE needs separate encoder, decoder and potentially conditon branches. Many different architectures can be imagined but archirectures of the same unet family can be defined here.
+All architectures defined here will be registered to a Selector designed for that family of architectures (see below).
+- <code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code>: <code class="docutils literal notranslate"><span class="pre">UNetConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">UNet</span></code> and <code class="docutils literal notranslate"><span class="pre">UNetSICConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">UNetSIC</span></code> (the SIC variant clamps output).
+- <code class="docutils literal notranslate"><span class="pre">cvae.py</span></code>: <code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAEUNet</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAEUNetSICEConfig</span></code> / <code class="docutils literal notranslate"><span class="pre">cVAEUNetSIC</span></code>. A conditional U-Net encodes the target into a latent, and can add a deterministic-guess U-Net branch.
+- <code class="docutils literal notranslate"><span class="pre">utils.py</span></code>: config validation and mask repetition for ensemble generation.</p>
 </dd>
 </dl>
 </section>
 <section id="model-selection">
 <h2>Model selection<a class="headerlink" href="#model-selection" title="Link to this heading"></a></h2>
-<p>Models register with <code class="docutils literal notranslate"><span class="pre">cVAEModelSelector</span></code> or <code class="docutils literal notranslate"><span class="pre">deterministicModelSelector</span></code> using <code class="docutils literal notranslate"><span class="pre">&#64;register(&quot;name&quot;)</span></code>, so a YAML config can pick one by name (<code class="docutils literal notranslate"><span class="pre">&quot;mlp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unet&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unetsic&quot;</span></code>).</p>
+<p>Architectures register with <code class="docutils literal notranslate"><span class="pre">cVAEArchSelector</span></code> or <code class="docutils literal notranslate"><span class="pre">deterministicArchSelector</span></code> using <code class="docutils literal notranslate"><span class="pre">&#64;register(&quot;name&quot;)</span></code>, so a YAML config can pick one by name (<code class="docutils literal notranslate"><span class="pre">&quot;mlp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unet&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unetsic&quot;</span></code>).</p>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>Future use might require a new architecture. Each new architecture requires a class and config class and will be compatible with <code class="docutils literal notranslate"><span class="pre">S2D4P`</span></code> as long as they inherit from <code class="docutils literal notranslate"><span class="pre">ArchABC</span></code> and <code class="docutils literal notranslate"><span class="pre">ArchConfigABC</span></code> respectively.
+If an architecture falls under the existing architecture families (mlp and unet), it is expected that the building blocks be added to the corresponding family in <code class="docutils literal notranslate"><span class="pre">layers/</span></code>, while the architecture object class and its config class
+are defined in their corresponding family’s directory (<code class="docutils literal notranslate"><span class="pre">mlp/</span></code> or <code class="docutils literal notranslate"><span class="pre">unet/</span></code>, etc.) for their corresponding model (<code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code> or <code class="docutils literal notranslate"><span class="pre">cvae.py</span></code>, etc.). Finelly, the config class must be registered with that model family’s
+selector class (<code class="docutils literal notranslate"><span class="pre">deterministicArchSelector</span></code> or <code class="docutils literal notranslate"><span class="pre">cVAEArchSelector</span></code>, etc.).  Should the design fall under a new family of architectures, it is expected its building blocks, architecture and config class to be defined under representative family names
+(e.g. <code class="docutils literal notranslate"><span class="pre">layers/transformers.py</span></code>, <code class="docutils literal notranslate"><span class="pre">transformer/cvae.py</span></code>), and the config class registered with the corresponidng model selector (e.g. <code class="docutils literal notranslate"><span class="pre">cVAEArchSelector</span></code>).</p>
 </section>
 </section>
 
@@ -153,7 +161,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../start_here/further_development.html" class="btn btn-neutral float-left" title="Further Development" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../start_here/usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="configs.html" class="btn btn-neutral float-right" title="Configs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -9,21 +9,21 @@ S2D4P.core.models.cvae module
 
 .. automodule:: S2D4P.core.models.cvae
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 S2D4P.core.models.deterministic module
 --------------------------------------
 
 .. automodule:: S2D4P.core.models.deterministic
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: S2D4P.core.models
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

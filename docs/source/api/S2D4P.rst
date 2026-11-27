@@ -22,5 +22,5 @@ Module contents
 
 .. automodule:: S2D4P
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

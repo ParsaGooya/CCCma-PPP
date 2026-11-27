@@ -13,8 +13,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -44,7 +44,6 @@
 <li class="toctree-l1"><a class="reference internal" href="start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -1166,16 +1165,14 @@
 </li>
         <li><a href="api/S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.init_time_dim">(S2D4P.data.dataset.dataset_abc.DatasetConfigABC attribute)</a>
 </li>
+        <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.init_time_dim">(S2D4P.preprocessing.preprocessing.PreprocessingPipeline attribute)</a>
+</li>
         <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.init_time_dim">(S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.infoclass.init_time_freq">init_time_freq (S2D4P.data.data_configs.data_configs_abc.infoclass attribute)</a>
 </li>
       <li><a href="api/S2D4P.data.data_configs.html#S2D4P.data.data_configs.data_configs_abc.DataConfigABC.init_time_frequency">init_time_frequency (S2D4P.data.data_configs.data_configs_abc.DataConfigABC property)</a>
-</li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.init_time_time">init_time_time (S2D4P.preprocessing.preprocessing.PreprocessingPipeline attribute)</a>
-</li>
-      <li><a href="api/S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfigABC.inject_noise">inject_noise (S2D4P.architectures.layers.conv.ConvBlockConfigABC attribute)</a>
 </li>
       <li><a href="api/S2D4P.architectures.html#S2D4P.architectures.architecture_abc.DeterministicRequest.input">input (S2D4P.architectures.architecture_abc.DeterministicRequest attribute)</a>
 
@@ -1209,8 +1206,6 @@
         <li><a href="api/S2D4P.train.html#S2D4P.train.dataloader.TrainDataloaderConfig.input_var_metadata">(S2D4P.train.dataloader.TrainDataloaderConfig property)</a>
 </li>
       </ul></li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.intercept">intercept (S2D4P.preprocessing.utils_preprocessing.TrendRemover attribute)</a>
-</li>
       <li><a href="api/S2D4P.architectures.html#S2D4P.architectures.architecture_abc.flowABC.inverse">inverse() (S2D4P.architectures.architecture_abc.flowABC method)</a>
 
       <ul>
@@ -1306,6 +1301,8 @@
 </li>
         <li><a href="api/S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.lead_time_dim">(S2D4P.data.dataset.dataset_abc.DatasetConfigABC attribute)</a>
 </li>
+        <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.lead_time_dim">(S2D4P.preprocessing.preprocessing.PreprocessingPipeline attribute)</a>
+</li>
         <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_dim">(S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC attribute)</a>
 </li>
       </ul></li>
@@ -1317,8 +1314,6 @@
         <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_resolution">(S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.lead_time_time">lead_time_time (S2D4P.preprocessing.preprocessing.PreprocessingPipeline attribute)</a>
-</li>
       <li><a href="api/S2D4P.data.dataset.html#S2D4P.data.dataset.dataset_abc.DatasetConfigABC.lead_times">lead_times (S2D4P.data.dataset.dataset_abc.DatasetConfigABC attribute)</a>, <a href="api/S2D4P.data.dataset.html#id9">[1]</a>
 
       <ul>
@@ -1469,11 +1464,7 @@
 </li>
       <li><a href="api/S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.MaskPool2d">MaskPool2d (class in S2D4P.architectures.layers.conv)</a>
 </li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer.max">max (S2D4P.preprocessing.utils_preprocessing.Normalizer attribute)</a>
-</li>
       <li><a href="api/S2D4P.train.html#S2D4P.train.train_configs.TrainConfig.max_epochs">max_epochs (S2D4P.train.train_configs.TrainConfig attribute)</a>
-</li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer.mean">mean (S2D4P.preprocessing.utils_preprocessing.Standardizer attribute)</a>
 </li>
       <li><a href="api/S2D4P.data.html#S2D4P.data.dataloader.BatchDataABC.metadata">metadata (S2D4P.data.dataloader.BatchDataABC attribute)</a>, <a href="api/S2D4P.data.html#id2">[1]</a>
 
@@ -1487,13 +1478,13 @@
 </li>
       <li><a href="api/S2D4P.generic.html#S2D4P.generic.aggregator.MetricsAggregator">MetricsAggregator (class in S2D4P.generic.aggregator)</a>
 </li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Normalizer.min">min (S2D4P.preprocessing.utils_preprocessing.Normalizer attribute)</a>
-</li>
       <li><a href="api/S2D4P.core.html#S2D4P.core.optimization.LRSchedulerConfig.min_lr">min_lr (S2D4P.core.optimization.LRSchedulerConfig attribute)</a>
 </li>
       <li><a href="api/S2D4P.core.html#S2D4P.core.trainer.TrainerConfig.minimum_validation_improvement_percentage">minimum_validation_improvement_percentage (S2D4P.core.trainer.TrainerConfig attribute)</a>
 </li>
       <li><a href="api/S2D4P.core.html#S2D4P.core.trainer.TrainerConfig.mixed_precision">mixed_precision (S2D4P.core.trainer.TrainerConfig attribute)</a>
+</li>
+      <li><a href="api/S2D4P.core.html#S2D4P.core.core_abc.moduleABC.model_setup">model_setup() (S2D4P.core.core_abc.moduleABC method)</a>
 </li>
       <li>
     module
@@ -2476,6 +2467,8 @@
         <li><a href="api/S2D4P.inference.html#module-S2D4P.inference.inference_configs">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     S2D4P.inference.predict
 
@@ -2483,8 +2476,6 @@
         <li><a href="api/S2D4P.inference.html#module-S2D4P.inference.predict">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     S2D4P.inference.predictors
 
@@ -2708,8 +2699,6 @@
       </ul></li>
       <li><a href="api/S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.skip_alignment_method">skip_alignment_method (S2D4P.architectures.unet.deterministic.UNetConfig attribute)</a>
 </li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.TrendRemover.slope">slope (S2D4P.preprocessing.utils_preprocessing.TrendRemover attribute)</a>
-</li>
       <li><a href="api/S2D4P.generic.html#S2D4P.generic.monitoring.Monitor.span">span() (S2D4P.generic.monitoring.Monitor method)</a>
 </li>
       <li><a href="api/S2D4P.data.html#S2D4P.data.weights.WeightsConfig.spatial_method">spatial_method (S2D4P.data.weights.WeightsConfig attribute)</a>
@@ -2731,8 +2720,6 @@
 </li>
       </ul></li>
       <li><a href="api/S2D4P.inference.predictors.html#S2D4P.inference.predictors.predictor_abc.PredictorABC.stats">stats (S2D4P.inference.predictors.predictor_abc.PredictorABC property)</a>
-</li>
-      <li><a href="api/S2D4P.preprocessing.html#S2D4P.preprocessing.utils_preprocessing.Standardizer.std">std (S2D4P.preprocessing.utils_preprocessing.Standardizer attribute)</a>
 </li>
       <li><a href="api/S2D4P.core.html#S2D4P.core.optimization.CosineAnnealingLRScheduler.step">step() (S2D4P.core.optimization.CosineAnnealingLRScheduler method)</a>
 

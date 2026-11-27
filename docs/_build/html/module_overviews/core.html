@@ -14,8 +14,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -47,7 +47,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
@@ -55,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Configs</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Core</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="data_modules.html">Data Modules</a></li>
@@ -95,33 +95,45 @@
              
   <section id="core">
 <h1>Core<a class="headerlink" href="#core" title="Link to this heading"></a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.core</span></code> package holds the training-agnostic machinery: model wrappers, selectors, the trainer, the optimizer, and the writer that produces predictions.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">S2D4P.core</span></code> package holds the training-agnostic machinery: model wrappers, selectors, the trainer, the optimizer, and the writer that produces predictions.
+The design separates the modeling framework (e.g. cVAE, deterministic, GAN, etc.) and architecture (e.g. MLP, UNet, transformer, etc.) as model vs. architecture.</p>
 <section id="modules">
 <h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">core_abc.py</span></code></dt><dd><p>Base classes: <code class="docutils literal notranslate"><span class="pre">moduleConfigABC</span></code> (config that builds a module), <code class="docutils literal notranslate"><span class="pre">moduleABC</span></code> (wrapper module with loss initialization and checkpoint loading), <code class="docutils literal notranslate"><span class="pre">GenerativeContext</span></code> (tells losses whether the model is generative or uses a generator), and <code class="docutils literal notranslate"><span class="pre">OutputABC</span></code>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">core_abc.py</span></code></dt><dd><p>Base classes: <code class="docutils literal notranslate"><span class="pre">moduleConfigABC</span></code> (config that builds a model), <code class="docutils literal notranslate"><span class="pre">moduleABC</span></code> (wrapper model with loss initialization and checkpoint loading), <code class="docutils literal notranslate"><span class="pre">GenerativeContext</span></code> (tells losses whether the architecture is generative or uses a generator), and <code class="docutils literal notranslate"><span class="pre">OutputABC</span></code>.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">registery.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">Registery</span></code>, a name-to-class registry. <code class="docutils literal notranslate"><span class="pre">get</span></code> builds a class from a dict using <code class="docutils literal notranslate"><span class="pre">dacite</span></code> in strict mode.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">selectors.py</span></code></dt><dd><p>Entry points that turn YAML into objects:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ModuleSelector</span></code>: picks a module type (<code class="docutils literal notranslate"><span class="pre">cvae</span></code> or <code class="docutils literal notranslate"><span class="pre">deterministic</span></code>) and builds it with <code class="docutils literal notranslate"><span class="pre">build_module</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ModelSelector</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEModelSelector</span></code>, <code class="docutils literal notranslate"><span class="pre">deterministicModelSelector</span></code>: pick an architecture by name. If <code class="docutils literal notranslate"><span class="pre">load_dir</span></code> is given, the saved config overrides the YAML.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ModuleSelector</span></code>: picks a model type (<code class="docutils literal notranslate"><span class="pre">cvae</span></code> or <code class="docutils literal notranslate"><span class="pre">deterministic</span></code>) and builds it with <code class="docutils literal notranslate"><span class="pre">build_module</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ArchSelector</span></code>, <code class="docutils literal notranslate"><span class="pre">cVAEArchSelector</span></code>, <code class="docutils literal notranslate"><span class="pre">deterministicArchSelector</span></code>: pick an architecture by name. If <code class="docutils literal notranslate"><span class="pre">load_dir</span></code> is given, the saved config overrides the YAML.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">FlowSelector</span></code>: picks a normalizing flow (<code class="docutils literal notranslate"><span class="pre">maf</span></code>, <code class="docutils literal notranslate"><span class="pre">realnvp</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">_load_config_from_checkpoint</span></code>: reads the config, shapes, and metadata from a checkpoint.</p></li>
 </ul>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">models/cvae.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">cVAEConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAE</span></code>. Wraps a conditional VAE model with an optional prior flow, posterior variance limits, and a CGCN loss weight. <code class="docutils literal notranslate"><span class="pre">forward</span></code> returns <code class="docutils literal notranslate"><span class="pre">cVAEOutput</span></code>, and <code class="docutils literal notranslate"><span class="pre">predict</span></code> samples from the prior.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">models/</span></code></dt><dd><p>Each modeling framework is desined as a <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> orchestrator and requrires a corresponding config class thst is registered to a the <code class="docutils literal notranslate"><span class="pre">ModuleSelector</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">models/cvae.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">cVAEConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">cVAE</span></code>. Wraps a conditional VAE model with an optional prior flow, posterior variance limits, and a CGCN (combined posterior sampling and prior sampling during training) loss weight. <code class="docutils literal notranslate"><span class="pre">forward</span></code> returns <code class="docutils literal notranslate"><span class="pre">cVAEOutput</span></code>, and <code class="docutils literal notranslate"><span class="pre">predict</span></code> samples from the prior.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">models/deterministic.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">deterministicConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">deterministic</span></code>. Wraps a deterministic model, with <code class="docutils literal notranslate"><span class="pre">forward</span></code>, <code class="docutils literal notranslate"><span class="pre">predict</span></code> and <code class="docutils literal notranslate"><span class="pre">deterministicOutput</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">trainer.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">TrainerConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">Trainer</span></code>. Runs the training loop with gradient accumulation, mixed precision, gradient clipping, validation, early stopping, best-model checkpointing, and resume. Also <code class="docutils literal notranslate"><span class="pre">clear_memory</span></code>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">trainer.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">TrainerConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">Trainer</span></code>. Training orchestrator. Runs the training loop with gradient accumulation, mixed precision, gradient clipping, validation, early stopping, best-model checkpointing, and resume. Also <code class="docutils literal notranslate"><span class="pre">clear_memory</span></code>.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">optimization.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">OptimizerConfig</span></code> builds an Adam or AdamW optimizer wrapped in <code class="docutils literal notranslate"><span class="pre">OptimizerWrapper</span></code>. <code class="docutils literal notranslate"><span class="pre">LRSchedulerConfig</span></code> builds a warmup-then-cosine schedule through <code class="docutils literal notranslate"><span class="pre">CosineAnnealingLRScheduler</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">writer.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">WriterConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">Writer</span></code>. Runs inference over a loader, writes per-batch temporary NetCDF files, then aggregates them year by year into final outputs with <code class="docutils literal notranslate"><span class="pre">aggregate_predictions</span></code>. It can also compute training statistics for ensemble noise.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">writer.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">WriterConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">Writer</span></code>. Inference orchestrator. Runs inference over a loader, writes per-batch temporary NetCDF files, then aggregates them year by year into final outputs with <code class="docutils literal notranslate"><span class="pre">aggregate_predictions</span></code>. It can also compute training statistics for ensemble noise.</p>
 </dd>
 </dl>
+</section>
+<section id="development">
+<h2>development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>1- New models are expected to be added to <code class="docutils literal notranslate"><span class="pre">models/</span></code>, and will be compatible with <code class="docutils literal notranslate"><span class="pre">trainer.py</span></code> orchestrator as long as their class and config class inherit from <code class="docutils literal notranslate"><span class="pre">moduleConfigABC</span></code> and <code class="docutils literal notranslate"><span class="pre">moduleABC</span></code>.</p>
+<p>2- The new model’s config class must be registrered with <code class="docutils literal notranslate"><span class="pre">ModuleSelector</span></code>.</p>
+<p>3- The model is an orchestrator that separates the modeling framework from architecture allowing flexibility. For instance, a futre GAN model might be defined under <code class="docutils literal notranslate"><span class="pre">models/gan.py</span></code> that takes care of orchestrating parts and architecture modules
+specific to GAN model while allowing flexibility for architectural choices for the criric or generator networks. Those could in turn be defined under <code class="docutils literal notranslate"><span class="pre">architectures</span></code>. An architecture selector specific to that model (e.g. <code class="docutils literal notranslate"><span class="pre">GANArchSelector</span></code>)
+must be created that inherit from <code class="docutils literal notranslate"><span class="pre">ArchSelector</span></code> and registers all architectures comptabible with that model type stored in e.g. <code class="docutils literal notranslate"><span class="pre">architectures/unet/gan.py</span></code>. Finally, each new model requires its own <code class="docutils literal notranslate"><span class="pre">predictor</span></code> object
+stored in <code class="docutils literal notranslate"><span class="pre">inference/predictors</span></code>.</p>
 </section>
 </section>
 

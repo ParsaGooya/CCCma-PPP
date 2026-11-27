@@ -14,8 +14,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -47,7 +47,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/further_development.html">Further Development</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
@@ -59,6 +58,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Inference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="loss.html">Loss</a></li>
@@ -96,7 +96,9 @@
              
   <section id="inference">
 <h1>Inference<a class="headerlink" href="#inference" title="Link to this heading"></a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">cccma_ppp.inference</span></code> package runs a trained model on new data and writes NetCDF predictions. It is run from the command line with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">cccma_ppp.inference</span> <span class="pre">config.yaml</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">S2D4P.inference</span></code> package runs a trained model on new data and writes NetCDF predictions. It is run from the command line with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">S2D4P.inference</span> <span class="pre">config.yaml</span></code>. At runtime <code class="docutils literal notranslate"><span class="pre">dataloader.py</span></code> supports loading
+inference ready batches of data based on indexing logic from <code class="docutils literal notranslate"><span class="pre">dataset.py</span></code>. The core of inference pipeline are the <code class="docutils literal notranslate"><span class="pre">predictors/</span></code> with one class for every model supporting model-specific behaviour. The pipeline creates
+<code class="docutils literal notranslate"><span class="pre">Writer</span></code> from <code class="docutils literal notranslate"><span class="pre">core/writer.py</span></code> that orchestrates inference using the above objects.</p>
 <section id="modules">
 <h2>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h2>
 <dl class="simple">
@@ -104,11 +106,11 @@
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">inference_configs.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">InferenceConfig</span></code> reads the experiment’s saved <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and checks that the inference data’s variables, preprocessing, and time features match training. It also provides <code class="docutils literal notranslate"><span class="pre">load_module</span></code> (restores the checkpoint, <code class="docutils literal notranslate"><span class="pre">best.pt</span></code> by default) and <code class="docutils literal notranslate"><span class="pre">build_writer</span></code>, which assembles the writer, data loader, and post-processor.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">dataset.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">InferenceDatasetConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">InferenceDataset</span></code>. Build inference samples over requested initialization times, with conditioning handled as in training. <code class="docutils literal notranslate"><span class="pre">_from_train</span></code> derives the inference config from the training config.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">dataset.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">InferenceDatasetConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">InferenceDataset</span></code>. Build pipeline for inference samples over requested initialization times, with conditioning handled as in training. <code class="docutils literal notranslate"><span class="pre">_from_train</span></code> derives the inference dataset configs from the training configs when a separate dataset config is not provided.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">dataloader.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">InferenceDataloaderConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">BatchData</span></code>. Select inference years, set up preprocessors for distributed runs, and build a loader. <code class="docutils literal notranslate"><span class="pre">collate_batch</span></code> stacks samples and attaches metadata.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">predictors/</span></code></dt><dd><p>Predictors turn a batch into predictions:</p>
+<dt><code class="docutils literal notranslate"><span class="pre">predictors/</span></code></dt><dd><p>Predictors runs the models in inference mode to turn a batch into predictions. Each model might have a different protocol, e.g., cVAE needs to sample the latent space. Future models must define their own predictors.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">predictor_abc.py</span></code>: <code class="docutils literal notranslate"><span class="pre">PredictorABC</span></code> handles output sampling, adds decoder noise for ensembles, and saves batches with <code class="docutils literal notranslate"><span class="pre">save_batch_to_netcdf</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">deterministic.py</span></code>: <code class="docutils literal notranslate"><span class="pre">DeterministicPredictorConfig</span></code> and its predictor.</p></li>
@@ -120,6 +122,10 @@
 <section id="output">
 <h2>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h2>
 <p>Predictions are written first as per-batch temporary files in <code class="docutils literal notranslate"><span class="pre">_temp</span></code>, then combined by year into files named <code class="docutils literal notranslate"><span class="pre">&lt;source&gt;_&lt;year&gt;[_nstds&lt;n&gt;][_output_ensemble].nc</span></code> under the output directory. Post-processing inverts the preprocessing steps used in training. The temporary files are removed afterwards.</p>
+</section>
+<section id="development">
+<h2>development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>New models require their own predictors defined under <code class="docutils literal notranslate"><span class="pre">predictors/</span></code> (e.g.  <code class="docutils literal notranslate"><span class="pre">predictors/gan.py</span></code>) and will be compatible with the <code class="docutils literal notranslate"><span class="pre">core/writer.py</span></code> orchestrator as long as they inherit from <code class="docutils literal notranslate"><span class="pre">predictor_abc.py</span></code>.</p>
 </section>
 </section>
 
