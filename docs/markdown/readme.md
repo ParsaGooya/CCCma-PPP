@@ -11,6 +11,9 @@ The package is currently under active development and is undergoing quality assu
 Developed by Parsa Gooya at the Canadian Centre for Climate Modelling and Analysis (CCCma), Environment and Climate Change Canada (ECCC).
 Contact: parsa.gooya@ec.gc.ca
 
+Quality Assurance (QA), integration testing and selective manual module verification was conducted by Nehan Arora (nehan.arora@ec.gc.ca)
+The work was done in collaboration with Reinel Sospedra-Alfonso at Climate Modelling Research Division (CMRD), Environment and Climate Change Canada (ECCC).
+
 All rights reserved. This software and associated materials may not be used, copied, modified, distributed, or shared without prior written permission from the authors.
 
 Copyright © 2026 Parsa Gooya and CCCma.
