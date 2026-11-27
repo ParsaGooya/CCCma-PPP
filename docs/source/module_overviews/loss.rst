@@ -31,4 +31,4 @@ Modules
 Development
 ------------------------
 
-New loss functions can be added to ``utils_loss.py`` and registered with ``Losspipeline`` and will be compatible with the ``loss.py`` orchestrator as long as they inherit from ``loss_abc.py``. 
+New loss classes can be added to ``utils_loss.py`` and registered with ``Losspipeline`` and will be compatible with the ``loss.py`` orchestrator as long as they inherit from ``loss_abc.py``. 

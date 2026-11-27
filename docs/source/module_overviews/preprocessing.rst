@@ -31,4 +31,4 @@ Modules
 
 Development
 ------------------------
-New preprocessor funtions can be added to ``utils_preprocessing.py`` and will be compatible with the ``preprocessing.py`` orchestrator as long as they inherit from ``preprocessing_ABC.py``.
+New preprocessor classes can be added to ``utils_preprocessing.py`` and will be compatible with the ``preprocessing.py`` orchestrator as long as they inherit from ``preprocessing_ABC.py``.

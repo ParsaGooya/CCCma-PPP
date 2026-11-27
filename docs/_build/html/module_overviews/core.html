@@ -46,7 +46,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/design_overview.html">)</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul class="current">
@@ -54,7 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Configs</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Core</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="data_modules.html">Data Modules</a></li>
@@ -127,10 +128,10 @@ The design separates the modeling framework (e.g. cVAE, deterministic, GAN, etc.
 </dl>
 </section>
 <section id="development">
-<h2>development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
 <p>1- New models are expected to be added to <code class="docutils literal notranslate"><span class="pre">models/</span></code>, and will be compatible with <code class="docutils literal notranslate"><span class="pre">trainer.py</span></code> orchestrator as long as their class and config class inherit from <code class="docutils literal notranslate"><span class="pre">moduleConfigABC</span></code> and <code class="docutils literal notranslate"><span class="pre">moduleABC</span></code>.</p>
 <p>2- The new model’s config class must be registrered with <code class="docutils literal notranslate"><span class="pre">ModuleSelector</span></code>.</p>
-<p>3- The model is an orchestrator that separates the modeling framework from architecture allowing flexibility. For instance, a futre GAN model might be defined under <code class="docutils literal notranslate"><span class="pre">models/gan.py</span></code> that takes care of orchestrating parts and architecture modules
+<p>3- The model is an orchestrator that separates the modeling framework from architecture allowing flexibility. For instance, a future GAN model might be defined under <code class="docutils literal notranslate"><span class="pre">models/gan.py</span></code> that takes care of orchestrating parts and architecture modules
 specific to GAN model while allowing flexibility for architectural choices for the criric or generator networks. Those could in turn be defined under <code class="docutils literal notranslate"><span class="pre">architectures</span></code>. An architecture selector specific to that model (e.g. <code class="docutils literal notranslate"><span class="pre">GANArchSelector</span></code>)
 must be created that inherit from <code class="docutils literal notranslate"><span class="pre">ArchSelector</span></code> and registers all architectures comptabible with that model type stored in e.g. <code class="docutils literal notranslate"><span class="pre">architectures/unet/gan.py</span></code>. Finally, each new model requires its own <code class="docutils literal notranslate"><span class="pre">predictor</span></code> object
 stored in <code class="docutils literal notranslate"><span class="pre">inference/predictors</span></code>.</p>

@@ -24,7 +24,7 @@ Modules
 ``registery_imports.py``
     Imports modules for their registration side effects, so ``@register`` decorators run before configs are parsed.
 
-development
+Development
 ------------------------
 
 1- New models, architecture, loss functions and preprocessing objects registered with selector classes throughout the pipeline must be imported in ``registery_imports.py`` for database building.

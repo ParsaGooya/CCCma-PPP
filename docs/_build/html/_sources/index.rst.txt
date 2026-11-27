@@ -7,7 +7,8 @@ S2D4P
 
    start_here/readme
    start_here/installation
-   start_here/usage
+   start_here/getting_started
+   start_here/design_overview
    start_here/further_development
 
 .. toctree::

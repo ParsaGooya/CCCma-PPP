@@ -3,9 +3,9 @@ Getting Started
 
 S2D4P provides a unified machine-learning framework for post-processing subseasonal-to-decadal climate predictions. The framework currently supports three principal post-processing tasks:
 
-* **Bias correction (bias adjustment):** Learning a mapping from climate model predictions to a reference dataset, such as observations or reanalysis, to correct systematic errors. This can can be formulated as learning the conditional distribution (conditional mean in case of a deterministic) of a reference dataset given the forecast.
-* **Ensemble boosting:** Generating additional ensemble members to better characterize the predictive distribution without the computational cost of additional dynamical simulations. This can be formulated as learning the (conditional) distribution of a forecast dataset which requires a generative model.
-* **Statistical downscaling:** Learning a mapping from coarse-resolution predictions to higher-resolution fields. Downscaling can be formulated similar to bias correction: learning the conditional distribution (conditional mean in case of a deterministic) of a high resolution dataset given the lower resolution forecast.
+* **Bias correction (bias adjustment):** Learning a mapping from climate model predictions to a reference dataset, such as observations or reanalysis, to correct systematic errors. This can can be formulated as learning the conditional distribution (conditional mean in case of a deterministic model) of a reference data given the forecast.
+* **Ensemble boosting:** Generating additional ensemble members to better characterize the predictive distribution without the computational cost of additional dynamical simulations. This can be formulated as learning the (conditional) distribution of a forecast which requires a generative model.
+* **Statistical downscaling:** Learning a mapping from coarse-resolution predictions to higher-resolution fields. Downscaling can be formulated similar to bias correction: learning the conditional distribution (conditional mean in case of a deterministic) of a high resolution reference given the lower resolution forecast.
 
 These tasks are not implemented as separate pipelines. Instead, the task is implicitly defined by the combination of data sources, their spatial resolutions, the selected learning model, and the training objective specified by the user.
 
@@ -51,9 +51,10 @@ Not all three sources are required for every experiment. Their availability and 
 
 Conditioning data can be provided independently of the forecast data or derived from the forecast ensemble, depending on the selected conditioning method. For example, ensemble generation can be conditioned on the ensemble mean, individual ensemble members, or a separate set of predictor variables.
 
-*Forecast data must always be specified for training*
+.. important::
+   Forecast data must always be specified for training.
 
-.. list-table:: Illustrative data combinations
+.. list-table:: Data combinations examples
    :header-rows: 1
    :widths: 25 25 25 25
 
@@ -320,7 +321,8 @@ The structure of the training YAML file follows the hierarchy of ``TrainConfig``
 
 This example illustrates the structure of the configuration rather than providing a complete executable experiment. Each nested section corresponds to another configuration class. 
 
-#To determine the arguments that can be provided under a section, consult the declaration of the corresponding configuration class in the API reference.#
+.. important::
+   To determine the arguments that can be provided under a section, consult the declaration of the corresponding configuration class in the API reference.
 
 The hierarchical organization provides a consistent way to navigate the configuration system without having to manually trace the construction of every runtime component.
 
@@ -510,7 +512,8 @@ Alternatively, the user can explicitly configure a new dataset. The pipeline val
 
 Compatibility considerations include required input and conditioning variables, input dimensions and spatial structure, temporal coordinates and lead-time conventions, conditioning method, additional time-dependent features, and fitted preprocessing transformations.
 
-#Inference dataloader does not need nor accept a reference dataset.*
+.. important::
+  Inference dataloader does not need nor accept a reference dataset.
 
 Inference data need not cover the same initialization times as training data. However, they must satisfy the input requirements of the trained model. Passing compatibility checks does not necessarily guarantee generalization to a substantially different climate regime or data distribution.
 
@@ -623,4 +626,5 @@ It is important to distinguish this approach from ensemble generation using a ge
 
 Nevertheless, this provides an alternative approach to probabilistic prediction using deterministic neural networks, or sampling the output distribution of an MSE-trained generative model without requiring an explicitly generative architecture.
 
-*Using generators in place of determinsitic networks or sub-branches in generative models (e.g., the decoder in cVAE) is yet another approach for ensemble generation that is supported by the pipeline and requires an ensemble aware loss function (e.g., CRPS).*
+.. important::
+  Using generators in place of determinsitic networks or sub-branches in generative models (e.g., the decoder in cVAE) is yet another approach for ensemble generation that is supported by the pipeline and requires an ensemble aware loss function (e.g., CRPS).*

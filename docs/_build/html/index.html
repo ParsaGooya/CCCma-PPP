@@ -16,6 +16,7 @@
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -45,7 +46,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="start_here/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="start_here/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="start_here/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="start_here/design_overview.html">)</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
 <ul>
@@ -105,11 +107,37 @@
 <li class="toctree-l2"><a class="reference internal" href="start_here/installation.html#install-the-package">Install the package</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="start_here/usage.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="start_here/usage.html#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="start_here/usage.html#inference">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="start_here/getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="start_here/getting_started.html#data">1. Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#data-sources">1.1. Data sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#expected-data-structure">1.2. Expected data structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#dimension-names-and-conventions">1.3. Dimension names and conventions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#temporal-coordinates-and-calendars">1.4. Temporal coordinates and calendars</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#initialization-time-resolution-and-lead-time-resolution">1.5. Initialization-time resolution and lead-time resolution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#data-selection">1.6. Data selection</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/getting_started.html#training">2. Training</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#trainconfig">2.2. TrainConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#structure-of-the-training-yaml-file">2.3. Structure of the training YAML file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#loading-the-yaml-configuration">2.4. Loading the YAML configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#training-experiment-lifecycle">2.5. Training experiment lifecycle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="start_here/getting_started.html#inference">3. Inference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#id1">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#inferenceconfig">3.2. InferenceConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#configuring-the-inference-dataset">3.3. Configuring the inference dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#restoring-preprocessing-transformations">3.4. Restoring preprocessing transformations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#predictors-and-module-specific-inference">3.5. Predictors and module-specific inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#ensemble-generation-using-generative-models">3.6. Ensemble generation using generative models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="start_here/getting_started.html#ensemble-generation-using-output-noise-covariance">3.7. Ensemble generation using output noise covariance</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="start_here/design_overview.html">)</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -124,38 +152,38 @@
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/configs.html">Configs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/configs.html#configs-init-py"><code class="docutils literal notranslate"><span class="pre">configs/__init__.py</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/configs.html#configs-configs-yaml"><code class="docutils literal notranslate"><span class="pre">configs/configs.yaml</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_overviews/configs.html#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/configs.html#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/core.html">Core</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/core.html#modules">Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_overviews/core.html#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/core.html#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/data_modules.html">Data Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/data_modules.html#modules">Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_overviews/data_modules.html#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/data_modules.html#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/generic.html">Generic</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/generic.html#modules">Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_overviews/generic.html#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/generic.html#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/inference.html">Inference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/inference.html#modules">Modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/inference.html#output">Output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_overviews/inference.html#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/inference.html#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/loss.html">Loss</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/loss.html#modules">Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_overviews/loss.html#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/loss.html#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/preprocessing.html">Preprocessing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_overviews/preprocessing.html#modules">Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_overviews/preprocessing.html#development">development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_overviews/preprocessing.html#development">Development</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_overviews/train.html">Train</a><ul>

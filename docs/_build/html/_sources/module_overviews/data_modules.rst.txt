@@ -33,7 +33,7 @@ Modules
 ``dataloader.py``
     ``Dataloader`` wraps a PyTorch ``DataLoader`` with distributed sampling. ``DataloaderConfigABC`` and ``BatchDataABC`` define the shared config and batch interfaces compatable with the pipeline.
 
-development
+Development
 ------------------------
 
 1- Wrappers for configuring data sourced from other than existing forecast, reference and condition sources defined in ``data/data_configs.py`` must be added there and will be compatable with the data pipeline as long as they inhert from  ``data/data_configs_abc.py``.
