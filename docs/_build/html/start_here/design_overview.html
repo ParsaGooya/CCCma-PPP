@@ -1,0 +1,549 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design Logic and Software Architecture Overview &mdash; S2D4P  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Architectures" href="../module_overviews/architectures.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            S2D4P
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Design Logic and Software Architecture Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#separation-of-configuration-and-runtime-classes">2. Separation of Configuration and Runtime Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-classes">Configuration classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#runtime-classes">Runtime classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#separation-of-learning-paradigm-and-architecture">3. Separation of learning paradigm and architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hierarchical-configuration-architecture">4. Hierarchical Configuration Architecture</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#responsibility-boundaries">Responsibility boundaries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selector-registries-and-component-extensibility">5. Selector Registries and Component Extensibility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#registration">Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selector-responsibilities">Selector responsibilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#benefits-of-registration">Benefits of registration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#abstract-interfaces-and-polymorphism">6. Abstract Interfaces and Polymorphism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#yaml-based-configuration-and-dacite-deserialization">7. YAML-Based Configuration and <code class="docutils literal notranslate"><span class="pre">dacite</span></code> Deserialization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-loading">Configuration loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#recursive-dataclass-construction">Recursive dataclass construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#integration-with-selectors">Integration with selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#type-safety-and-validation">Type safety and validation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-validation-and-object-construction">8. Configuration Validation and Object Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reusability-reproducibility-and-experiment-management">9. Reusability, Reproducibility, and Experiment Management</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">S2D4P</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">S2D4P</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Design Logic and Software Architecture Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/start_here/design_overview.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="design-logic-and-software-architecture-overview">
+<h1>Design Logic and Software Architecture Overview<a class="headerlink" href="#design-logic-and-software-architecture-overview" title="Link to this heading"></a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>The design of S2D4P combines hierarchical configuration, factory-based construction, abstract interfaces, and registry-driven polymorphism.</p>
+<p>These mechanisms serve complementary purposes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mechanism</p></th>
+<th class="head"><p>Main design purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Configuration dataclasses</p></td>
+<td><p>Typed, structured declaration of component settings</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">__post_init__()</span></code></p></td>
+<td><p>Local validation and derived-parameter preparation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">build()</span></code> methods</p></td>
+<td><p>Deferred construction of runtime implementations</p></td>
+</tr>
+<tr class="row-odd"><td><p>Abstract base classes</p></td>
+<td><p>Common interfaces and component interchangeability</p></td>
+</tr>
+<tr class="row-even"><td><p>Selector registries</p></td>
+<td><p>Dynamic selection of concrete implementations</p></td>
+</tr>
+<tr class="row-odd"><td><p>YAML</p></td>
+<td><p>Human-readable, reusable experiment specification</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dacite</span></code></p></td>
+<td><p>Conversion of nested dictionaries into typed dataclasses</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code> and <code class="docutils literal notranslate"><span class="pre">InferenceConfig</span></code></p></td>
+<td><p>Coordination of the full experiment configuration</p></td>
+</tr>
+</tbody>
+</table>
+<p>The central design principle is that <strong>the experiment is described declaratively, its components are selected through registries, and its execution is delegated to runtime objects constructed through well-defined interfaces.</strong></p>
+<p>This organization allows S2D4P to expand its supported data sources, architectures, learning objectives, and post-processing applications while preserving a common and reusable machine-learning infrastructure.</p>
+<p><strong>* *This document and module docstrings are generated with the help of Artifical Intelligence.* *</strong></p>
+</section>
+<section id="introduction">
+<h2>1. Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
+<p>S2D4P is designed as a modular, configuration-driven machine-learning framework for climate prediction post-processing. It supports different learning paradigms, neural network architectures, data sources, and preprocessing methods through a common training and inference infrastructure.</p>
+<p>The framework follows four principal design choices:</p>
+<ol class="arabic simple">
+<li><p><strong>Separation of configuration and implementation:</strong> Components are represented by configuration dataclasses that describe their parameters and provide interfaces for constructing the corresponding runtime objects.</p></li>
+<li><p><strong>Hierarchical configuration:</strong> An experiment is described by a nested configuration tree, with <code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code> as its root. <code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code> populates the condifuration classes for runtime objects. Each configuration object is responsible for a specific part of the pipeline.</p></li>
+<li><p><strong>Registry-based component selection:</strong> Selector registries associate symbolic names with concrete implementations, allowing components to be selected dynamically without hardcoding their dependencies throughout the framework.</p></li>
+<li><p><strong>Declarative experiment definitions:</strong> Experiments are specified through YAML files, which are interpreted and converted into typed Python configuration objects using <code class="docutils literal notranslate"><span class="pre">dacite</span></code>.</p></li>
+</ol>
+<p>Together, these choices separate experiment specification from implementation, promote code reuse, and make it easier to extend the framework without modifying its core training infrastructure.</p>
+</section>
+<section id="separation-of-configuration-and-runtime-classes">
+<h2>2. Separation of Configuration and Runtime Classes<a class="headerlink" href="#separation-of-configuration-and-runtime-classes" title="Link to this heading"></a></h2>
+<p>A fundamental design pattern inS2D4P is the separation between configuration classes and their associated runtime classes. The configuration classes are the levels at which the user interacts with the pipeline and the objects are created internally.</p>
+<section id="configuration-classes">
+<h3>Configuration classes<a class="headerlink" href="#configuration-classes" title="Link to this heading"></a></h3>
+<p>Configuration classes are generally implemented as Python <code class="docutils literal notranslate"><span class="pre">dataclasses</span></code>. They describe the parameters required to initialize a component, validate those parameters, and provide a <code class="docutils literal notranslate"><span class="pre">build()</span></code> method to construct the corresponding implementation. This design postpones the creation</p>
+<p>of large and memory consuming objects until all checks have passed.</p>
+<p>A configuration class typically has three responsibilities:</p>
+<ul class="simple">
+<li><p><strong>Parameter declaration:</strong> Define the supported configuration fields, their types, and default values.</p></li>
+<li><p><strong>Validation and preparation:</strong> Check parameter consistency and prepare derived settings, typically through <code class="docutils literal notranslate"><span class="pre">__post_init__()</span></code>.</p></li>
+<li><p><strong>Object construction:</strong> Provide a <code class="docutils literal notranslate"><span class="pre">build()</span></code> method that instantiates the runtime component, optionally using information available only when the pipeline is assembled.</p></li>
+</ul>
+</section>
+<section id="runtime-classes">
+<h3>Runtime classes<a class="headerlink" href="#runtime-classes" title="Link to this heading"></a></h3>
+<p>Runtime classes implement the actual computational behavior of a component. Depending on the component, this may involve data loading, preprocessing, forward passes, optimization, sampling, or execution of a training loop.</p>
+<p>Runtime objects can maintain mutable execution state, fitted parameters, neural network weights, or references to other components.</p>
+<p>For example, the trainer follows this pattern:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TrainerConfig</span><span class="p">:</span>
+    <span class="n">gradient_accumulation_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">mixed_precision</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">grad_clip</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_clip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_clip</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">train_data_loader</span><span class="p">,</span>
+        <span class="n">validation_data_loader</span><span class="p">,</span>
+        <span class="n">optimization</span><span class="p">,</span>
+        <span class="n">module</span><span class="p">,</span>
+        <span class="n">max_epochs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="n">Trainer</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">train_data_loader</span><span class="o">=</span><span class="n">train_data_loader</span><span class="p">,</span>
+            <span class="n">validation_data_loader</span><span class="o">=</span><span class="n">validation_data_loader</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">optimization</span><span class="p">,</span>
+            <span class="n">max_epochs</span><span class="o">=</span><span class="n">max_epochs</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">TrainerConfig</span></code> contains the declarative settings, while <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> implements the training loop, optimization steps, validation, and checkpoint management.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">build()</span></code> method provides a bridge between these two representations.</p>
+<p>Importantly, the configuration object does not necessarily contain all information required to construct the runtime object. Some information, such as input dimensions, the number of training batches, or references to other instantiated components, becomes available only during pipeline initialization.</p>
+<p>Consequently, <code class="docutils literal notranslate"><span class="pre">build()</span></code> methods may accept additional arguments that represent runtime dependencies or data-derived properties.</p>
+<p>This pattern resembles a <em>factory-based architecture</em>, in which configuration classes act as specialized factories for their corresponding implementations.</p>
+</section>
+</section>
+<section id="separation-of-learning-paradigm-and-architecture">
+<h2>3. Separation of learning paradigm and architecture<a class="headerlink" href="#separation-of-learning-paradigm-and-architecture" title="Link to this heading"></a></h2>
+<p>In S2D4P, the learning paradigm, i.e., the recipe/algorithm for training and inference is represented by <code class="docutils literal notranslate"><span class="pre">model</span></code> and separated from <code class="docutils literal notranslate"><span class="pre">architecture</span></code> which defines the backbone of the model and defines its forward processing algorithm and inductive bias.</p>
+<p>The learning module defines the learning problem and associated computational logic. It determines how predictions are produced, how training objectives are evaluated, and, for generative models, how probabilistic samples are generated.</p>
+<p>The neural architecture defines the computational mapping used by the learning module.</p>
+</section>
+<section id="hierarchical-configuration-architecture">
+<h2>4. Hierarchical Configuration Architecture<a class="headerlink" href="#hierarchical-configuration-architecture" title="Link to this heading"></a></h2>
+<p>An experiment in S2D4P is represented by a hierarchy of configuration objects.</p>
+<p>At the top level, <code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code> defines an experiment and contains the configuration objects associated with its major components.</p>
+<p>A simplified representation of this hierarchy is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TrainConfig
+│
+├── train_loader: TrainDataloaderConfig
+│   └── dataset_config: TrainDatasetConfig
+│       ├── model: ModelDataConfig
+│       │   └── preprocessing_pipeline
+│       ├── observation: ObsDataConfig | None
+│       │   └── preprocessing_pipeline
+│       └── condition: ConditionDataConfig | None
+│           └── preprocessing_pipeline
+│
+├── module: ModuleSelector
+│   └── ModuleConfig
+│       └── ModelConfig: ModelSelector
+│           └── ArchitectureConfig
+│
+├── losspipeline: LosspipelineConfig
+│   └── loss_pipeline: list[LossStepConfig]
+│
+├── trainer: TrainerConfig
+│
+├── optimization: OptimizerConfig
+│   └── lr_scheduler_config
+│
+├── weights: WeightsConfig
+│
+└── Experiment-level settings
+    ├── experiment_dir
+    ├── max_epochs
+    ├── seed
+    ├── save_checkpoint
+    └── resume_dir
+</pre></div>
+</div>
+<p><em>This is a conceptual representation of the configuration hierarchy rather than a complete listing of every field.</em></p>
+<section id="responsibility-boundaries">
+<h3>Responsibility boundaries<a class="headerlink" href="#responsibility-boundaries" title="Link to this heading"></a></h3>
+<p>Each branch is responsible for a distinct part of the experiment:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Configuration</p></th>
+<th class="head"><p>Responsibility</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code></p></td>
+<td><p>Defines and coordinates the experiment</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TrainDataloaderConfig</span></code></p></td>
+<td><p>Controls dataloader construction and batching</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TrainDatasetConfig</span></code></p></td>
+<td><p>Defines the dataset, input sources, temporal selections, and associated preprocessing</p></td>
+</tr>
+<tr class="row-odd"><td><p>Data configurations</p></td>
+<td><p>Describe forecast, reference, and conditioning data</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ModuleSelector</span></code></p></td>
+<td><p>Selects the learning paradigm or <code class="docutils literal notranslate"><span class="pre">model</span></code>, such as deterministic learning or a conditional VAE</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ArchSelector</span></code></p></td>
+<td><p>Selects the neural network architecture</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LosspipelineConfig</span></code></p></td>
+<td><p>Specifies the loss terms and their composition</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PreprocessingPipeline</span></code></p></td>
+<td><p>Specifies the preprocessing steps and their configurations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TrainerConfig</span></code></p></td>
+<td><p>Controls training-loop behavior</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OptimizerConfig</span></code></p></td>
+<td><p>Specifies optimization and learning-rate scheduling</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WeightsConfig</span></code></p></td>
+<td><p>Defines spatial or variable-dependent loss weighting</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">InferenceConfig</span></code></p></td>
+<td><p>Defines and coordinates the inference loop</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WriterConfig</span></code></p></td>
+<td><p>Controls inference-loop behavior</p></td>
+</tr>
+</tbody>
+</table>
+<p>This organization enables individual components to be modified independently.</p>
+<p>For example, replacing a deterministic learning module with a conditional generative module should not require rewriting the dataloader or trainer, provided the new module satisfies the required interfaces.</p>
+<p>Likewise, changing a U-Net architecture to another compatible model should primarily affect the architecture configuration, not the remainder of the experiment.</p>
+<p>The nested structure also allows configuration validation to occur at multiple levels. Individual components can validate their own parameters, while higher-level configurations can enforce constraints involving multiple components.</p>
+</section>
+</section>
+<section id="selector-registries-and-component-extensibility">
+<h2>5. Selector Registries and Component Extensibility<a class="headerlink" href="#selector-registries-and-component-extensibility" title="Link to this heading"></a></h2>
+<p>Although configuration dataclasses establish the structure of the pipeline, many configuration fields represent alternative implementations that share a common interface.</p>
+<p>For example, a learning module might use a deterministic formulation or a conditional variational autoencoder. A neural architecture might be an MLP, U-Net, or another compatible model.</p>
+<p>Hardcoding these choices through repeated <code class="docutils literal notranslate"><span class="pre">if</span></code>/<code class="docutils literal notranslate"><span class="pre">elif</span></code> statements would tightly couple the core framework to every available implementation.</p>
+<p>S2D4P instead uses <strong>selector registries</strong> to associate names with implementation classes.</p>
+<section id="registration">
+<h3>Registration<a class="headerlink" href="#registration" title="Link to this heading"></a></h3>
+<p>A concrete configuration class can be registered under a symbolic name through a decorator.</p>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@deterministicModelSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;unet&quot;</span><span class="p">)</span>
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UNetConfig</span><span class="p">(</span><span class="n">modelConfigABC</span><span class="p">):</span>
+    <span class="n">channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">bottleneck_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">added_features_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="n">UNet</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+            <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+            <span class="n">added_features_dim</span><span class="o">=</span><span class="n">added_features_dim</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>The registration associates the key <code class="docutils literal notranslate"><span class="pre">&quot;unet&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">UNetConfig</span></code>.</p>
+<p>A user can subsequently select this architecture through configuration without importing the concrete class into the experiment definition.</p>
+</section>
+<section id="selector-responsibilities">
+<h3>Selector responsibilities<a class="headerlink" href="#selector-responsibilities" title="Link to this heading"></a></h3>
+<p>Conceptually, a selector performs three operations:</p>
+<ol class="arabic simple">
+<li><p>Identifies the requested implementation using its registered name.</p></li>
+<li><p>Resolves that name to the associated configuration class.</p></li>
+<li><p>Constructs the appropriate configuration object from the provided parameters.</p></li>
+</ol>
+<p>The resulting configuration object can then build its runtime implementation.</p>
+<p>This gives two distinct layers of construction:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Registered name + configuration parameters
+                  │
+                  ▼
+           Selector registry
+                  │
+                  ▼
+       Concrete configuration
+                  │
+              build()
+                  │
+                  ▼
+           Runtime object
+</pre></div>
+</div>
+<p>The selector resolves <em>which configuration class</em> to use, while the configuration class determines <em>how its runtime object is constructed</em>.</p>
+<p>This distinction is important because the selected implementation may require additional runtime information that is not available during YAML parsing.</p>
+</section>
+<section id="benefits-of-registration">
+<h3>Benefits of registration<a class="headerlink" href="#benefits-of-registration" title="Link to this heading"></a></h3>
+<p>Registry-based selection provides several advantages.</p>
+<p><strong>Extensibility:</strong> New models, preprocessing steps, and learning modules can be introduced by defining and registering new implementations as long as they comply with pipelines abstraction recipe (see below).</p>
+<p><strong>Decoupling:</strong> Parent components depend on common interfaces rather than concrete implementations.</p>
+<p><strong>Configuration-driven selection:</strong> Users can change components by editing configuration files rather than modifying core pipeline code.</p>
+<p><strong>Code reuse:</strong> Shared training infrastructure can operate on multiple implementations that satisfy the same interface.</p>
+<p><strong>Discoverability:</strong> A registry provides a centralized mapping between available component names and their corresponding classes.</p>
+<p>Registration introduces an important implementation requirement: the module containing a registered class must be imported before that registry entry can be resolved. Registries do not automatically discover classes that have never been imported.</p>
+</section>
+</section>
+<section id="abstract-interfaces-and-polymorphism">
+<h2>6. Abstract Interfaces and Polymorphism<a class="headerlink" href="#abstract-interfaces-and-polymorphism" title="Link to this heading"></a></h2>
+<p>The registry mechanism is complemented by abstract base classes and shared component interfaces.</p>
+<p>Abstract interfaces establish the methods and properties that a component must provide to participate in the pipeline.</p>
+<p>For instance, architecture configurations must inherit from <code class="docutils literal notranslate"><span class="pre">ArchConfigABC</span></code>, while runtime architectures implement a corresponding object interface.</p>
+<p>This allows the framework to work with an abstract model contract rather than a specific architecture.</p>
+<p>An important example is the separation between the <strong>learning module (model)</strong> and the <strong>neural network architecture (architecture)</strong>.</p>
+<p>A deterministic module and a conditional VAE can employ different architectures without requiring the architecture itself to implement the entire training procedure.</p>
+<p>This separation is especially relevant to the framework’s support for different post-processing tasks, including bias adjustment, ensemble augmentation, downscaling, and conditional generation.</p>
+<p>It also provides a natural extension point for additional generative approaches, such as diffusion-based models, provided they implement the interfaces expected by the surrounding infrastructure.</p>
+</section>
+<section id="yaml-based-configuration-and-dacite-deserialization">
+<h2>7. YAML-Based Configuration and <code class="docutils literal notranslate"><span class="pre">dacite</span></code> Deserialization<a class="headerlink" href="#yaml-based-configuration-and-dacite-deserialization" title="Link to this heading"></a></h2>
+<p>S2D4P uses YAML as a human-readable format for specifying experiments.</p>
+<p>Rather than defining every experiment programmatically, users describe the desired pipeline through configuration files.</p>
+<p>These configurations can be saved, version-controlled, compared, and reused.</p>
+<section id="configuration-loading">
+<h3>Configuration loading<a class="headerlink" href="#configuration-loading" title="Link to this heading"></a></h3>
+<p>The YAML configuration is first loaded into standard Python objects, typically nested dictionaries and lists.</p>
+<p>The resulting dictionary is then converted into the typed configuration hierarchy using <code class="docutils literal notranslate"><span class="pre">dacite</span></code>.</p>
+<p>A simplified example is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dacite</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;train_config.yaml&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">config_data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">dacite</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="n">data_class</span><span class="o">=</span><span class="n">TrainConfig</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">config_data</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">dacite</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dacite</span></code> can recursively construct nested configuration objects.</p>
+</section>
+<section id="recursive-dataclass-construction">
+<h3>Recursive dataclass construction<a class="headerlink" href="#recursive-dataclass-construction" title="Link to this heading"></a></h3>
+<p>Because <code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code> contains other dataclass types, <code class="docutils literal notranslate"><span class="pre">dacite</span></code> can recursively construct nested configuration objects.</p>
+<p>For example, a dictionary representing <code class="docutils literal notranslate"><span class="pre">TrainerConfig</span></code> can be converted into an instance of that dataclass as part of constructing <code class="docutils literal notranslate"><span class="pre">TrainConfig</span></code>.</p>
+<p>This allows the YAML structure to closely follow the Python configuration hierarchy.</p>
+<p>However, recursive dataclass construction and registry-based selection solve different problems.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dacite</span></code> can construct a dataclass when its concrete type is known from the corresponding field annotation. It does not automatically determine which registered subclass should be instantiated from an arbitrary registry key.</p>
+<p>Consequently, fields representing polymorphic components require an additional selection or conversion mechanism.</p>
+</section>
+<section id="integration-with-selectors">
+<h3>Integration with selectors<a class="headerlink" href="#integration-with-selectors" title="Link to this heading"></a></h3>
+<p>Selector registries connect declarative YAML entries to the appropriate concrete configuration types.</p>
+<p>Conceptually, the full loading process is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>YAML configuration file
+          │
+          ▼
+    yaml.safe_load()
+          │
+          ▼
+  Nested Python dictionary
+          │
+          ▼
+    Selector resolution
+    where polymorphism
+       is required
+          │
+          ▼
+  dacite.from_dict()
+          │
+          ▼
+   Typed configuration tree
+          │
+          ▼
+   Validation and build()
+          │
+          ▼
+   Executable ML pipeline
+</pre></div>
+</div>
+<p>The precise ordering of selector resolution and <code class="docutils literal notranslate"><span class="pre">dacite</span></code> construction depends on how a selector is implemented. A selector may resolve its target class during configuration conversion or through a custom construction step.</p>
+<p>The essential design requirement is that each polymorphic entry resolves to an appropriate concrete configuration type before the corresponding runtime component is built.</p>
+</section>
+<section id="type-safety-and-validation">
+<h3>Type safety and validation<a class="headerlink" href="#type-safety-and-validation" title="Link to this heading"></a></h3>
+<p>This loading mechanism provides several levels of error detection:</p>
+<ul class="simple">
+<li><p><strong>YAML parsing:</strong> Detects invalid YAML syntax.</p></li>
+<li><p><strong>Dataclass deserialization:</strong> Checks the structure and types of configuration fields.</p></li>
+<li><p><strong>Configuration validation:</strong> Applies component-specific constraints through methods such as <code class="docutils literal notranslate"><span class="pre">__post_init__()</span></code>.</p></li>
+<li><p><strong>Pipeline construction:</strong> Checks requirements that depend on other components or runtime information.</p></li>
+</ul>
+<p>These layers are complementary. <code class="docutils literal notranslate"><span class="pre">dacite</span></code> validates the configuration structure but does not replace semantic validation or guarantee compatibility between independently configured components.</p>
+<p>Care is also required when defining forward references, union types, and abstract configuration fields, since these may require explicit type resolution or custom conversion logic.</p>
+</section>
+</section>
+<section id="configuration-validation-and-object-construction">
+<h2>8. Configuration Validation and Object Construction<a class="headerlink" href="#configuration-validation-and-object-construction" title="Link to this heading"></a></h2>
+<p>The configuration lifecycle separates parsing, validation, and construction.</p>
+<p><strong>Parsing</strong> converts a declarative representation into Python configuration objects.</p>
+<p><strong>Validation</strong> determines whether the specified settings are internally consistent and compatible with the requested components.</p>
+<p><strong>Construction</strong> instantiates the runtime objects using both configuration settings and runtime dependencies. This is usually the computationally costly part and is delayed as much as possible to after when all existing checks pass.</p>
+<p>For example, a U-Net configuration may validate its number of channels and derive the expected number of decoder stages in <code class="docutils literal notranslate"><span class="pre">__post_init__()</span></code>.</p>
+<p>However, its final construction may require input and output shapes inferred from the dataset.</p>
+<p>Similarly, the trainer may require the training dataloader to be constructed before it can initialize a schedule that depends on the number of batches.</p>
+<p>The use of <code class="docutils literal notranslate"><span class="pre">build()</span></code> therefore supports a form of <strong>deferred construction</strong>: a component’s settings are defined early, but the implementation is instantiated only when its dependencies are available.</p>
+<p>The resulting dependency structure also gives the high-level training pipeline responsibility for assembling components in an appropriate order.</p>
+</section>
+<section id="reusability-reproducibility-and-experiment-management">
+<h2>9. Reusability, Reproducibility, and Experiment Management<a class="headerlink" href="#reusability-reproducibility-and-experiment-management" title="Link to this heading"></a></h2>
+<p>Configuration-driven architecture is especially valuable in climate machine learning, where experiments frequently vary across datasets, initialization periods, lead times, variables, neural architectures, and training objectives.</p>
+<p>A configuration file captures the intended structure of an experiment independently of the code responsible for executing it.</p>
+<p>The separation of configuration and implementation supports reproducibility in several ways.</p>
+<p><strong>Explicit experiment definitions:</strong> Hyperparameters, data selections, preprocessing choices, and training settings can be recorded in structured configuration files.</p>
+<p><strong>Consistent initialization:</strong> The same configuration can be used to reconstruct compatible components across training and inference workflows.</p>
+<p><strong>Reusable preprocessing:</strong> Fitted preprocessing transformations can be stored and subsequently restored so that inference applies the transformations established during training.</p>
+<p><strong>Modular comparisons:</strong> Alternative models and training objectives can be compared while preserving common data-processing and execution settings.</p>
+<p><strong>Version-controlled experiments:</strong> YAML definitions can be tracked alongside the source code, making changes between experiments easier to identify.</p>
+<p>The configuration alone is not a complete reproducibility record. Exact reproduction may also depend on the source-code revision, model checkpoints, fitted transformations, random seeds, software environment, and input-data versions.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../module_overviews/architectures.html" class="btn btn-neutral float-right" title="Architectures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S2D4P.core.models package &mdash; S2D4P  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="S2D4P.data package" href="S2D4P.data.html" />
+    <link rel="prev" title="S2D4P.core package" href="S2D4P.core.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            S2D4P
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/design_overview.html">Design Logic and Software Architecture Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">S2D4P</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="S2D4P.html">S2D4P package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="S2D4P.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.html">S2D4P.architectures package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.configs.html">S2D4P.configs package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="S2D4P.core.html">S2D4P.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.html">S2D4P.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.generic.html">S2D4P.generic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.inference.html">S2D4P.inference package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.loss.html">S2D4P.loss package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html">S2D4P.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.train.html">S2D4P.train package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.html#module-S2D4P">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">S2D4P</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">S2D4P</a></li>
+          <li class="breadcrumb-item"><a href="S2D4P.html">S2D4P package</a></li>
+          <li class="breadcrumb-item"><a href="S2D4P.core.html">S2D4P.core package</a></li>
+      <li class="breadcrumb-item active">S2D4P.core.models package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/S2D4P.core.models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="s2d4p-core-models-package">
+<h1>S2D4P.core.models package<a class="headerlink" href="#s2d4p-core-models-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-S2D4P.core.models.cvae">
+<span id="s2d4p-core-models-cvae-module"></span><h2>S2D4P.core.models.cvae module<a class="headerlink" href="#module-S2D4P.core.models.cvae" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.core.models.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.core.models.cvae.cVAEConfig" title="S2D4P.core.models.cvae.cVAEConfig"><span class="pre">cVAEConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.cvae.cVAE" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">moduleABC</span></code></a></p>
+<p>Conditional variational autoencoder module.</p>
+<p>Combines a configurable cVAE architecture with an optional normalizing-flow
+prior, reconstruction loss, and Kullback-Leibler divergence objective.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.core.models.cvae.cVAEConfig" title="S2D4P.core.models.cvae.cVAEConfig"><em>cVAEConfig</em></a>) – Configuration defining the architecture, latent prior, variance limits,
+and training objective.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Shape of each model input excluding the batch dimension.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Shape of each model output excluding the batch dimension. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+the input shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional features supplied with each sample.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAE.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.train.html#S2D4P.train.dataloader.BatchData" title="S2D4P.train.dataloader.BatchData"><span class="pre">BatchData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput"><span class="pre">cVAEOutput</span></a></span></span><a class="headerlink" href="#S2D4P.core.models.cvae.cVAE.forward" title="Link to this definition"></a></dt>
+<dd><p>Run the cVAE training or validation forward pass.</p>
+<p>The batch target defines the posterior distribution while the model input
+provides conditioning information. During validation, a configured generator
+uses its validation output-sample count.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="S2D4P.inference.html#S2D4P.inference.dataloader.BatchData" title="S2D4P.inference.dataloader.BatchData"><em>BatchData</em></a>) – Batch containing targets, conditioning inputs, masks, and optional
+additional features.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Number of posterior latent samples to generate for each batch element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Predictions, posterior parameters, latent samples, and conditional latent
+parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput">cVAEOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAE.init_loss_function">
+<span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.loss.html#S2D4P.loss.loss.Losspipeline" title="S2D4P.loss.loss.Losspipeline"><span class="pre">Losspipeline</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.cvae.cVAE.init_loss_function" title="Link to this definition"></a></dt>
+<dd><p>Initialize the reconstruction and Kullback-Leibler losses.</p>
+<p>The reconstruction loss is moved to the module device and a matching KLD loss
+is constructed with the same reduction method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reconstruction_loss</strong> (<a class="reference internal" href="S2D4P.loss.html#S2D4P.loss.loss.Losspipeline" title="S2D4P.loss.loss.Losspipeline"><em>Losspipeline</em></a>) – Reconstruction loss pipeline used during cVAE training.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If a normalizing-flow prior is configured but the reconstruction loss
+    does not use sum reduction.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAE.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.train.html#S2D4P.train.dataloader.BatchData" title="S2D4P.train.dataloader.BatchData"><span class="pre">BatchData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput"><span class="pre">cVAEOutput</span></a></span></span><a class="headerlink" href="#S2D4P.core.models.cvae.cVAE.predict" title="Link to this definition"></a></dt>
+<dd><p>Generate predictions from the cVAE latent prior.</p>
+<p>Latent samples can be generated internally or supplied explicitly. An
+optional normalizing flow transforms prior samples before generation. During
+training, generator-enabled architectures use the configured number of
+training noise samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="S2D4P.inference.html#S2D4P.inference.dataloader.BatchData" title="S2D4P.inference.dataloader.BatchData"><em>BatchData</em></a>) – Batch containing conditioning inputs, masks, and optional additional
+features.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Number of latent samples generated for each batch element.</p></li>
+<li><p><strong>nstds</strong> (<em>int</em>) – Standard-deviation multiplier used during latent prior sampling.</p></li>
+<li><p><strong>latent_samples</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional explicitly supplied latent samples. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, samples are
+generated from the configured prior.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of stochastic outputs generated for each latent sample.</p></li>
+<li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of latent samples processed in each generation chunk. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+all latent samples are processed together.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generated predictions and associated conditional latent parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.core.models.cvae.cVAEOutput" title="S2D4P.core.models.cvae.cVAEOutput">cVAEOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.core.models.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Architecture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.cVAEArchSelector" title="S2D4P.core.selectors.cVAEArchSelector"><span class="pre">cVAEArchSelector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posterior_variance_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_flow_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><span class="pre">NormalizedFlowConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combined_CGCN_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleConfigABC" title="S2D4P.core.core_abc.moduleConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">moduleConfigABC</span></code></a></p>
+<p>Configuration for a conditional variational autoencoder module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Architecture</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.cVAEArchSelector" title="S2D4P.core.selectors.cVAEArchSelector"><em>cVAEArchSelector</em></a><em> | </em><em>None</em>) – Selector defining the cVAE architecture.</p></li>
+<li><p><strong>posterior_variance_limits</strong> (<em>list</em><em>[</em><em>float</em><em> | </em><em>None</em><em>, </em><em>float</em><em> | </em><em>None</em><em>] </em><em>| </em><em>tuple</em><em>[</em><em>float</em><em> | </em><em>None</em><em>, </em><em>float</em><em> | </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Optional lower and upper bounds on posterior variance.</p></li>
+<li><p><strong>prior_flow_config</strong> (<a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><em>NormalizedFlowConfig</em></a><em> | </em><em>None</em>) – Optional normalizing-flow configuration defining the latent prior.</p></li>
+<li><p><strong>combined_CGCN_weight</strong> (<em>float</em><em> | </em><em>None</em>) – Weight assigned to the prior-sampled reconstruction loss when combining
+it with the standard cVAE training objective.</p></li>
+<li><p><strong>load_dir</strong> (<em>str</em><em> | </em><em>None</em>) – Path to a saved module checkpoint from which architecture and prior-flow
+settings are restored.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEConfig.Architecture">
+<span class="sig-name descname"><span class="pre">Architecture</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.cVAEArchSelector" title="S2D4P.core.selectors.cVAEArchSelector"><span class="pre">cVAEArchSelector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEConfig.Architecture" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Build a conditional variational autoencoder module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Shape of each model input excluding the batch dimension.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Shape of each model output excluding the batch dimension. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+the input shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional features supplied with each sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed conditional variational autoencoder module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.core.models.cvae.cVAE" title="S2D4P.core.models.cvae.cVAE">cVAE</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEConfig.combined_CGCN_weight">
+<span class="sig-name descname"><span class="pre">combined_CGCN_weight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEConfig.combined_CGCN_weight" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEConfig.load_dir">
+<span class="sig-name descname"><span class="pre">load_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEConfig.load_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEConfig.posterior_variance_limits">
+<span class="sig-name descname"><span class="pre">posterior_variance_limits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEConfig.posterior_variance_limits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEConfig.prior_flow_config">
+<span class="sig-name descname"><span class="pre">prior_flow_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.architectures.html#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><span class="pre">NormalizedFlowConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEConfig.prior_flow_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.core.models.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_log_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic_guess</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutputABC</span></code></a></p>
+<p>Container for conditional variational autoencoder outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> (<em>torch.Tensor</em>) – Generated model output.</p></li>
+<li><p><strong>mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Mean of the posterior latent distribution.</p></li>
+<li><p><strong>log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Log-variance of the posterior latent distribution.</p></li>
+<li><p><strong>samples</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Samples drawn from the posterior latent distribution.</p></li>
+<li><p><strong>cond_mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Mean or embedding produced from the conditioning input.</p></li>
+<li><p><strong>cond_log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Log-variance of the conditional latent distribution when explicitly
+parameterized.</p></li>
+<li><p><strong>deterministic_guess</strong> (<em>bool</em>) – Whether <code class="docutils literal notranslate"><span class="pre">output</span></code> represents only the deterministic guess branch.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput.cond_log_var">
+<span class="sig-name descname"><span class="pre">cond_log_var</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput.cond_log_var" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput.cond_mu">
+<span class="sig-name descname"><span class="pre">cond_mu</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput.cond_mu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput.deterministic_guess">
+<span class="sig-name descname"><span class="pre">deterministic_guess</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput.deterministic_guess" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput.log_var">
+<span class="sig-name descname"><span class="pre">log_var</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput.log_var" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput.mu">
+<span class="sig-name descname"><span class="pre">mu</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput.mu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput.output">
+<span class="sig-name descname"><span class="pre">output</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput.output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.cvae.cVAEOutput.samples">
+<span class="sig-name descname"><span class="pre">samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.cvae.cVAEOutput.samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.core.models.deterministic">
+<span id="s2d4p-core-models-deterministic-module"></span><h2>S2D4P.core.models.deterministic module<a class="headerlink" href="#module-S2D4P.core.models.deterministic" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministic">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.core.models.deterministic.</span></span><span class="sig-name descname"><span class="pre">deterministic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.core.models.deterministic.deterministicConfig" title="S2D4P.core.models.deterministic.deterministicConfig"><span class="pre">deterministicConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministic" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleABC" title="S2D4P.core.core_abc.moduleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">moduleABC</span></code></a></p>
+<p>Deterministic model module.</p>
+<p>Wraps a configured deterministic architecture and reconstruction loss while
+providing common training-loss, forward, and prediction interfaces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.core.models.deterministic.deterministicConfig" title="S2D4P.core.models.deterministic.deterministicConfig"><em>deterministicConfig</em></a>) – Configuration defining the deterministic architecture.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Shape of each model input excluding the batch dimension.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Shape of each model output excluding the batch dimension. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+the input shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional features supplied with each sample.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministic.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.train.html#S2D4P.train.dataloader.BatchData" title="S2D4P.train.dataloader.BatchData"><span class="pre">BatchData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#S2D4P.core.models.deterministic.deterministicOutput" title="S2D4P.core.models.deterministic.deterministicOutput"><span class="pre">deterministicOutput</span></a></span></span><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministic.forward" title="Link to this definition"></a></dt>
+<dd><p>Run the deterministic model forward pass.</p>
+<p>During validation, generator-enabled architectures use the configured number
+of validation noise samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<a class="reference internal" href="S2D4P.inference.html#S2D4P.inference.dataloader.BatchData" title="S2D4P.inference.dataloader.BatchData"><em>BatchData</em></a>) – Batch containing model inputs, masks, and optional additional features.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model predictions produced by the configured architecture.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.core.models.deterministic.deterministicOutput" title="S2D4P.core.models.deterministic.deterministicOutput">deterministicOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministic.init_loss_function">
+<span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.loss.html#S2D4P.loss.loss.Losspipeline" title="S2D4P.loss.loss.Losspipeline"><span class="pre">Losspipeline</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministic.init_loss_function" title="Link to this definition"></a></dt>
+<dd><p>Initialize the reconstruction loss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reconstruction_loss</strong> (<a class="reference internal" href="S2D4P.loss.html#S2D4P.loss.loss.Losspipeline" title="S2D4P.loss.loss.Losspipeline"><em>Losspipeline</em></a>) – Reconstruction loss pipeline used during deterministic training.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministic.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.train.html#S2D4P.train.dataloader.BatchData" title="S2D4P.train.dataloader.BatchData"><span class="pre">BatchData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#S2D4P.core.models.deterministic.deterministicOutput" title="S2D4P.core.models.deterministic.deterministicOutput"><span class="pre">deterministicOutput</span></a></span></span><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministic.predict" title="Link to this definition"></a></dt>
+<dd><p>Generate deterministic or generator-sampled predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="S2D4P.inference.html#S2D4P.inference.dataloader.BatchData" title="S2D4P.inference.dataloader.BatchData"><em>BatchData</em></a>) – Batch containing model inputs, masks, and optional additional features.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of output samples requested from the architecture.</p></li>
+<li><p><strong>chunk_output_samples</strong> (<em>bool</em>) – Whether multiple stochastic output samples are generated separately
+rather than by repeating decoder features in a single pass.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generated model predictions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.core.models.deterministic.deterministicOutput" title="S2D4P.core.models.deterministic.deterministicOutput">deterministicOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministicConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.core.models.deterministic.</span></span><span class="sig-name descname"><span class="pre">deterministicConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Architecture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.deterministicArchSelector" title="S2D4P.core.selectors.deterministicArchSelector"><span class="pre">deterministicArchSelector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministicConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.moduleConfigABC" title="S2D4P.core.core_abc.moduleConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">moduleConfigABC</span></code></a></p>
+<p>Configuration for a deterministic model module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Architecture</strong> (<a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.deterministicArchSelector" title="S2D4P.core.selectors.deterministicArchSelector"><em>deterministicArchSelector</em></a><em> | </em><em>None</em>) – Selector defining the deterministic model architecture.</p></li>
+<li><p><strong>load_dir</strong> (<em>str</em><em> | </em><em>None</em>) – Path to a saved module checkpoint. If provided, the saved architecture
+configuration is used instead of the explicitly configured architecture.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministicConfig.Architecture">
+<span class="sig-name descname"><span class="pre">Architecture</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.deterministicArchSelector" title="S2D4P.core.selectors.deterministicArchSelector"><span class="pre">deterministicArchSelector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministicConfig.Architecture" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministicConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministicConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Build a deterministic model module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Shape of each model input excluding the batch dimension.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Shape of each model output excluding the batch dimension. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+the input shape is used.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional features supplied with each sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed deterministic model module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.core.models.deterministic.deterministic" title="S2D4P.core.models.deterministic.deterministic">deterministic</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministicConfig.load_dir">
+<span class="sig-name descname"><span class="pre">load_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministicConfig.load_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministicOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.core.models.deterministic.</span></span><span class="sig-name descname"><span class="pre">deterministicOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministicOutput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutputABC</span></code></a></p>
+<p>Container for deterministic model output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>torch.Tensor</em>) – Model predictions produced by the deterministic architecture.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.core.models.deterministic.deterministicOutput.output">
+<span class="sig-name descname"><span class="pre">output</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.core.models.deterministic.deterministicOutput.output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.core.models">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-S2D4P.core.models" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="S2D4P.core.html" class="btn btn-neutral float-left" title="S2D4P.core package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="S2D4P.data.html" class="btn btn-neutral float-right" title="S2D4P.data package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

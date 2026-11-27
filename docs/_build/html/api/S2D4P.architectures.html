@@ -1,0 +1,1487 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S2D4P.architectures package &mdash; S2D4P  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="S2D4P.architectures.layers package" href="S2D4P.architectures.layers.html" />
+    <link rel="prev" title="S2D4P package" href="S2D4P.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            S2D4P
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/design_overview.html">Design Logic and Software Architecture Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">S2D4P</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="S2D4P.html">S2D4P package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="S2D4P.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">S2D4P.architectures package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.configs.html">S2D4P.configs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html">S2D4P.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.html">S2D4P.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.generic.html">S2D4P.generic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.inference.html">S2D4P.inference package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.loss.html">S2D4P.loss package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.preprocessing.html">S2D4P.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.train.html">S2D4P.train package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.html#module-S2D4P">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">S2D4P</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">S2D4P</a></li>
+          <li class="breadcrumb-item"><a href="S2D4P.html">S2D4P package</a></li>
+      <li class="breadcrumb-item active">S2D4P.architectures package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/S2D4P.architectures.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="s2d4p-architectures-package">
+<h1>S2D4P.architectures package<a class="headerlink" href="#s2d4p-architectures-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="S2D4P.architectures.layers.html">S2D4P.architectures.layers package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#module-S2D4P.architectures.layers.conv">S2D4P.architectures.layers.conv module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlock"><code class="docutils literal notranslate"><span class="pre">ConvBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlock.forward"><code class="docutils literal notranslate"><span class="pre">ConvBlock.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.activation"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.activation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.bias"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.bias</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.dropout_rate"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.dropout_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.group_norm_groups"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.group_norm_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.kernel_size"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.kernel_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.name"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.normalization"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.normalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.num_convolutions"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.num_convolutions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfig.padding_method"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfig.padding_method</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfigABC"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfigABC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvBlockConfigABC.setup_generator"><code class="docutils literal notranslate"><span class="pre">ConvBlockConfigABC.setup_generator()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlock"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlock.forward"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlock.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.drop_path_rate"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.drop_path_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.dropout_rate"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.dropout_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.expansion_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.kernel_size"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.kernel_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.layer_scale_init"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.layer_scale_init</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.multi_channel"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.multi_channel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.name"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.num_blocks"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.num_blocks</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.padding_method"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.padding_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.return_mask"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.return_mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtBlockConfig.use_partial_conv"><code class="docutils literal notranslate"><span class="pre">ConvNeXtBlockConfig.use_partial_conv</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtSingle"><code class="docutils literal notranslate"><span class="pre">ConvNeXtSingle</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvNeXtSingle.forward"><code class="docutils literal notranslate"><span class="pre">ConvNeXtSingle.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvSingle"><code class="docutils literal notranslate"><span class="pre">ConvSingle</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.ConvSingle.forward"><code class="docutils literal notranslate"><span class="pre">ConvSingle.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentBlock"><code class="docutils literal notranslate"><span class="pre">LatentBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentBlock.forward"><code class="docutils literal notranslate"><span class="pre">LatentBlock.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentLayer"><code class="docutils literal notranslate"><span class="pre">LatentLayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentLayer.forward"><code class="docutils literal notranslate"><span class="pre">LatentLayer.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentVector"><code class="docutils literal notranslate"><span class="pre">LatentVector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentVector.log_var"><code class="docutils literal notranslate"><span class="pre">LatentVector.log_var</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.LatentVector.mu"><code class="docutils literal notranslate"><span class="pre">LatentVector.mu</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.MaskPool2d"><code class="docutils literal notranslate"><span class="pre">MaskPool2d</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.MaskPool2d.forward"><code class="docutils literal notranslate"><span class="pre">MaskPool2d.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlock"><code class="docutils literal notranslate"><span class="pre">PartialConvBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlock.forward"><code class="docutils literal notranslate"><span class="pre">PartialConvBlock.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.activation"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.activation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.bias"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.bias</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.dropout_rate"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.dropout_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.group_norm_groups"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.group_norm_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.kernel_size"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.kernel_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.multi_channel"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.multi_channel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.name"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.normalization"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.normalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.num_convolutions"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.num_convolutions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.padding_method"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.padding_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvBlockConfig.return_mask"><code class="docutils literal notranslate"><span class="pre">PartialConvBlockConfig.return_mask</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvSingle"><code class="docutils literal notranslate"><span class="pre">PartialConvSingle</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.PartialConvSingle.forward"><code class="docutils literal notranslate"><span class="pre">PartialConvSingle.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.TensorMask"><code class="docutils literal notranslate"><span class="pre">TensorMask</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.TensorMask.mask"><code class="docutils literal notranslate"><span class="pre">TensorMask.mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.conv.TensorMask.tensor"><code class="docutils literal notranslate"><span class="pre">TensorMask.tensor</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#module-S2D4P.architectures.layers.generic">S2D4P.architectures.layers.generic module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.generic.DropPath"><code class="docutils literal notranslate"><span class="pre">DropPath</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.generic.DropPath.forward"><code class="docutils literal notranslate"><span class="pre">DropPath.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.generic.LayerNorm2d"><code class="docutils literal notranslate"><span class="pre">LayerNorm2d</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.generic.LayerNorm2d.forward"><code class="docutils literal notranslate"><span class="pre">LayerNorm2d.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#module-S2D4P.architectures.layers.mlp">S2D4P.architectures.layers.mlp module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.mlp.build_mlp"><code class="docutils literal notranslate"><span class="pre">build_mlp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#module-S2D4P.architectures.layers.partialconv2d">S2D4P.architectures.layers.partialconv2d module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.partialconv2d.PartialConv2d"><code class="docutils literal notranslate"><span class="pre">PartialConv2d</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.partialconv2d.PartialConv2d.forward"><code class="docutils literal notranslate"><span class="pre">PartialConv2d.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#module-S2D4P.architectures.layers.unet">S2D4P.architectures.layers.unet module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.DownBlock"><code class="docutils literal notranslate"><span class="pre">DownBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.DownBlock.forward"><code class="docutils literal notranslate"><span class="pre">DownBlock.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.DownBlock.output_shape"><code class="docutils literal notranslate"><span class="pre">DownBlock.output_shape()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UNetOutput"><code class="docutils literal notranslate"><span class="pre">UNetOutput</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UNetOutput.forward"><code class="docutils literal notranslate"><span class="pre">UNetOutput.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UNetOutputSIC"><code class="docutils literal notranslate"><span class="pre">UNetOutputSIC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UNetOutputSIC.forward"><code class="docutils literal notranslate"><span class="pre">UNetOutputSIC.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UpBlock"><code class="docutils literal notranslate"><span class="pre">UpBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.UpBlock.forward"><code class="docutils literal notranslate"><span class="pre">UpBlock.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.unet.build_conv_block"><code class="docutils literal notranslate"><span class="pre">build_conv_block()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#module-S2D4P.architectures.layers.utils">S2D4P.architectures.layers.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.utils.align_to_skip"><code class="docutils literal notranslate"><span class="pre">align_to_skip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.layers.html#S2D4P.architectures.layers.utils.padd"><code class="docutils literal notranslate"><span class="pre">padd()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.layers.html#module-S2D4P.architectures.layers">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="S2D4P.architectures.mlp.html">S2D4P.architectures.mlp package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.mlp.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.mlp.html#module-S2D4P.architectures.mlp.cvae">S2D4P.architectures.mlp.cvae module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLP"><code class="docutils literal notranslate"><span class="pre">cVAE_MLP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLP.forward"><code class="docutils literal notranslate"><span class="pre">cVAE_MLP.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLP.predict"><code class="docutils literal notranslate"><span class="pre">cVAE_MLP.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.EXPECTS_MASK"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.EXPECTS_MASK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.GENERATOR"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.GENERATOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.NUM_INPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.NUM_INPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.NUM_OUTPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.NUM_OUTPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.activation"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.activation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.batch_normalization"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.batch_normalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.build"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.checkpoint_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.condemb_to_decoder"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.condemb_to_decoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.condition_dependant_latent"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.condition_dependant_latent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.condition_embedding_dims"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.condition_embedding_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.condition_embedding_size"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.condition_embedding_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.decoder_hidden_dims"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.decoder_hidden_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.dropout_rate"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.dropout_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.encoder_hidden_dims"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.encoder_hidden_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.init_method"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.init_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.cvae.cVAE_MLPConfig.latent_size"><code class="docutils literal notranslate"><span class="pre">cVAE_MLPConfig.latent_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.mlp.html#module-S2D4P.architectures.mlp.deterministic">S2D4P.architectures.mlp.deterministic module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.Autoencoder"><code class="docutils literal notranslate"><span class="pre">Autoencoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.Autoencoder.forward"><code class="docutils literal notranslate"><span class="pre">Autoencoder.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.EXPECTS_MASK"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.EXPECTS_MASK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.GENERATOR"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.GENERATOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.NUM_INPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.NUM_INPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.NUM_OUTPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.NUM_OUTPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.activation"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.activation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.append_mode"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.append_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.batch_normalization"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.batch_normalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.build"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.checkpoint_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.decoder_hidden_dims"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.decoder_hidden_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.dropout_rate"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.dropout_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.encoder_hidden_dims"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.encoder_hidden_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.mlp.html#S2D4P.architectures.mlp.deterministic.AutoencoderConfig.init_method"><code class="docutils literal notranslate"><span class="pre">AutoencoderConfig.init_method</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.mlp.html#module-S2D4P.architectures.mlp">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="S2D4P.architectures.unet.html">S2D4P.architectures.unet package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.unet.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.unet.html#module-S2D4P.architectures.unet.cvae">S2D4P.architectures.unet.cvae module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.Generation"><code class="docutils literal notranslate"><span class="pre">Generation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.Generation.forward"><code class="docutils literal notranslate"><span class="pre">Generation.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.Recognition"><code class="docutils literal notranslate"><span class="pre">Recognition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.Recognition.forward"><code class="docutils literal notranslate"><span class="pre">Recognition.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.UNetSelector"><code class="docutils literal notranslate"><span class="pre">UNetSelector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.UNetSelector.share_output_block"><code class="docutils literal notranslate"><span class="pre">UNetSelector.share_output_block</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.UNetSelector.type"><code class="docutils literal notranslate"><span class="pre">UNetSelector.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNet"><code class="docutils literal notranslate"><span class="pre">cVAEUNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNet.forward"><code class="docutils literal notranslate"><span class="pre">cVAEUNet.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNet.predict"><code class="docutils literal notranslate"><span class="pre">cVAEUNet.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.EXPECTS_MASK"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.EXPECTS_MASK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.GENERATOR"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.GENERATOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.NUM_INPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.NUM_INPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.NUM_OUTPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.NUM_OUTPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.add_skip_latent"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.add_skip_latent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.block_config"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.block_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.build"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.channels"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.channels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.checkpoint_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condemb_to_decoder"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.condemb_to_decoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_dependant_latent"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.condition_dependant_latent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_embedding_channels"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.condition_embedding_channels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.condition_embedding_size"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.condition_embedding_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.deterministic_guess_config"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.deterministic_guess_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.init_method"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.init_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.latent_normalization"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.latent_normalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.latent_size"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.latent_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.mask_fraction_threshold"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.mask_fraction_threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.mask_pooling"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.mask_pooling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.output_activation"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.output_activation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.output_block_hidden_channels"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.output_block_hidden_channels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.transpose_kernel_sizes"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.transpose_kernel_sizes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.upsampling_alignment_method"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.upsampling_alignment_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetConfig.upsampling_method"><code class="docutils literal notranslate"><span class="pre">cVAEUNetConfig.upsampling_method</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetSIC"><code class="docutils literal notranslate"><span class="pre">cVAEUNetSIC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig"><code class="docutils literal notranslate"><span class="pre">cVAEUNetSICEConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.build"><code class="docutils literal notranslate"><span class="pre">cVAEUNetSICEConfig.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">cVAEUNetSICEConfig.checkpoint_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.cvae.cVAEUNetSICEConfig.clip_output"><code class="docutils literal notranslate"><span class="pre">cVAEUNetSICEConfig.clip_output</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.unet.html#module-S2D4P.architectures.unet.deterministic">S2D4P.architectures.unet.deterministic module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNet"><code class="docutils literal notranslate"><span class="pre">UNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNet.forward"><code class="docutils literal notranslate"><span class="pre">UNet.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNet.forward_decoder"><code class="docutils literal notranslate"><span class="pre">UNet.forward_decoder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNet.output_block"><code class="docutils literal notranslate"><span class="pre">UNet.output_block</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig"><code class="docutils literal notranslate"><span class="pre">UNetConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.EXPECTS_MASK"><code class="docutils literal notranslate"><span class="pre">UNetConfig.EXPECTS_MASK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.GENERATOR"><code class="docutils literal notranslate"><span class="pre">UNetConfig.GENERATOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.NUM_INPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">UNetConfig.NUM_INPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.NUM_OUTPUT_DIMS"><code class="docutils literal notranslate"><span class="pre">UNetConfig.NUM_OUTPUT_DIMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.add_skip_connections"><code class="docutils literal notranslate"><span class="pre">UNetConfig.add_skip_connections</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.block_config"><code class="docutils literal notranslate"><span class="pre">UNetConfig.block_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.build"><code class="docutils literal notranslate"><span class="pre">UNetConfig.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.channels"><code class="docutils literal notranslate"><span class="pre">UNetConfig.channels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">UNetConfig.checkpoint_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.init_method"><code class="docutils literal notranslate"><span class="pre">UNetConfig.init_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.mask_fraction_threshold"><code class="docutils literal notranslate"><span class="pre">UNetConfig.mask_fraction_threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.mask_pooling"><code class="docutils literal notranslate"><span class="pre">UNetConfig.mask_pooling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.output_activation"><code class="docutils literal notranslate"><span class="pre">UNetConfig.output_activation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.output_block_hidden_channels"><code class="docutils literal notranslate"><span class="pre">UNetConfig.output_block_hidden_channels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.process_skip_connections"><code class="docutils literal notranslate"><span class="pre">UNetConfig.process_skip_connections</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.skip_alignment_method"><code class="docutils literal notranslate"><span class="pre">UNetConfig.skip_alignment_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.transpose_kernel_sizes"><code class="docutils literal notranslate"><span class="pre">UNetConfig.transpose_kernel_sizes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetConfig.upsampling_method"><code class="docutils literal notranslate"><span class="pre">UNetConfig.upsampling_method</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetSIC"><code class="docutils literal notranslate"><span class="pre">UNetSIC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetSICConfig"><code class="docutils literal notranslate"><span class="pre">UNetSICConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetSICConfig.build"><code class="docutils literal notranslate"><span class="pre">UNetSICConfig.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetSICConfig.checkpoint_config"><code class="docutils literal notranslate"><span class="pre">UNetSICConfig.checkpoint_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.unet.html#S2D4P.architectures.unet.deterministic.UNetSICConfig.clip_output"><code class="docutils literal notranslate"><span class="pre">UNetSICConfig.clip_output</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.unet.html#module-S2D4P.architectures.unet.utils">S2D4P.architectures.unet.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="S2D4P.architectures.unet.html#module-S2D4P.architectures.unet">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-S2D4P.architectures.architecture_abc">
+<span id="s2d4p-architectures-architecture-abc-module"></span><h2>S2D4P.architectures.architecture_abc module<a class="headerlink" href="#module-S2D4P.architectures.architecture_abc" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchABC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">ArchABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for model architectures.</p>
+<p>Provides shared checkpoint validation, parameter initialization, device
+resolution, and checkpoint-loading utilities.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchABC.generative_modeling">
+<span class="sig-name descname"><span class="pre">generative_modeling</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchABC.generative_modeling" title="Link to this definition"></a></dt>
+<dd><p>Whether the architecture performs generative modeling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchABC.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchABC.forward" title="Link to this definition"></a></dt>
+<dd><p>Run the architecture forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Architecture-specific model output.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">generative_modeling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">ArchConfigABC</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base configuration for model architectures.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.activation">
+<span class="sig-name descname"><span class="pre">activation</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.activation" title="Link to this definition"></a></dt>
+<dd><p>Activation function used by the architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ActivationName</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.GENERATOR">
+<span class="sig-name descname"><span class="pre">GENERATOR</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.GENERATOR" title="Link to this definition"></a></dt>
+<dd><p>Optional configuration for generator-based stochastic sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig">GENERATORConfig</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.EXPECTS_MASK">
+<span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.EXPECTS_MASK" title="Link to this definition"></a></dt>
+<dd><p>Whether the architecture expects spatial validity masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id1">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd><p>Indicate whether the architecture expects spatial validity masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether spatial validity masks are required by the architecture.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GENERATOR</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd><p>Return the generator configuration associated with the architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Generator configuration, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when stochastic generator behavior
+is disabled.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#S2D4P.architectures.architecture_abc.GENERATORConfig" title="S2D4P.architectures.architecture_abc.GENERATORConfig">GENERATORConfig</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_INPUT_DIMS">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
+<dd><p>Return the number of input dimensions expected by the architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of input dimensions expected by the architecture.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_OUTPUT_DIMS">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.NUM_OUTPUT_DIMS" title="Link to this definition"></a></dt>
+<dd><p>Return the number of output dimensions produced by the architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of output dimensions produced by the architecture.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">activation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'relu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gelu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'silu'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.ArchConfigABC.build">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.ArchConfigABC.build" title="Link to this definition"></a></dt>
+<dd><p>Build an architecture from this configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Shape of each model input excluding the batch dimension.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Shape of each model output excluding the batch dimension.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em><em> | </em><em>None</em>) – Number of additional features supplied with each sample.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional architecture-specific keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed architecture.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">CheckpointConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_input_var_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_output_var_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for loading architecture weights from a checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>load_path</strong> (<em>Path</em><em> | </em><em>str</em>) – Path to the checkpoint file.</p></li>
+<li><p><strong>checkpoint_input_shape</strong> (<em>np.ndarray</em>) – Input shape used by the checkpointed architecture.</p></li>
+<li><p><strong>checkpoint_output_shape</strong> (<em>np.ndarray</em>) – Output shape used by the checkpointed architecture.</p></li>
+<li><p><strong>checkpoint_input_var_metadata</strong> (<em>dict</em>) – Input-variable metadata associated with the checkpoint.</p></li>
+<li><p><strong>checkpoint_output_var_metadata</strong> (<em>dict</em>) – Output-variable metadata associated with the checkpoint.</p></li>
+<li><p><strong>strict</strong> (<em>bool</em>) – Whether checkpoint parameters must exactly match the current architecture
+state dictionary.</p></li>
+<li><p><strong>freeze_weights</strong> (<em>bool</em>) – Whether loaded architecture parameters are frozen after loading.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_input_shape">
+<span class="sig-name descname"><span class="pre">checkpoint_input_shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_input_shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_input_var_metadata">
+<span class="sig-name descname"><span class="pre">checkpoint_input_var_metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_input_var_metadata" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_output_shape">
+<span class="sig-name descname"><span class="pre">checkpoint_output_shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_output_shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_output_var_metadata">
+<span class="sig-name descname"><span class="pre">checkpoint_output_var_metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig.checkpoint_output_var_metadata" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig.freeze_weights">
+<span class="sig-name descname"><span class="pre">freeze_weights</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig.freeze_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig.load_path">
+<span class="sig-name descname"><span class="pre">load_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig.load_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.CheckpointConfig.strict">
+<span class="sig-name descname"><span class="pre">strict</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.CheckpointConfig.strict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.DeterministicRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">DeterministicRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_output_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.DeterministicRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for a deterministic architecture request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Model input tensor.</p></li>
+<li><p><strong>input_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the input.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional additional features supplied with the input.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of stochastic output samples requested.</p></li>
+<li><p><strong>chunk_output_samples</strong> (<em>bool</em>) – Whether multiple stochastic outputs are generated separately rather than
+by repeating decoder features in a single pass.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.DeterministicRequest.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.DeterministicRequest.added_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.DeterministicRequest.chunk_output_samples">
+<span class="sig-name descname"><span class="pre">chunk_output_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.DeterministicRequest.chunk_output_samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.DeterministicRequest.input">
+<span class="sig-name descname"><span class="pre">input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.DeterministicRequest.input" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.DeterministicRequest.input_mask">
+<span class="sig-name descname"><span class="pre">input_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.DeterministicRequest.input_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.DeterministicRequest.output_sample_size">
+<span class="sig-name descname"><span class="pre">output_sample_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.DeterministicRequest.output_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.GENERATORConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">GENERATORConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'full'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'medium'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'low'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_training_noise_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_validation_noise_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.GENERATORConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for generator-based stochastic output sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noise_level</strong> (<em>NoiseLevel</em>) – Level controlling where generator noise is injected into the architecture.</p></li>
+<li><p><strong>num_training_noise_samples</strong> (<em>int</em>) – Number of stochastic output samples generated during training.</p></li>
+<li><p><strong>num_validation_noise_samples</strong> (<em>int</em><em> | </em><em>None</em>) – Number of stochastic output samples generated during validation. If
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">num_training_noise_samples</span></code> is used.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.GENERATORConfig.noise_level">
+<span class="sig-name descname"><span class="pre">noise_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'full'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'medium'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'low'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'full'</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.GENERATORConfig.noise_level" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.GENERATORConfig.num_training_noise_samples">
+<span class="sig-name descname"><span class="pre">num_training_noise_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.GENERATORConfig.num_training_noise_samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.GENERATORConfig.num_validation_noise_samples">
+<span class="sig-name descname"><span class="pre">num_validation_noise_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.GENERATORConfig.num_validation_noise_samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchABC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEArchABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="S2D4P.architectures.architecture_abc.cVAEArchConfigABC"><span class="pre">cVAEArchConfigABC</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchABC" title="S2D4P.architectures.architecture_abc.ArchABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArchABC</span></code></a></p>
+<p>Abstract base class for conditional variational autoencoder architectures.</p>
+<p>Provides shared latent sampling and prior-sampling behavior for cVAE
+architectures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="S2D4P.architectures.architecture_abc.cVAEArchConfigABC"><em>cVAEArchConfigABC</em></a>) – cVAE architecture configuration.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchABC.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="S2D4P.architectures.architecture_abc.cVAEForwardRequest"><span class="pre">cVAEForwardRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchABC.forward" title="Link to this definition"></a></dt>
+<dd><p>Run the cVAE training forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="S2D4P.architectures.architecture_abc.cVAEForwardRequest"><em>cVAEForwardRequest</em></a>) – Request containing target, conditioning, masking, and sampling
+information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Architecture-specific cVAE output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC">OutputABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchABC.predict">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="S2D4P.architectures.architecture_abc.cVAEPredictRequest"><span class="pre">cVAEPredictRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchABC.predict" title="Link to this definition"></a></dt>
+<dd><p>Generate predictions from the cVAE prior.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="S2D4P.architectures.architecture_abc.cVAEPredictRequest"><em>cVAEPredictRequest</em></a>) – Request containing conditioning and latent sampling information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Architecture-specific generated output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC">OutputABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEArchConfigABC</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArchConfigABC</span></code></a></p>
+<p>Abstract base configuration for cVAE architectures.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.latent_size">
+<span class="sig-name descname"><span class="pre">latent_size</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.latent_size" title="Link to this definition"></a></dt>
+<dd><p>Size of the latent representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_dependant_latent">
+<span class="sig-name descname"><span class="pre">condition_dependant_latent</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_dependant_latent" title="Link to this definition"></a></dt>
+<dd><p>Whether the latent prior depends on the conditioning input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_size">
+<span class="sig-name descname"><span class="pre">condition_embedding_size</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_size" title="Link to this definition"></a></dt>
+<dd><p>Size of the conditioning embedding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_dims">
+<span class="sig-name descname"><span class="pre">condition_embedding_dims</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condition_embedding_dims" title="Link to this definition"></a></dt>
+<dd><p>Dimensions used to construct the conditioning embedding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condemb_to_decoder">
+<span class="sig-name descname"><span class="pre">condemb_to_decoder</span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.condemb_to_decoder" title="Link to this definition"></a></dt>
+<dd><p>Whether the conditioning embedding is supplied directly to the decoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEArchConfigABC.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEArchConfigABC.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">condemb_to_decoder</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">condition_dependant_latent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">condition_embedding_dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span></em><a class="headerlink" href="#id6" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">condition_embedding_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">latent_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEForwardRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posterior_variance_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for a cVAE training forward request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target tensor used to infer the posterior latent distribution.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Conditioning tensor supplied to the cVAE.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the target.</p></li>
+<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the conditioning input.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional additional features supplied to the architecture.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Number of posterior latent samples to generate.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of stochastic outputs generated for each latent sample.</p></li>
+<li><p><strong>posterior_variance_limits</strong> (<em>list</em><em>[</em><em>torch.Tensor</em><em>, </em><em>torch.Tensor</em><em>] </em><em>| </em><em>None</em>) – Optional lower and upper limits applied to posterior log-variance.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.added_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.condition">
+<span class="sig-name descname"><span class="pre">condition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.condition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.condition_mask">
+<span class="sig-name descname"><span class="pre">condition_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.condition_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.latent_sample_size">
+<span class="sig-name descname"><span class="pre">latent_sample_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.latent_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.output_sample_size">
+<span class="sig-name descname"><span class="pre">output_sample_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.output_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.posterior_variance_limits">
+<span class="sig-name descname"><span class="pre">posterior_variance_limits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.posterior_variance_limits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.target">
+<span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.target" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEForwardRequest.target_mask">
+<span class="sig-name descname"><span class="pre">target_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEForwardRequest.target_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_flow</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><span class="pre">flowABC</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for a cVAE prediction request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Conditioning tensor supplied to the cVAE.</p></li>
+<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional validity mask associated with the conditioning input.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional additional features supplied to the architecture.</p></li>
+<li><p><strong>prior_flow</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><em>flowABC</em></a><em> | </em><em>None</em>) – Optional normalizing flow used to transform prior latent samples.</p></li>
+<li><p><strong>latent_samples</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional user-provided latent samples. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, samples are generated
+from the configured prior.</p></li>
+<li><p><strong>nstds</strong> (<em>int</em>) – Standard-deviation multiplier used during latent sampling.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Number of latent samples generated for each input.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Number of stochastic outputs generated for each latent sample.</p></li>
+<li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of latent samples processed per generation chunk.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.added_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.chunk_size">
+<span class="sig-name descname"><span class="pre">chunk_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.chunk_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.condition">
+<span class="sig-name descname"><span class="pre">condition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.condition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.condition_mask">
+<span class="sig-name descname"><span class="pre">condition_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.condition_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.latent_sample_size">
+<span class="sig-name descname"><span class="pre">latent_sample_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.latent_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.latent_samples">
+<span class="sig-name descname"><span class="pre">latent_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.latent_samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.nstds">
+<span class="sig-name descname"><span class="pre">nstds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.nstds" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.output_sample_size">
+<span class="sig-name descname"><span class="pre">output_sample_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.output_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.cVAEPredictRequest.prior_flow">
+<span class="sig-name descname"><span class="pre">prior_flow</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><span class="pre">flowABC</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.architectures.architecture_abc.cVAEPredictRequest.prior_flow" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.deterministicArchABC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">deterministicArchABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><span class="pre">ArchConfigABC</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.deterministicArchABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchABC" title="S2D4P.architectures.architecture_abc.ArchABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArchABC</span></code></a></p>
+<p>Abstract base class for deterministic model architectures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.ArchConfigABC" title="S2D4P.architectures.architecture_abc.ArchConfigABC"><em>ArchConfigABC</em></a>) – Architecture configuration.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.deterministicArchABC.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><span class="pre">DeterministicRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC"><span class="pre">OutputABC</span></a></span></span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.deterministicArchABC.forward" title="Link to this definition"></a></dt>
+<dd><p>Run the deterministic architecture forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#S2D4P.architectures.architecture_abc.DeterministicRequest" title="S2D4P.architectures.architecture_abc.DeterministicRequest"><em>DeterministicRequest</em></a>) – Request containing inputs, masks, additional features, and output sampling
+settings.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Architecture-specific deterministic model output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="S2D4P.core.html#S2D4P.core.core_abc.OutputABC" title="S2D4P.core.core_abc.OutputABC">OutputABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.flowABC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">flowABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.flowABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for invertible normalizing-flow transformations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.flowABC.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.flowABC.forward" title="Link to this definition"></a></dt>
+<dd><p>Apply the forward flow transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Any</em>) – Values to transform through the flow.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Optional conditioning information supplied to the flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Forward flow output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.flowABC.inverse">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.flowABC.inverse" title="Link to this definition"></a></dt>
+<dd><p>Apply the inverse flow transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>Any</em>) – Values to transform through the inverse flow.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Optional conditioning information supplied to the inverse flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inverse flow output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="S2D4P.architectures.architecture_abc.weights_init">
+<span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.architecture_abc.</span></span><span class="sig-name descname"><span class="pre">weights_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.architecture_abc.weights_init" title="Link to this definition"></a></dt>
+<dd><p>Initialize parameters of supported neural-network layers.</p>
+<p>Only linear and one-, two-, or three-dimensional convolutional layers are
+modified. Biases are initialized to zero when trainable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m</strong> (<em>nn.Module</em>) – Module whose parameters are initialized.</p></li>
+<li><p><strong>method</strong> (<em>InitMethod</em>) – Initialization method. <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> leaves existing parameters
+unchanged.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the requested initialization method is unsupported.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.architectures.normalized_flows">
+<span id="s2d4p-architectures-normalized-flows-module"></span><h2>S2D4P.architectures.normalized_flows module<a class="headerlink" href="#module-S2D4P.architectures.normalized_flows" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.FCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">FCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.FCNN" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Fully connected neural network used to parameterize flow transformations.</p>
+<p>The network contains two hidden layers with hyperbolic tangent activations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_dim</strong> (<em>int</em>) – Number of input features.</p></li>
+<li><p><strong>out_dim</strong> (<em>int</em>) – Number of output features.</p></li>
+<li><p><strong>hidden_dim</strong> (<em>int</em>) – Number of features in each hidden layer.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.FCNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.FCNN.forward" title="Link to this definition"></a></dt>
+<dd><p>Apply the fully connected network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Input feature tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Network output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">MAF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_dim=16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_network=&lt;class</span> <span class="pre">'S2D4P.architectures.normalized_flows.FCNN'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
+<p>Masked autoregressive flow transformation.</p>
+<p>Each latent dimension is transformed using location and log-scale parameters
+conditioned on preceding latent dimensions and, optionally, external
+conditioning features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dim</strong> (<em>int</em>) – Number of hidden features used by the parameter networks.</p></li>
+<li><p><strong>base_network</strong> (<em>type</em><em>[</em><em>nn.Module</em><em>]</em>) – Network class used to predict location and log-scale parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.build" title="Link to this definition"></a></dt>
+<dd><p>Build the autoregressive transformation.</p>
+<p>A parameter network is created for each latent dimension after the first.
+For an unconditional flow, the first dimension uses directly learned
+parameters. For a conditional flow, its parameters are predicted from the
+conditioning features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the flow is unconditional.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This flow instance with its parameter networks constructed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.MAF" title="S2D4P.architectures.normalized_flows.MAF">MAF</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.forward" title="Link to this definition"></a></dt>
+<dd><p>Apply the autoregressive flow transformation.</p>
+<p>Each output dimension is standardized using parameters predicted from the
+preceding input dimensions. The transformed feature order is reversed before
+being returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">dim)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Conditioning features required by a conditional flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed samples and the forward log-determinant for each sample.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[torch.Tensor, torch.Tensor]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the flow was constructed as conditional but no conditioning features
+    are provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.inverse" title="Link to this definition"></a></dt>
+<dd><p>Apply the inverse autoregressive flow transformation.</p>
+<p>Input feature order is reversed before each original dimension is
+reconstructed sequentially from previously reconstructed dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>torch.Tensor</em>) – Transformed samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">dim)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Conditioning features required by a conditional flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inverse-transformed samples and the inverse log-determinant for each
+sample.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[torch.Tensor, torch.Tensor]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the flow was constructed as conditional but no conditioning features
+    are provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.MAF.reset_parameters">
+<span class="sig-name descname"><span class="pre">reset_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.MAF.reset_parameters" title="Link to this definition"></a></dt>
+<dd><p>Initialize the learnable first-dimension parameters.</p>
+<p>The location and log-scale parameters are initialized from a uniform
+distribution.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">NormalizedFlowConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_flows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.FlowSelector" title="S2D4P.core.selectors.FlowSelector"><span class="pre">FlowSelector</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flow_sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for a sequence of normalizing-flow transformations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_flows</strong> (<em>list</em><em>[</em><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.FlowSelector" title="S2D4P.core.selectors.FlowSelector"><em>FlowSelector</em></a><em>]</em>) – Ordered flow configurations used to construct the normalizing-flow model.</p></li>
+<li><p><strong>flow_sample_size</strong> (<em>int</em>) – Number of samples used when estimating flow-based quantities.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latent_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Build a normalizing-flow model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latent_size</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features supplied to each flow. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+flow is unconditional.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Constructed sequence of normalizing-flow transformations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel" title="S2D4P.architectures.normalized_flows.NormalizedFlowModel">NormalizedFlowModel</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowConfig.flow_sample_size">
+<span class="sig-name descname"><span class="pre">flow_sample_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5000</span></em><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig.flow_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowConfig.list_flows">
+<span class="sig-name descname"><span class="pre">list_flows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="S2D4P.core.html#S2D4P.core.selectors.FlowSelector" title="S2D4P.core.selectors.FlowSelector"><span class="pre">FlowSelector</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig.list_flows" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">NormalizedFlowModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><span class="pre">NormalizedFlowConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
+<p>Apply a sequence of normalizing-flow transformations.</p>
+<p>Individual flow steps are evaluated in configuration order during the forward
+transformation and in reverse order during the inverse transformation.
+Log-determinants are accumulated across all steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#S2D4P.architectures.normalized_flows.NormalizedFlowConfig" title="S2D4P.architectures.normalized_flows.NormalizedFlowConfig"><em>NormalizedFlowConfig</em></a>) – Configuration defining the sequence of flow transformations.</p></li>
+<li><p><strong>latent_size</strong> (<em>int</em>) – Number of latent dimensions transformed by each flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features supplied to each flow. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+flow is unconditional.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowModel.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel.forward" title="Link to this definition"></a></dt>
+<dd><p>Apply the normalizing flows in forward order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">latent_size)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional conditioning features supplied to each flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed samples and accumulated forward log-determinants.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.flowOutput" title="S2D4P.architectures.normalized_flows.flowOutput">flowOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.NormalizedFlowModel.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.NormalizedFlowModel.inverse" title="Link to this definition"></a></dt>
+<dd><p>Apply the normalizing flows in reverse order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>torch.Tensor</em>) – Transformed samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">latent_size)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Optional conditioning features supplied to each inverse flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inverse-transformed samples and accumulated inverse log-determinants.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.flowOutput" title="S2D4P.architectures.normalized_flows.flowOutput">flowOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">RealNVP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_dim=16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_network=&lt;class</span> <span class="pre">'S2D4P.architectures.normalized_flows.FCNN'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.architectures.architecture_abc.flowABC" title="S2D4P.architectures.architecture_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
+<p>Real-valued non-volume-preserving coupling flow.</p>
+<p>The latent representation is divided into two parts that are transformed
+sequentially using learned translation and log-scale functions. The coupling
+networks can optionally depend on external conditioning features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dim</strong> (<em>int</em>) – Number of hidden features used by the coupling networks.</p></li>
+<li><p><strong>base_network</strong> (<em>type</em><em>[</em><em>nn.Module</em><em>]</em>) – Network class used to construct translation and log-scale functions.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP.build" title="Link to this definition"></a></dt>
+<dd><p>Build the RealNVP coupling networks.</p>
+<p>Translation and log-scale networks are constructed for both coupling
+transformations and optionally include conditioning features in their inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the flow is unconditional.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This flow instance with its coupling networks constructed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.RealNVP" title="S2D4P.architectures.normalized_flows.RealNVP">RealNVP</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP.forward" title="Link to this definition"></a></dt>
+<dd><p>Build the RealNVP coupling networks.</p>
+<p>Translation and log-scale networks are constructed for both coupling
+transformations and optionally include conditioning features in their inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Number of latent dimensions transformed by the flow.</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em><em> | </em><em>None</em>) – Number of conditioning features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the flow is unconditional.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This flow instance with its coupling networks constructed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.architectures.normalized_flows.RealNVP" title="S2D4P.architectures.normalized_flows.RealNVP">RealNVP</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.RealNVP.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.RealNVP.inverse" title="Link to this definition"></a></dt>
+<dd><p>Apply the inverse RealNVP coupling transformation.</p>
+<p>The two coupling transformations are inverted in reverse dependency order to
+recover the original latent samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>torch.Tensor</em>) – Transformed samples with shape <code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">dim)</span></code>.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Conditioning features required by a conditional flow.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inverse-transformed samples and the inverse log-determinant for each
+sample.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[torch.Tensor, torch.Tensor]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the flow was constructed as conditional but no conditioning features
+    are provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.flowOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.architectures.normalized_flows.</span></span><span class="sig-name descname"><span class="pre">flowOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_det</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.architectures.normalized_flows.flowOutput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for the output of a normalizing-flow transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>e_samples</strong> (<em>torch.Tensor</em>) – Samples produced by the flow transformation.</p></li>
+<li><p><strong>log_det</strong> (<em>torch.Tensor</em>) – Log-determinant of the transformation Jacobian for each sample.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.flowOutput.e_samples">
+<span class="sig-name descname"><span class="pre">e_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.architectures.normalized_flows.flowOutput.e_samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.architectures.normalized_flows.flowOutput.log_det">
+<span class="sig-name descname"><span class="pre">log_det</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#S2D4P.architectures.normalized_flows.flowOutput.log_det" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.architectures">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-S2D4P.architectures" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="S2D4P.html" class="btn btn-neutral float-left" title="S2D4P package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="S2D4P.architectures.layers.html" class="btn btn-neutral float-right" title="S2D4P.architectures.layers package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

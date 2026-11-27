@@ -1,0 +1,1241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S2D4P.preprocessing package &mdash; S2D4P  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="S2D4P.train package" href="S2D4P.train.html" />
+    <link rel="prev" title="S2D4P.loss package" href="S2D4P.loss.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            S2D4P
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/design_overview.html">Design Logic and Software Architecture Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">S2D4P</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="S2D4P.html">S2D4P package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="S2D4P.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.architectures.html">S2D4P.architectures package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.configs.html">S2D4P.configs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.core.html">S2D4P.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.data.html">S2D4P.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.generic.html">S2D4P.generic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.inference.html">S2D4P.inference package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.loss.html">S2D4P.loss package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">S2D4P.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="S2D4P.train.html">S2D4P.train package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="S2D4P.html#module-S2D4P">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">S2D4P</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">S2D4P</a></li>
+          <li class="breadcrumb-item"><a href="S2D4P.html">S2D4P package</a></li>
+      <li class="breadcrumb-item active">S2D4P.preprocessing package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/S2D4P.preprocessing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="s2d4p-preprocessing-package">
+<h1>S2D4P.preprocessing package<a class="headerlink" href="#s2d4p-preprocessing-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-S2D4P.preprocessing.preprocessing">
+<span id="s2d4p-preprocessing-preprocessing-module"></span><h2>S2D4P.preprocessing.preprocessing module<a class="headerlink" href="#module-S2D4P.preprocessing.preprocessing" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.preprocessing.</span></span><span class="sig-name descname"><span class="pre">PreprocessingPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessors_list:</span> <span class="pre">list[~S2D4P.preprocessing.selector.PreprocessingStepSelector]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pathlib.Path</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manage an ordered sequence of preprocessing transformations.</p>
+<p>The pipeline constructs preprocessing modules from configured selectors,
+fits them sequentially, applies forward and inverse transformations, stores
+reference output coordinates and variables, and supports serialization of
+fitted preprocessing state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>preprocessors_list</strong> (<em>list</em><em>[</em><a class="reference internal" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector" title="S2D4P.preprocessing.selector.PreprocessingStepSelector"><em>PreprocessingStepSelector</em></a><em>]</em>) – Ordered preprocessing steps used to construct the pipeline.</p></li>
+<li><p><strong>load_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Path to a previously saved preprocessing pipeline. If provided, fitted
+pipeline state is restored during initialization.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Below arguments are configured to be read from configs and not specified
+by user. This can be changed if adopting the code for other pipelines.</p>
+<dl class="simple">
+<dt>init_time_dim<span class="classifier">str</span></dt><dd><p>Name of the initialization-time dimension used by the pipeline.</p>
+</dd>
+<dt>lead_time_dim<span class="classifier">str</span></dt><dd><p>Name of the lead-time dimension used by the pipeline.</p>
+</dd>
+<dt>supported_NN_dimensions<span class="classifier">tuple[str, …]</span></dt><dd><p>Ordered dimensions supported as neural-network output dimensions.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.add_fitted_preprocessor">
+<span class="sig-name descname"><span class="pre">add_fitted_preprocessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.add_fitted_preprocessor" title="Link to this definition"></a></dt>
+<dd><p>Add a fitted preprocessing module to the pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>preprocessor</strong> (<em>Any</em>) – Fitted preprocessing module to add.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name associated with the preprocessing step.</p></li>
+<li><p><strong>index</strong> (<em>int</em><em> | </em><em>None</em>) – Position at which to insert the preprocessor. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+preprocessor is appended.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If <code class="docutils literal notranslate"><span class="pre">preprocessor</span></code> has not been fitted.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.extract_output_coords_vars">
+<span class="sig-name descname"><span class="pre">extract_output_coords_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.extract_output_coords_vars" title="Link to this definition"></a></dt>
+<dd><p>Record reference output coordinates and variables.</p>
+<p>Supported neural-network dimensions are extracted from the fitting data and
+stored for later reconstruction of model outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data from which reference coordinates and variable names are extracted.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the pipeline is not fitted, no supported neural-network dimensions are
+    present, or the fitting data contain no data variables.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit the preprocessing pipeline sequentially.</p>
+<p>Each preprocessing module is fitted on the output of the preceding
+transformation. Reference output coordinates and variables are recorded after
+all steps are fitted, and the fitted pipeline can optionally be serialized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data used to fit the preprocessing pipeline.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Optional mask applied while fitting preprocessing statistics.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the fitted pipeline to disk.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Filename used when saving the pipeline. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a name is generated
+from the pipeline identifier.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory in which the fitted pipeline is saved. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+experiment preprocessing directory is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This fitted preprocessing pipeline.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline" title="S2D4P.preprocessing.preprocessing.PreprocessingPipeline">PreprocessingPipeline</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.get_flattener">
+<span class="sig-name descname"><span class="pre">get_flattener</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove" title="S2D4P.preprocessing.utils_preprocessing.Flattennanremove"><span class="pre">Flattennanremove</span></a></span></span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.get_flattener" title="Link to this definition"></a></dt>
+<dd><p>Return the fitted flattening preprocessor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>First <code class="docutils literal notranslate"><span class="pre">Flattennanremove</span></code> instance in the fitted pipeline.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove" title="S2D4P.preprocessing.utils_preprocessing.Flattennanremove">Flattennanremove</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the pipeline does not contain a <code class="docutils literal notranslate"><span class="pre">Flattennanremove</span></code> step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.get_preprocessors">
+<span class="sig-name descname"><span class="pre">get_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.get_preprocessors" title="Link to this definition"></a></dt>
+<dd><p>Return fitted preprocessing modules.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">name</span></code> is omitted, all fitted preprocessors are returned. Otherwise,
+exactly one fitted preprocessor with the requested step name is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>) – Name of a preprocessing step to retrieve.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>All fitted preprocessing modules when <code class="docutils literal notranslate"><span class="pre">name</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, otherwise the
+single matching preprocessor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list | Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – If the pipeline has not been fitted.</p></li>
+<li><p><strong>ValueError</strong> – If the requested step does not exist or occurs more than once.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.has_flattener">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_flattener</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.has_flattener" title="Link to this definition"></a></dt>
+<dd><p>Indicate whether the fitted pipeline contains a flattening preprocessor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when a <code class="docutils literal notranslate"><span class="pre">Flattennanremove</span></code> step is present.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.init_time_dim">
+<span class="sig-name descname"><span class="pre">init_time_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'time'</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.init_time_dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.inverse_rename">
+<span class="sig-name descname"><span class="pre">inverse_rename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.inverse_rename" title="Link to this definition"></a></dt>
+<dd><p>Restore original names from the pipeline renaming configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Dataset using standardized pipeline names.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataset with original names restored when a renaming configuration is
+available.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_arguments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Apply inverse preprocessing transformations in reverse order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.DataArray</em>) – Preprocessed data to restore.</p></li>
+<li><p><strong>step_arguments</strong> (<em>dict</em><em> | </em><em>None</em>) – Mapping from preprocessing step names to keyword arguments supplied to
+that step’s <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data after reversing all preprocessing transformations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">step_arguments</span></code> contains a preprocessing step that is not part of
+    the fitted pipeline.</p></li>
+<li><p><strong>RuntimeError</strong> – If the pipeline has not been fitted.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.lead_time_dim">
+<span class="sig-name descname"><span class="pre">lead_time_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lead_time'</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.lead_time_dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.load_dir">
+<span class="sig-name descname"><span class="pre">load_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.load_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.load_from_memory">
+<span class="sig-name descname"><span class="pre">load_from_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.load_from_memory" title="Link to this definition"></a></dt>
+<dd><p>Restore a fitted preprocessing pipeline from disk.</p>
+<p>Fitted preprocessing modules, step names, masks, fitting times, reference
+coordinates, reference variables, and pipeline metadata are copied from the
+serialized pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>load_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Path to the serialized preprocessing pipeline.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This pipeline populated with the loaded fitted state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline" title="S2D4P.preprocessing.preprocessing.PreprocessingPipeline">PreprocessingPipeline</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the serialized preprocessing pipeline has not been fitted.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.preprocessors_list">
+<span class="sig-name descname"><span class="pre">preprocessors_list</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector" title="S2D4P.preprocessing.selector.PreprocessingStepSelector"><span class="pre">PreprocessingStepSelector</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.preprocessors_list" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.set_name">
+<span class="sig-name descname"><span class="pre">set_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.set_name" title="Link to this definition"></a></dt>
+<dd><p>Set the pipeline name and coordinate-renaming information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name used to identify the pipeline when saving and loading fitted state.</p></li>
+<li><p><strong>rename_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>] </em><em>| </em><em>None</em>) – Mapping from original data names to standardized pipeline names.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.supported_NN_dimensions">
+<span class="sig-name descname"><span class="pre">supported_NN_dimensions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sequence',</span> <span class="pre">'lev',</span> <span class="pre">'lat',</span> <span class="pre">'lon')</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.supported_NN_dimensions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.to_dataset">
+<span class="sig-name descname"><span class="pre">to_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.to_dataset" title="Link to this definition"></a></dt>
+<dd><p>Reconstruct a dataset from channel-first model output.</p>
+<p>Output dimensions are restored to their reference spatial coordinates, or to
+the flattened reference locations when a flattening preprocessor is present.
+The channel dimension is then converted back to the original data variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.DataArray</em>) – Model output containing a <code class="docutils literal notranslate"><span class="pre">channels</span></code> dimension and output dimensions.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataset with the reference variables, dimensions, and coordinates restored.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – If the preprocessing pipeline has not been fitted.</p></li>
+<li><p><strong>ValueError</strong> – If the input lacks a <code class="docutils literal notranslate"><span class="pre">channels</span></code> dimension or its channel count does not
+    match the variables associated with the fitted pipeline.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing.PreprocessingPipeline.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_arguments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing.PreprocessingPipeline.transform" title="Link to this definition"></a></dt>
+<dd><p>Apply all fitted preprocessing steps in order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.DataArray</em>) – Data to transform.</p></li>
+<li><p><strong>step_arguments</strong> (<em>dict</em><em> | </em><em>None</em>) – Mapping from preprocessing step names to keyword arguments supplied to
+that step’s <code class="docutils literal notranslate"><span class="pre">transform</span></code> method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data after applying all preprocessing transformations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">step_arguments</span></code> contains a preprocessing step that is not part of
+    the fitted pipeline.</p></li>
+<li><p><strong>RuntimeError</strong> – If the pipeline has not been fitted.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.preprocessing.preprocessing_ABC">
+<span id="s2d4p-preprocessing-preprocessing-abc-module"></span><h2>S2D4P.preprocessing.preprocessing_ABC module<a class="headerlink" href="#module-S2D4P.preprocessing.preprocessing_ABC" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.preprocessing_ABC.</span></span><span class="sig-name descname"><span class="pre">PreprocessModuleABC</span></span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for preprocessing modules.</p>
+<p>Defines the common interface for fitting, transforming, and inverse
+transforming xarray data, together with shared utilities for temporal
+grouping, reduction dimensions, and validation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble">
+<span class="sig-name descname"><span class="pre">large_ensemble</span></span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble" title="Link to this definition"></a></dt>
+<dd><p>Whether the realization dimension is implicitly included in reductions
+because it is present in the data but absent from the configured
+reduction dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted">
+<span class="sig-name descname"><span class="pre">fitted</span></span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted" title="Link to this definition"></a></dt>
+<dd><p>Whether the preprocessor has been fitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.dims">
+<span class="sig-name descname"><span class="pre">dims</span></span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.dims" title="Link to this definition"></a></dt>
+<dd><p>Dimensions over which preprocessing statistics are calculated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[str, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.frequency" title="Link to this definition"></a></dt>
+<dd><p>Optional temporal grouping frequency. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit the preprocessing module to data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data used to estimate preprocessing statistics.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Implementation-specific fit result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">fitted</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.init_time_dim">
+<span class="sig-name descname"><span class="pre">init_time_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'time'</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.init_time_dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.inverse_transform">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Reverse the fitted preprocessing transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Transformed data to restore.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional implementation-specific inverse-transformation arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inverse-transformed data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset | xr.DataArray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">large_ensemble</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_dim">
+<span class="sig-name descname"><span class="pre">lead_time_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lead_time'</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_resolution">
+<span class="sig-name descname"><span class="pre">lead_time_resolution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'month'</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.lead_time_resolution" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.realization_dim">
+<span class="sig-name descname"><span class="pre">realization_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ensembles'</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.realization_dim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.supported_frequencies">
+<span class="sig-name descname"><span class="pre">supported_frequencies</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'day',</span> <span class="pre">'month',</span> <span class="pre">'year',</span> <span class="pre">None}</span></em><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.supported_frequencies" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.transform">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC.transform" title="Link to this definition"></a></dt>
+<dd><p>Apply the fitted preprocessing transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data to transform.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional implementation-specific transformation arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset | xr.DataArray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.preprocessing.registery">
+<span id="s2d4p-preprocessing-registery-module"></span><h2>S2D4P.preprocessing.registery module<a class="headerlink" href="#module-S2D4P.preprocessing.registery" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.registery.Registery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.registery.</span></span><span class="sig-name descname"><span class="pre">Registery</span></span><a class="headerlink" href="#S2D4P.preprocessing.registery.Registery" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Registry for named classes.</p>
+<p>Classes can be registered under unique string identifiers and later
+instantiated by name using optional keyword configuration.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.registery.Registery.available">
+<span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.registery.Registery.available" title="Link to this definition"></a></dt>
+<dd><p>Return the names of all registered classes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Names currently available in the registry.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.registery.Registery.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#S2D4P.preprocessing.registery.Registery.get" title="Link to this definition"></a></dt>
+<dd><p>Retrieve and instantiate a registered class.</p>
+<p>When no configuration is provided, the class is instantiated without
+arguments. Otherwise, the configuration dictionary is expanded into keyword
+arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name identifying the registered class.</p></li>
+<li><p><strong>config</strong> (<em>dict</em><em> | </em><em>None</em>) – Keyword arguments used to construct the registered class.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Instance of the registered class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">name</span></code> is not registered.</p></li>
+<li><p><strong>TypeError</strong> – If <code class="docutils literal notranslate"><span class="pre">config</span></code> is neither a dictionary nor <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.registery.Registery.register">
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.registery.Registery.register" title="Link to this definition"></a></dt>
+<dd><p>Create a decorator that registers a class under a unique name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name used to identify the registered class.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decorator that registers and returns the supplied class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If <code class="docutils literal notranslate"><span class="pre">name</span></code> is not a string.</p></li>
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">name</span></code> is empty or has already been registered.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.preprocessing.selector">
+<span id="s2d4p-preprocessing-selector-module"></span><h2>S2D4P.preprocessing.selector module<a class="headerlink" href="#module-S2D4P.preprocessing.selector" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.selector.PreprocessingStepSelector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.selector.</span></span><span class="sig-name descname"><span class="pre">PreprocessingStepSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Select and configure a registered preprocessing step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the registered preprocessing step.</p></li>
+<li><p><strong>args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>object</em><em>] </em><em>| </em><em>None</em>) – Keyword arguments used to construct the preprocessing module.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.selector.PreprocessingStepSelector.args">
+<span class="sig-name descname"><span class="pre">args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector.args" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.selector.PreprocessingStepSelector.available">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector.available" title="Link to this definition"></a></dt>
+<dd><p>Return the names of all registered preprocessing steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Names currently available in the preprocessing registry.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.selector.PreprocessingStepSelector.get_preprocessor">
+<span class="sig-name descname"><span class="pre">get_preprocessor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector.get_preprocessor" title="Link to this definition"></a></dt>
+<dd><p>Construct the selected preprocessing module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Preprocessing module constructed with the configured arguments.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC">PreprocessModuleABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.selector.PreprocessingStepSelector.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.selector.PreprocessingStepSelector.register">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><span class="pre">PreprocessModuleABC</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector.register" title="Link to this definition"></a></dt>
+<dd><p>Create a decorator that registers a preprocessing module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name under which the preprocessing module is registered.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decorator used to register the preprocessing module class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable[…, <a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC">PreprocessModuleABC</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.selector.PreprocessingStepSelector.registery">
+<span class="sig-name descname"><span class="pre">registery</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#S2D4P.preprocessing.registery.Registery" title="S2D4P.preprocessing.registery.Registery"><span class="pre">Registery</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;S2D4P.preprocessing.registery.Registery</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#S2D4P.preprocessing.selector.PreprocessingStepSelector.registery" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.preprocessing.utils_preprocessing">
+<span id="s2d4p-preprocessing-utils-preprocessing-module"></span><h2>S2D4P.preprocessing.utils_preprocessing module<a class="headerlink" href="#module-S2D4P.preprocessing.utils_preprocessing" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">AnomaliesScaler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
+<p>Convert data to anomalies relative to a fitted mean.</p>
+<p>The mean is calculated over configurable dimensions and can optionally be
+estimated separately by year, month, or day.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Dimensions over which the mean is calculated.</p></li>
+<li><p><strong>frequency</strong> (<em>TemporalFrequency</em><em> | </em><em>None</em>) – Optional temporal frequency used to group fitted means.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments accepted for pipeline compatibility.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit mean values used to calculate anomalies.</p>
+<p>An optional mask excludes values from fitting. When temporal grouping is
+enabled and initialization time is reduced, a separate mean is fitted for
+each temporal group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data used to estimate mean values.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Optional mask identifying values excluded from fitting.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This fitted anomaly scaler.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler" title="S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler">AnomaliesScaler</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Restore anomalies by adding the fitted mean.</p>
+<p>The fitted mean is temporally aligned with initialization or forecast target
+times before being added.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Anomaly data to restore.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data with the fitted mean restored.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.AnomaliesScaler.transform" title="Link to this definition"></a></dt>
+<dd><p>Convert data to anomalies by subtracting the fitted mean.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Data to transform.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Anomalies relative to the fitted mean.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Flattennanremove">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Flattennanremove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
+<p>Flatten neural-network dimensions while removing invalid locations.</p>
+<p>Supported neural-network dimensions are stacked into a single <code class="docutils literal notranslate"><span class="pre">ref</span></code>
+dimension. Only locations containing valid data are retained. When both input
+and target data are supplied, only locations valid in both are preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Path to a previously fitted flattening preprocessor.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments accepted for pipeline compatibility.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Flattennanremove.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit the valid flattened locations.</p>
+<p>Neural-network dimensions are stacked into a <code class="docutils literal notranslate"><span class="pre">ref</span></code> dimension and locations
+containing missing values are removed. When a target is provided, retained
+locations are restricted to those valid in both input and target data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Input data used to determine valid flattened locations.</p></li>
+<li><p><strong>target</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em><em> | </em><em>None</em>) – Optional target data used to restrict locations to those valid in both
+input and target datasets.</p></li>
+<li><p><strong>mask</strong> (<em>Any</em>) – Optional mask argument accepted for preprocessing pipeline compatibility.
+It is not used by this preprocessor.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to serialize the fitted preprocessor.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Base filename used when saving the fitted preprocessor.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Directory in which the fitted preprocessor is saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This fitted flattening preprocessor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove" title="S2D4P.preprocessing.utils_preprocessing.Flattennanremove">Flattennanremove</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If input data do not contain all neural-network dimensions required by
+    the reference data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Flattennanremove.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Restore flattened data to its original neural-network dimensions.</p>
+<p>Missing locations removed during flattening are reintroduced using the stored
+reference coordinate structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Flattened data containing a <code class="docutils literal notranslate"><span class="pre">ref</span></code> dimension.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data restored to the original neural-network dimensions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">data</span></code> does not contain the flattened <code class="docutils literal notranslate"><span class="pre">ref</span></code> dimension.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Flattennanremove.supported_NN_dimensions_sorted">
+<span class="sig-name descname"><span class="pre">supported_NN_dimensions_sorted</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sequence',</span> <span class="pre">'lev',</span> <span class="pre">'lat',</span> <span class="pre">'lon')</span></em><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove.supported_NN_dimensions_sorted" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Flattennanremove.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Flattennanremove.transform" title="Link to this definition"></a></dt>
+<dd><p>Flatten data and retain fitted valid locations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Data to flatten.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data containing the fitted valid locations along the trailing <code class="docutils literal notranslate"><span class="pre">ref</span></code>
+dimension.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Normalizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Normalizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Normalizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
+<p>Scale data to a normalized range using fitted minimum and maximum values.</p>
+<p>Statistics are calculated over the configured dimensions and can optionally
+be grouped by year, month, or day.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Dimensions over which minimum and maximum statistics are calculated.</p></li>
+<li><p><strong>frequency</strong> (<em>TemporalFrequency</em><em> | </em><em>None</em>) – Optional temporal frequency used to group fitted statistics.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments accepted for pipeline compatibility.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Normalizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Normalizer.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit minimum and maximum normalization statistics.</p>
+<p>An optional mask excludes values from fitting. When temporal grouping is
+enabled and initialization time is reduced, separate statistics are fitted
+for each temporal group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data used to estimate normalization statistics.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Optional mask identifying values excluded from fitting.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This fitted normalizer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.preprocessing.utils_preprocessing.Normalizer" title="S2D4P.preprocessing.utils_preprocessing.Normalizer">Normalizer</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If any fitted normalization range is zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Normalizer.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Normalizer.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Reverse normalization using fitted statistics.</p>
+<p>Statistics are temporally aligned with initialization or forecast target
+times before the original data scale is restored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Normalized data to restore.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data restored to its original scale.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Normalizer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Normalizer.transform" title="Link to this definition"></a></dt>
+<dd><p>Normalize data using fitted minimum and maximum values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Data to normalize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Standardizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">Standardizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'year'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Standardizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
+<p>Standardize data using fitted mean and standard deviation.</p>
+<p>Statistics are calculated over the configured dimensions and can optionally
+be grouped by year, month, or day. Locations with zero standard deviation are
+masked because they cannot be standardized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Dimensions over which mean and standard deviation are calculated.</p></li>
+<li><p><strong>frequency</strong> (<em>TemporalFrequency</em><em> | </em><em>None</em>) – Optional temporal frequency used to group fitted statistics.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments accepted for pipeline compatibility.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Fitted standard deviations that are not greater than zero are replaced with
+missing values and therefore remain masked during transformation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Standardizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Standardizer.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit mean and sample standard-deviation statistics.</p>
+<p>An optional mask excludes values from fitting. When temporal grouping is
+enabled and initialization time is reduced, separate statistics are fitted
+for each temporal group. Standard deviations that are not positive are
+masked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em><em> | </em><em>xr.DataArray</em>) – Data used to estimate standardization statistics.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Optional mask identifying values excluded from fitting.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This fitted standardizer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.preprocessing.utils_preprocessing.Standardizer" title="S2D4P.preprocessing.utils_preprocessing.Standardizer">Standardizer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Standardizer.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Standardizer.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Reverse standardization using fitted statistics.</p>
+<p>Statistics are temporally aligned with initialization or forecast target
+times before the original data scale is restored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Standardized data to restore.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data restored to its original scale.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.Standardizer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.Standardizer.transform" title="Link to this definition"></a></dt>
+<dd><p>Standardize data using fitted mean and standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Data to standardize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Standardized data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.TrendRemover">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">TrendRemover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.TrendRemover" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC" title="S2D4P.preprocessing.preprocessing_ABC.PreprocessModuleABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessModuleABC</span></code></a></p>
+<p>Remove a fitted linear temporal trend from data.</p>
+<p>A linear trend is fitted along initialization time. Trends can be fitted
+globally or separately by month or day-of-year.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frequency</strong> (<em>Literal</em><em>[</em><em>&quot;month&quot;</em><em>, </em><em>&quot;day&quot;</em><em>] </em><em>| </em><em>None</em>) – Optional temporal grouping frequency. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, one trend is fitted
+across all initialization times.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments accepted for pipeline compatibility.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.TrendRemover.TEMPORAL_ORDER">
+<span class="sig-name descname"><span class="pre">TEMPORAL_ORDER</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'day':</span> <span class="pre">0,</span> <span class="pre">'month':</span> <span class="pre">1,</span> <span class="pre">'year':</span> <span class="pre">2}</span></em><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.TrendRemover.TEMPORAL_ORDER" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.TrendRemover.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.TrendRemover.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit linear temporal trends.</p>
+<p>Data can be fitted globally or independently within temporal groups. An
+optional mask excludes values from trend estimation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>xr.Dataset</em>) – Data used to estimate linear trends.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Optional mask identifying values excluded from fitting.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This fitted trend remover.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#S2D4P.preprocessing.utils_preprocessing.TrendRemover" title="S2D4P.preprocessing.utils_preprocessing.TrendRemover">TrendRemover</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If initialization time is absent, the requested grouping frequency is
+    coarser than the source temporal resolution, or a temporal group contains
+    fewer than two initialization times.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.TrendRemover.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.TrendRemover.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Restore the fitted linear trend.</p>
+<p>Trend statistics are aligned with the appropriate initialization or forecast
+target times before the trend is reconstructed and added to the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Detrended data to restore.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data with the fitted linear trend restored.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.TrendRemover.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.TrendRemover.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove the fitted linear trend from data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>xr.Dataset</em>) – Data from which the trend is removed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Detrended data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="S2D4P.preprocessing.utils_preprocessing.align_stat_data_lead_time_inverse_transform">
+<span class="sig-prename descclassname"><span class="pre">S2D4P.preprocessing.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">align_stat_data_lead_time_inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'day'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'month'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'month'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_time_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_time_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lead_time'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dataset</span></span></span><a class="headerlink" href="#S2D4P.preprocessing.utils_preprocessing.align_stat_data_lead_time_inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Align preprocessing statistics with data for inverse transformation.</p>
+<p>Statistics containing a lead-time dimension are aligned using
+initialization times. Otherwise, forecast valid times are used.</p>
+<p>Temporal grouping dimensions (‘year’, ‘month’, ‘day’) are aligned
+to the appropriate temporal coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xr.DataArray</em><em> | </em><em>xr.Dataset</em>) – Data to be inverse-transformed.</p></li>
+<li><p><strong>stat</strong> (<em>xr.DataArray</em><em> | </em><em>xr.Dataset</em>) – Fitted preprocessing statistics.</p></li>
+<li><p><strong>lead_time_resolution</strong> (<em>lead_time_unit</em>) – Resolution of forecast lead times.</p></li>
+<li><p><strong>init_time_dim</strong> (<em>str</em>) – Initialization-time dimension name.</p></li>
+<li><p><strong>lead_time_dim</strong> (<em>str</em>) – Lead-time dimension name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Temporally aligned statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray | xr.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-S2D4P.preprocessing">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-S2D4P.preprocessing" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="S2D4P.loss.html" class="btn btn-neutral float-left" title="S2D4P.loss package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="S2D4P.train.html" class="btn btn-neutral float-right" title="S2D4P.train package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

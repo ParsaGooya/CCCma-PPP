@@ -9,7 +9,7 @@ S2D4P
    start_here/installation
    start_here/getting_started
    start_here/design_overview
-   start_here/further_development
+   start_here/future_development
 
 .. toctree::
    :maxdepth: 3
