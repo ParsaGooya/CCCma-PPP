@@ -22,6 +22,8 @@ These capabilities can also be combined within a single experiment, allowing the
 
 A typical experiment consists of three stages: preparing and configuring the data, configuring and training a machine-learning model, and performing inference using the trained model.
 
+*** *This document and module docstrings are generated with the help of Artifical Intelligence.* ***
+
 1. Data
 -------
 
@@ -513,7 +515,7 @@ Alternatively, the user can explicitly configure a new dataset. The pipeline val
 Compatibility considerations include required input and conditioning variables, input dimensions and spatial structure, temporal coordinates and lead-time conventions, conditioning method, additional time-dependent features, and fitted preprocessing transformations.
 
 .. important::
-  Inference dataloader does not need nor accept a reference dataset.
+  Inference dataloader does not need nor accepts a reference dataset.
 
 Inference data need not cover the same initialization times as training data. However, they must satisfy the input requirements of the trained model. Passing compatibility checks does not necessarily guarantee generalization to a substantially different climate regime or data distribution.
 
@@ -627,4 +629,4 @@ It is important to distinguish this approach from ensemble generation using a ge
 Nevertheless, this provides an alternative approach to probabilistic prediction using deterministic neural networks, or sampling the output distribution of an MSE-trained generative model without requiring an explicitly generative architecture.
 
 .. important::
-  Using generators in place of determinsitic networks or sub-branches in generative models (e.g., the decoder in cVAE) is yet another approach for ensemble generation that is supported by the pipeline and requires an ensemble aware loss function (e.g., CRPS).*
+  Using generators in place of determinsitic networks or sub-branches in generative models (e.g., the decoder in cVAE) is yet another approach for ensemble generation that is supported by the pipeline and requires an ensemble aware loss function (e.g., CRPS) as shown in `the refernced study <https://arxiv.org/pdf/2605.29172>`_.

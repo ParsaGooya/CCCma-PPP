@@ -32,7 +32,7 @@ The central design principle is that **the experiment is described declaratively
 
 This organization allows S2D4P to expand its supported data sources, architectures, learning objectives, and post-processing applications while preserving a common and reusable machine-learning infrastructure.
 
-*This document and module docstrings are generated with the help of Artifical Intelligence.*
+*** *This document and module docstrings are generated with the help of Artifical Intelligence.* ***
 
 1. Introduction
 ---------------
@@ -66,14 +66,6 @@ A configuration class typically has three responsibilities:
 -  **Validation and preparation:** Check parameter consistency and prepare derived settings, typically through ``__post_init__()``.
 -  **Object construction:** Provide a ``build()`` method that instantiates the runtime component, optionally using information available only when the pipeline is assembled.
 
-3. Separation of learning paradigm and architecture
----------------------------------------------------
-
-In S2D4P, the learning paradigm ,i.e., the recipe/algorithm for training and inference is represented by ``model`` and separated from ``architecture`` which defines the backbone of the model and defines its forward processing algorithm and inductive bias.
-
-The learning module defines the learning problem and associated computational logic. It determines how predictions are produced, how training objectives are evaluated, and, for generative models, how probabilistic samples are generated.
-
-The neural architecture defines the computational mapping used by the learning module.
 
 Runtime classes
 ~~~~~~~~~~~~~~~
@@ -121,7 +113,16 @@ Consequently, ``build()`` methods may accept additional arguments that represent
 
 This pattern resembles a *factory-based architecture*, in which configuration classes act as specialized factories for their corresponding implementations.
 
-3. Hierarchical Configuration Architecture
+3. Separation of learning paradigm and architecture
+---------------------------------------------------
+
+In S2D4P, the learning paradigm, i.e., the recipe/algorithm for training and inference is represented by ``model`` and separated from ``architecture`` which defines the backbone of the model and defines its forward processing algorithm and inductive bias.
+
+The learning module defines the learning problem and associated computational logic. It determines how predictions are produced, how training objectives are evaluated, and, for generative models, how probabilistic samples are generated.
+
+The neural architecture defines the computational mapping used by the learning module.
+
+4. Hierarchical Configuration Architecture
 ------------------------------------------
 
 An experiment in S2D4P is represented by a hierarchy of configuration objects.
@@ -210,7 +211,7 @@ Likewise, changing a U-Net architecture to another compatible model should prima
 
 The nested structure also allows configuration validation to occur at multiple levels. Individual components can validate their own parameters, while higher-level configurations can enforce constraints involving multiple components.
 
-4. Selector Registries and Component Extensibility
+5. Selector Registries and Component Extensibility
 --------------------------------------------------
 
 Although configuration dataclasses establish the structure of the pipeline, many configuration fields represent alternative implementations that share a common interface.
@@ -301,7 +302,7 @@ Registry-based selection provides several advantages.
 
 Registration introduces an important implementation requirement: the module containing a registered class must be imported before that registry entry can be resolved. Registries do not automatically discover classes that have never been imported.
 
-5. Abstract Interfaces and Polymorphism
+6. Abstract Interfaces and Polymorphism
 ---------------------------------------
 
 The registry mechanism is complemented by abstract base classes and shared component interfaces.
@@ -320,7 +321,7 @@ This separation is especially relevant to the framework’s support for differen
 
 It also provides a natural extension point for additional generative approaches, such as diffusion-based models, provided they implement the interfaces expected by the surrounding infrastructure.
 
-6. YAML-Based Configuration and ``dacite`` Deserialization
+7. YAML-Based Configuration and ``dacite`` Deserialization
 ----------------------------------------------------------
 
 S2D4P uses YAML as a human-readable format for specifying experiments.
@@ -419,7 +420,7 @@ These layers are complementary. ``dacite`` validates the configuration structure
 
 Care is also required when defining forward references, union types, and abstract configuration fields, since these may require explicit type resolution or custom conversion logic.
 
-7. Configuration Validation and Object Construction
+8. Configuration Validation and Object Construction
 ---------------------------------------------------
 
 The configuration lifecycle separates parsing, validation, and construction.
@@ -440,7 +441,7 @@ The use of ``build()`` therefore supports a form of **deferred construction**: a
 
 The resulting dependency structure also gives the high-level training pipeline responsibility for assembling components in an appropriate order.
 
-8. Reusability, Reproducibility, and Experiment Management
+9. Reusability, Reproducibility, and Experiment Management
 ----------------------------------------------------------
 
 Configuration-driven architecture is especially valuable in climate machine learning, where experiments frequently vary across datasets, initialization periods, lead times, variables, neural architectures, and training objectives.
